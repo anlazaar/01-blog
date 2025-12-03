@@ -28,8 +28,13 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
 
+    private String firstname;
+    private String lastname;
     private String bio;
     private String avatarUrl;
+
+    @Column(nullable = false)
+    private boolean completedAccount;
 
     // Followers / Following
     @OneToMany(mappedBy = "follower")
@@ -40,4 +45,5 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
     private List<Post> posts;
+
 }

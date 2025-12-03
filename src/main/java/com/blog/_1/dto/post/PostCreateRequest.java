@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class PostCreateRequest {
+    private String title;
     private String description;
     private String mediaUrl;
     private String mediaType;

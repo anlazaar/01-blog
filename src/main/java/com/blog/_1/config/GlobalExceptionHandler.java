@@ -63,14 +63,13 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", "Invalid token signature"));
     }
 
-    
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<?> handleConstraintViolation(DataIntegrityViolationException ex) {
 
         Throwable root = ex.getRootCause();
         String message = root != null ? root.getMessage() : ex.getMessage();
 
-        // Genrale, needs more work to specify the duplicate 
+        // Genrale, needs more work to specify the duplicate
         if (message != null && message.contains("duplicate")) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "Value already exists (possibly email)"));
