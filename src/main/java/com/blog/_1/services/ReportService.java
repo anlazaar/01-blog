@@ -27,25 +27,31 @@ public class ReportService {
     // -----------------------------
     public ReportResponse createReport(ReportCreateRequest req) {
 
-        User reporter = (User) SecurityContextHolder.getContext()
+        Object principal = SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal();
 
+        if (!(principal instanceof User)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        User reporter = (User) principal;
+
         User reportedUser = userRepository.findById(req.getReportedUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Reported user not found"));
 
         Report report = new Report();
         report.setReason(req.getReason());
         report.setReporter(reporter);
         report.setReportedUser(reportedUser);
 
-        Report saved = reportRepository.save(report);
+        reportRepository.save(report);
 
-        return toResponse(saved);
+        return toResponse(report);
     }
 
     // -----------------------------
-    // GET ALL (ADMIN)
+    // GET ALL REPORTS (ADMIN)
     // -----------------------------
     public List<ReportResponse> getAllReports() {
         return reportRepository.findAll()
@@ -58,17 +64,37 @@ public class ReportService {
     // DELETE REPORT (ADMIN)
     // -----------------------------
     public void deleteReport(UUID id) {
+        if (!reportRepository.existsById(id)) {
+            throw new RuntimeException("Report not found");
+        }
         reportRepository.deleteById(id);
     }
 
+    // -----------------------------
+    // RESOLVE REPORT (ADMIN)
+    // -----------------------------
+    public void resolveReport(UUID id) {
+        Report report = reportRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+
+        report.setResolved(true);
+        reportRepository.save(report);
+    }
+
+    // -----------------------------
     // Convert Entity → DTO
+    // -----------------------------
     private ReportResponse toResponse(Report r) {
         ReportResponse dto = new ReportResponse();
 
         dto.setId(r.getId());
         dto.setReason(r.getReason());
         dto.setResolved(r.isResolved());
-        dto.setCreatedAt(r.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+
+        dto.setCreatedAt(
+                r.getCreatedAt() != null
+                        ? r.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                        : null);
 
         dto.setReporter(toUserDTO(r.getReporter()));
         dto.setReportedUser(toUserDTO(r.getReportedUser()));
@@ -87,6 +113,7 @@ public class ReportService {
         dto.setLastname(u.getLastname());
         dto.setBio(u.getBio());
         dto.setAvatarUrl(u.getAvatarUrl());
+
         return dto;
     }
 }
