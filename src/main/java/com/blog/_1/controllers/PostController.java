@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -59,13 +60,13 @@ public class PostController {
     public ResponseEntity<?> delete(
             @PathVariable UUID id,
             Authentication auth) {
-        UUID userId = UUID.fromString(auth.getName());
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        postService.delete(id, userId, isAdmin);
+        postService.delete(id, currentUser.getId(), isAdmin);
 
-        return ResponseEntity.ok("Post deleted successfully");
+        return ResponseEntity.ok().body(Map.of("res", "Post deleted successfully"));
     }
 
     // Get posts by user
