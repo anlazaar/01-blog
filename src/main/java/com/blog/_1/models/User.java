@@ -36,6 +36,9 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private boolean completedAccount;
 
+    @Column(nullable = false)
+    private boolean banned = false;
+
     // Followers / Following
     @OneToMany(mappedBy = "follower")
     private List<Subscription> following;

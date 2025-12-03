@@ -23,6 +23,7 @@ import com.blog._1.models.Role;
 import com.blog._1.models.User;
 import com.blog._1.repositories.UserRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -117,11 +118,11 @@ public class UserService {
             throws IOException {
         User user = getUserById(userId);
 
-        if (!firstname.equals(""))
+        if (firstname != null && !firstname.equals(""))
             user.setFirstname(firstname);
-        if (!lastname.equals(""))
+        if (lastname != null && !lastname.equals(""))
             user.setLastname(lastname);
-        if (!bio.equals(""))
+        if (lastname != null && !bio.equals(""))
             user.setBio(bio);
 
         if (avatar != null && !avatar.isEmpty()) {
@@ -138,12 +139,13 @@ public class UserService {
             user.setAvatarUrl("/uploads/avatars/" + filename);
         }
 
-        if (!firstname.equals("") && !lastname.equals("") && !bio.equals("")) {
+        if (lastname != null && firstname != null && bio != null && !firstname.equals("") && !lastname.equals("")
+                && !bio.equals("")) {
             user.setCompletedAccount(true);
         }
 
         // Update email
-        if (!email.equals("") && !email.isBlank() && !email.equals(user.getEmail())) {
+        if (email != null && !email.equals("") && !email.isBlank() && !email.equals(user.getEmail())) {
             if (userRepository.existsByEmail(email)) {
                 throw new IllegalArgumentException("Email already in use");
             }
@@ -151,7 +153,7 @@ public class UserService {
         }
 
         // Update username
-        if (!username.equals("") && !username.isBlank() && !username.equals(user.getUsername())) {
+        if (username != null && !username.equals("") && !username.isBlank() && !username.equals(user.getUsername())) {
             if (userRepository.existsByUsername(username)) {
                 throw new IllegalArgumentException("Username already in use");
             }
@@ -159,7 +161,7 @@ public class UserService {
         }
 
         // Update password
-        if (!password.equals("") && !oldpassword.equals("")) {
+        if ((password != null && oldpassword != null) && !password.equals("") && !oldpassword.equals("")) {
             // System.out.println("I'M HERE!!" + oldpassword + " " + password);
             PasswordEncoder encoder = new BCryptPasswordEncoder();
             if (encoder.matches(oldpassword, user.getPassword())) {
@@ -183,6 +185,15 @@ public class UserService {
 
     public void deleteUser(UUID id) {
         userRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void banUser(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setBanned(true);
+        userRepository.save(user);
     }
 
     // ========================

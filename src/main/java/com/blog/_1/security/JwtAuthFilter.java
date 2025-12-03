@@ -46,34 +46,51 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         final String token = authHeader.substring(7);
 
         try {
-            final UUID userid = jwtService.extractUserId(token);
+            final UUID userId = jwtService.extractUserId(token);
             final String role = jwtService.extractRole(token);
 
-            if (userid != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (userId != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                if (jwtService.isValidToken(token)) {
-
-                    Collection<? extends GrantedAuthority> authorities = List
-                            .of(new SimpleGrantedAuthority("ROLE_" + role));
-
-                    User userDetails = userService.getUserById(userid);
-
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
-                            null,
-                            authorities);
-
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (!jwtService.isValidToken(token)) {
+                    writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+                    return;
                 }
+
+                User userDetails = userService.getUserById(userId);
+
+                // ---------------------------
+                // BLOCK BANNED USERS
+                // ---------------------------
+                if (userDetails.isBanned()) {
+                    writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "Your account has been banned");
+                    return;
+                }
+
+                Collection<? extends GrantedAuthority> authorities = List
+                        .of(new SimpleGrantedAuthority("ROLE_" + role));
+
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
+                        null, authorities);
+
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
+
         } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"error\":\"Token expired\"}");
-            return; // stop filter chain → force logout
+            writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Token expired or invalid");
+            return;
         }
 
         filterChain.doFilter(request, response);
     }
+
+    private void writeJsonError(HttpServletResponse response, int status, String message) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
+    }
+
 }
