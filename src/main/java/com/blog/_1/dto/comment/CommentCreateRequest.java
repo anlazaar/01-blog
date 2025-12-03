@@ -1,8 +1,8 @@
-package com.blog._1.dto.comment;
+    package com.blog._1.dto.comment;
 
-import lombok.Data;
+    import lombok.Data;
 
-@Data
-public class CommentCreateRequest {
-    private String text;
-}
+    @Data
+    public class CommentCreateRequest {
+        private String text;
+    }
