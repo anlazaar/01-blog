@@ -3,6 +3,7 @@ package com.blog._1.security;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 // import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
@@ -12,6 +13,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.blog._1.models.User;
+import com.blog._1.services.UserService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UserService userService;
 
     @Override
     protected void doFilterInternal(
@@ -40,24 +45,33 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String token = authHeader.substring(7);
 
-        final String username = jwtService.extractUserName(token);
-        final String role = jwtService.extractRole(token);
+        try {
+            final UUID userid = jwtService.extractUserId(token);
+            final String role = jwtService.extractRole(token);
 
-        if (username != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (userid != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            if (jwtService.isValidToken(token)) {
+                if (jwtService.isValidToken(token)) {
 
-                Collection<? extends GrantedAuthority> authorities = List
-                        .of(new SimpleGrantedAuthority("ROLE_" + role));
+                    Collection<? extends GrantedAuthority> authorities = List
+                            .of(new SimpleGrantedAuthority("ROLE_" + role));
 
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, null,
-                        authorities);
+                    User userDetails = userService.getUserById(userid);
 
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request));
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
+                            null,
+                            authorities);
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\":\"Token expired\"}");
+            return; // stop filter chain → force logout
         }
 
         filterChain.doFilter(request, response);

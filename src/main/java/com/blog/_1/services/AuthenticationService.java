@@ -1,8 +1,11 @@
 package com.blog._1.services;
 
+import java.util.Map;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.blog._1.dto.auth.LoginResponse;
 import com.blog._1.models.Role;
 import com.blog._1.models.User;
 import com.blog._1.repositories.UserRepository;
@@ -18,7 +21,8 @@ public class AuthenticationService {
     private final PasswordEncoder passwdEnco;
     private final JwtService jwtService;
 
-    public String login(String email, String passwd) {
+    public Map<String, Object> login(String email, String passwd) {
+
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("No such a user with this email"));
 
@@ -26,10 +30,14 @@ public class AuthenticationService {
             throw new RuntimeException("Password Incorrect");
         }
 
-        return jwtService.generateToken(user);
+        String token = jwtService.generateToken(user);
+
+        return Map.of(
+                "isCompleted", user.isCompletedAccount(),
+                "token", token);
     }
 
-    public String register(String name, String email, String password) {
+    public Map<String, Object> register(String name, String email, String password) {
 
         if (userRepo.findByEmail(email).isPresent()) {
             throw new RuntimeException("Email already taken");
@@ -43,6 +51,6 @@ public class AuthenticationService {
 
         userRepo.save(user);
 
-        return jwtService.generateToken(user);
+        return Map.of("token", jwtService.generateToken(user), "isCompleted", user.isCompletedAccount());
     }
 }

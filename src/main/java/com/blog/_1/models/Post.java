@@ -16,6 +16,7 @@ public class Post extends BaseEntity {
     @GeneratedValue
     private UUID id;
 
+    private String title;
     private String description;
 
     private String mediaUrl; // image or video link
