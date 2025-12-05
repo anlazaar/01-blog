@@ -1,0 +1,170 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <h1>Admin Dashboard</h1>
+    <p>Manage users, content, and reports</p>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- Sidebar / Tabs -->
+    <aside class="admin-sidebar">
+      <button class="tab-btn" [class.active]="activeTab === 'users'" (click)="switchTab('users')">
+        <fa-icon [icon]="faUsers"></fa-icon> Users
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'posts'" (click)="switchTab('posts')">
+        <fa-icon [icon]="faNewspaper"></fa-icon> Posts
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'reports'"
+        (click)="switchTab('reports')"
+      >
+        <fa-icon [icon]="faFlag"></fa-icon> Reports
+      </button>
+    </aside>
+
+    <!-- Content Area -->
+    <main class="admin-content">
+      <div *ngIf="message" class="alert-success">
+        {{ message }}
+      </div>
+
+      <div *ngIf="isLoading" class="loading">Loading...</div>
+
+      <!-- USERS TAB -->
+      <div *ngIf="activeTab === 'users' && !isLoading" class="table-responsive">
+        <table class="sketch-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of users">
+              <td>
+                <div class="user-cell">
+                  <img
+                    [src]="
+                      user.avatarUrl
+                        ? 'http://localhost:8080' + user.avatarUrl
+                        : 'assets/default-avatar.png'
+                    "
+                    class="table-avatar"
+                  />
+
+                  <a [routerLink]="['/profile', user.id]">{{ user.username }}</a>
+                </div>
+              </td>
+              <td>{{ user.email }}</td>
+              <td>
+                <span class="badge">{{ user.role }}</span>
+              </td>
+              <td>
+                <span class="badge" [class.banned]="user.banned">
+                  {{ user.banned ? 'BANNED' : 'ACTIVE' }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                <button
+                  *ngIf="!user.banned"
+                  (click)="banUser(user.id)"
+                  class="action-btn ban"
+                  title="Ban User"
+                >
+                  <fa-icon [icon]="faBan"></fa-icon>
+                </button>
+
+                <button
+                  *ngIf="user.banned"
+                  (click)="banUser(user.id)"
+                  class="action-btn unban"
+                  title="Unban User"
+                >
+                  <fa-icon [icon]="faCheck"></fa-icon>
+                </button>
+
+                <button (click)="deleteUser(user.id)" class="action-btn delete" title="Delete User">
+                  <fa-icon [icon]="faTrash"></fa-icon>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- POSTS TAB -->
+      <div *ngIf="activeTab === 'posts' && !isLoading" class="table-responsive">
+        <table class="sketch-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Date</th>
+              <th>View</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let post of posts">
+              <td>{{ post.title }}</td>
+              <td>{{ post.author?.username }}</td>
+              <td>{{ post.createdAt | date : 'short' }}</td>
+              <td class="actions-cell">
+                <a [routerLink]="['/posts', post.id]" class="action-btn view">
+                  <fa-icon [icon]="faLink"></fa-icon>
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- REPORTS TAB -->
+      <div *ngIf="activeTab === 'reports' && !isLoading" class="table-responsive">
+        <table class="sketch-table">
+          <thead>
+            <tr>
+              <th>Reason</th>
+              <th>Reporter</th>
+              <th>Reported User</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let report of reports">
+              <td>{{ report.reason }}</td>
+              <td>{{ report.reporter?.username }}</td>
+              <td>
+                <a [routerLink]="['/profile', report.reportedUser?.id]">
+                  {{ report.reportedUser?.username }}
+                </a>
+              </td>
+              <td>
+                <span
+                  class="badge"
+                  [class.resolved]="report.resolved"
+                  [class.pending]="!report.resolved"
+                >
+                  {{ report.resolved ? 'RESOLVED' : 'PENDING' }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                <button
+                  *ngIf="!report.resolved"
+                  (click)="resolveReport(report.id)"
+                  class="action-btn resolve"
+                  title="Mark Resolved"
+                >
+                  <fa-icon [icon]="faCheck"></fa-icon>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
