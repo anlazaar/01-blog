@@ -1,0 +1,203 @@
+.admin-container {
+  max-width: 1200px;
+  margin: 40px auto;
+}
+
+.admin-header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 15px;
+}
+
+.admin-header h1 {
+  font-size: 32px;
+  color: var(--text-primary);
+  margin-bottom: 5px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 30px;
+}
+
+/* Sidebar Buttons */
+.admin-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.tab-btn {
+  background-color: var(--secondary-elevated);
+  border: 2px solid var(--border);
+  color: var(--text-primary);
+  padding: 15px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tab-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow);
+}
+
+.tab-btn.active {
+  background-color: var(--accent);
+  color: var(--text-inverse);
+  border-color: var(--accent);
+}
+
+/* Content Area */
+.admin-content {
+  background-color: var(--secondary-elevated);
+  border: 2px solid var(--border);
+  padding: 25px;
+  box-shadow: var(--shadow-lg);
+  min-height: 500px;
+  position: relative;
+}
+
+/* Sketchy Tables */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.sketch-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.sketch-table th,
+.sketch-table td {
+  padding: 12px 15px;
+  border-bottom: 2px solid var(--border-muted);
+  text-align: left;
+}
+
+.sketch-table th {
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.sketch-table tr:hover {
+  background-color: var(--hover-overlay);
+}
+
+/* Cells & Badges */
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-cell a {
+  color: var(--accent);
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.table-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%; /* Optional: or square for retro feel */
+  border: 1px solid var(--border);
+  object-fit: cover;
+}
+
+.badge {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  background-color: var(--secondary);
+}
+
+.badge.banned {
+  background-color: var(--error-bg);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.badge.resolved {
+  background-color: var(--success-bg);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.badge.pending {
+  background-color: var(--warning-bg);
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+/* Actions */
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border);
+  background-color: var(--secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  color: var(--text-primary);
+}
+
+.action-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.action-btn.ban:hover {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.action-btn.delete:hover {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.action-btn.resolve:hover {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.alert-success {
+  background-color: var(--success-bg);
+  color: var(--success);
+  border: 2px solid var(--success);
+  padding: 10px;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.action-btn.unban {
+  background: #4caf50;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
