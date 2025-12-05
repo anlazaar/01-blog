@@ -184,7 +184,9 @@ public class UserService {
     }
 
     public void deleteUser(UUID id) {
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        userRepository.delete(user);
     }
 
     @Transactional
@@ -192,7 +194,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.setBanned(true);
+        user.setBanned(!user.isBanned());
         userRepository.save(user);
     }
 
