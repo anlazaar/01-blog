@@ -1,0 +1,23 @@
+<div class="report-container">
+  <h1>Report Post</h1>
+
+  <div class="input-group">
+    <label>Select a reason</label>
+    <select [(ngModel)]="reason">
+      <option value="" disabled selected>Select a reason</option>
+      <option value="spam">Spam</option>
+      <option value="harassment">Harassment</option>
+      <option value="hate-speech">Hate Speech</option>
+      <option value="nsfw">NSFW / Inappropriate</option>
+      <option value="violence">Violence</option>
+      <option value="other">Other</option>
+    </select>
+  </div>
+
+  <div class="input-group">
+    <label>Additional details (optional)</label>
+    <textarea placeholder="Describe the issue..." [(ngModel)]="description"></textarea>
+  </div>
+
+  <button class="main-btn" (click)="submitReport()" [disabled]="!reason">Submit Report</button>
+</div>

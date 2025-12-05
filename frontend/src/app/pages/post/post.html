@@ -1,0 +1,92 @@
+@if (loading) {
+<div class="loading-text">Loading...</div>
+
+}@else if (post) {
+<div class="post-page" *ngIf="!loading && post">
+  <div class="layout">
+    <div class="post-card">
+      <div class="post-header">
+        <h1>{{ post.title }}</h1>
+        <app-post-options-menu
+          [canEdit]="currentUserId == post.author.id"
+          [canReport]="currentUserId != post.author.id"
+          class="post-menu"
+          (update)="onUpdate(post)"
+          (delete)="onDelete(post)"
+        ></app-post-options-menu>
+      </div>
+
+      <p class="author">by {{ post.author.username }}</p>
+
+      <!-- Media -->
+      @if (post.mediaUrl) {
+      <div class="media">
+        @if (post.mediaType == "IMAGE") {
+        <img [src]="'http://localhost:8080' + post.mediaUrl" alt="Post image" />
+        } @else if (post.mediaType == "VIDEO") {
+        <video [src]="'http://localhost:8080' + post.mediaUrl" controls></video>
+        }
+      </div>
+      }
+
+      <p class="description">{{ post.description }}</p>
+
+      <div class="stats">
+        <span>{{ post.likeCount }} Likes</span>
+        <!-- <span>{{ post.commentCount }} Comments</span> -->
+      </div>
+
+      @if (currentUserId) {
+      <button class="like-btn" [class.liked]="post.likedByCurrentUser" (click)="toggleLike(post)">
+        <fa-icon [icon]="post.likedByCurrentUser ? faHeartSolid : faHeartRegular"></fa-icon>
+        <span>{{ post.likeCount }}</span>
+      </button>
+      }
+    </div>
+
+    <div class="comments-sidebar">
+      <h3>Comments</h3>
+
+      <div class="comments-list">
+        @if (post.comments.length == 0) {
+        <p class="no-comments">No comments yet.</p>
+        }
+
+        <div class="comment" *ngFor="let c of post.comments">
+          <div
+            class="comment-author"
+            [routerLink]="['/profile', c.author.id]"
+            style="cursor: pointer"
+          >
+            <img [src]="'http://localhost:8080' + c.author.avatarUrl" />
+            <span
+              ><b>{{ c.author.username }}</b></span
+            >
+            <span>{{ c.createdAt | date }}</span>
+          </div>
+
+          <p class="comment-text">{{ c.text }}</p>
+        </div>
+      </div>
+
+      <!-- ADD COMMENT -->
+      @if (currentUserId) {
+      <div class="add-comment">
+        <input type="text" placeholder="Write a comment..." [(ngModel)]="newComment" />
+        <button (click)="sendComment()">Send</button>
+      </div>
+      }
+    </div>
+  </div>
+</div>
+} @else {
+<h1>Post not found</h1>
+}
+
+<app-confirm-dialog
+  [show]="showConfirm"
+  message="Are you sure you want to delete this post?"
+  (confirm)="confirmDelete()"
+  (cancel)="cancelDelete()"
+>
+</app-confirm-dialog>

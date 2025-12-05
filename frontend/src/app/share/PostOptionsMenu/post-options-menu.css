@@ -1,0 +1,58 @@
+.menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.menu-btn {
+  border: 2px solid var(--border);
+  background-color: var(--secondary-elevated);
+  color: var(--text-primary);
+  padding: 11px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 0;
+  transition: all var(--transition-fast);
+  z-index: 1000;
+}
+
+.menu-btn:hover {
+  background-color: var(--hover-overlay);
+  box-shadow: var(--shadow-sm);
+}
+
+.menu-btn:active {
+  transform: translate(0, 0);
+  box-shadow: none;
+}
+
+.menu-dropdown {
+  position: absolute;
+  top: 38px;
+  right: 0;
+  background-color: var(--secondary-elevated);
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  min-width: 180px;
+  z-index: 20;
+}
+
+.menu-item {
+  padding: 12px 14px;
+  font-size: 15px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.menu-item:hover {
+  background-color: var(--accent-muted);
+}
+
+.menu-item.destructive {
+  color: var(--error);
+}
+
+.menu-item.destructive:hover {
+  background-color: var(--error-bg);
+}

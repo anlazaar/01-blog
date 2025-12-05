@@ -1,0 +1,14 @@
+<div class="menu-container">
+  <button class="menu-btn" (click)="toggle()">…</button>
+  @if (isOpen) {
+  <div class="menu-dropdown" isOpen>
+    @if (canReport) {
+    <div class="menu-item" (click)="report.emit(); isOpen = false">Report user</div>
+    } @if (canEdit) {
+    <div class="menu-item" (click)="update.emit(); isOpen = false">Update</div>
+    <div class="menu-item destructive" (click)="delete.emit(); isOpen = false">Delete</div>
+
+    }
+  </div>
+  }
+</div>
