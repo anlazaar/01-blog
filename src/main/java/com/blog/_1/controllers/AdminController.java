@@ -2,15 +2,13 @@ package com.blog._1.controllers;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import com.blog._1.dto.user.AdminUserDTO;
+import com.blog._1.dto.post.PostResponse; // Use your existing PostResponse!
 import com.blog._1.models.User;
 import com.blog._1.services.PostService;
 import com.blog._1.services.ReportService;
@@ -32,8 +30,15 @@ public class AdminController {
     // ====================
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<List<AdminUserDTO>> getAllUsers() {
+        List<User> users = userService.getAllUsers();
+
+        // Convert User Entity -> AdminUserDTO
+        List<AdminUserDTO> dtos = users.stream()
+                .map(AdminUserDTO::from)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
     }
 
     @PatchMapping("/users/{id}/ban")
@@ -41,6 +46,7 @@ public class AdminController {
         userService.banUser(id);
         return ResponseEntity.ok("User banned");
     }
+
 
     @DeleteMapping("/users/{id}")
     public ResponseEntity<String> deleteUser(@PathVariable UUID id) {
@@ -53,8 +59,12 @@ public class AdminController {
     // ====================
 
     @GetMapping("/posts")
-    public ResponseEntity<?> getAllPosts() {
-        return ResponseEntity.ok(postService.getAll());
+    public ResponseEntity<List<PostResponse>> getAllPosts() {
+        // Assuming postService.getAll() returns List<Post>
+        // We use your existing PostResponse.from() method
+
+        return ResponseEntity.ok(
+                postService.getAll());
     }
 
     // ====================
@@ -63,6 +73,8 @@ public class AdminController {
 
     @GetMapping("/reports")
     public ResponseEntity<?> getAllReports() {
+        // You might need a DTO for reports too if they cause recursion,
+        // but for now, let's see if the User/Post fix handles it.
         return ResponseEntity.ok(reportService.getAllReports());
     }
 

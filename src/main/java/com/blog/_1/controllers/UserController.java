@@ -77,20 +77,4 @@ public class UserController {
                         password, oldpassword, username)));
 
     }
-
-    // ========================
-    // Admin-only routes
-    // ========================
-
-    @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable UUID id) {
-        userService.deleteUser(id);
-        return ResponseEntity.ok("User deleted");
-    }
-
 }

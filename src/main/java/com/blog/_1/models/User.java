@@ -40,13 +40,28 @@ public class User extends BaseEntity {
     private boolean banned = false;
 
     // Followers / Following
-    @OneToMany(mappedBy = "follower")
+    @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Subscription> following;
 
-    @OneToMany(mappedBy = "following")
+    @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Subscription> followers;
 
-    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts;
+
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments;
+
+    // Optionnal if we want likes to be deleted too
+    // @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval =
+    // true)
+    // private List<PostLike> likes;
+
+    // Reports
+    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Report> reportsMade;
+
+    @OneToMany(mappedBy = "reportedUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Report> reportsAgainst;
 
 }
