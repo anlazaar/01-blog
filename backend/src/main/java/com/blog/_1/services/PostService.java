@@ -61,6 +61,27 @@ public class PostService {
         }
     }
 
+    public PostResponse patch(UUID postId, UUID userId, PostPatchRequest req) {
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        if (!post.getAuthor().getId().equals(userId)) {
+            throw new RuntimeException("You are not allowed to edit this post");
+        }
+
+        // Only apply values provided
+        if (req.getTitle() != null) {
+            post.setTitle(req.getTitle());
+        }
+        if (req.getDescription() != null) {
+            post.setDescription(req.getDescription());
+        }
+
+        Post updated = postRepository.save(post);
+        return PostResponse.from(updated);
+    }
+
     // Create Post
     public PostResponse create(String title, String description, String mediaType,
             MultipartFile mediaFile, UUID authorId) {

@@ -69,6 +69,16 @@ public class PostController {
         return ResponseEntity.ok().body(Map.of("res", "Post deleted successfully"));
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<PostResponse> patch(
+            @PathVariable UUID id,
+            @RequestBody PostPatchRequest request,
+            Authentication auth) {
+
+        UUID userId = UUID.fromString(auth.getName());
+        return ResponseEntity.ok(postService.patch(id, userId, request));
+    }
+
     // Get posts by user
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<PostResponse>> getByUser(@PathVariable UUID userId) {
