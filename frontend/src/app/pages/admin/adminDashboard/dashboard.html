@@ -1,170 +1,258 @@
-<div class="admin-container">
-  <div class="admin-header">
-    <h1>Admin Dashboard</h1>
-    <p>Manage users, content, and reports</p>
-  </div>
+<div class="admin-wrapper">
+  <header class="admin-page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Overview of platform activity</p>
+  </header>
 
-  <div class="dashboard-grid">
-    <!-- Sidebar / Tabs -->
-    <aside class="admin-sidebar">
-      <button class="tab-btn" [class.active]="activeTab === 'users'" (click)="switchTab('users')">
-        <fa-icon [icon]="faUsers"></fa-icon> Users
-      </button>
-      <button class="tab-btn" [class.active]="activeTab === 'posts'" (click)="switchTab('posts')">
-        <fa-icon [icon]="faNewspaper"></fa-icon> Posts
-      </button>
+  <div class="dashboard-layout">
+    <!-- Sidebar Navigation -->
+    <nav class="admin-nav">
+      <!-- NEW: Overview Tab -->
       <button
-        class="tab-btn"
+        class="nav-item"
+        [class.active]="activeTab === 'overview'"
+        (click)="switchTab('overview')"
+      >
+        <fa-icon [icon]="faChartLine" class="nav-icon"></fa-icon>
+        <span>Overview</span>
+      </button>
+
+      <button class="nav-item" [class.active]="activeTab === 'users'" (click)="switchTab('users')">
+        <fa-icon [icon]="faUsers" class="nav-icon"></fa-icon>
+        <span>People</span>
+      </button>
+
+      <button class="nav-item" [class.active]="activeTab === 'posts'" (click)="switchTab('posts')">
+        <fa-icon [icon]="faNewspaper" class="nav-icon"></fa-icon>
+        <span>Stories</span>
+      </button>
+
+      <button
+        class="nav-item"
         [class.active]="activeTab === 'reports'"
         (click)="switchTab('reports')"
       >
-        <fa-icon [icon]="faFlag"></fa-icon> Reports
+        <fa-icon [icon]="faFlag" class="nav-icon"></fa-icon>
+        <span>Reports</span>
       </button>
-    </aside>
+    </nav>
 
-    <!-- Content Area -->
-    <main class="admin-content">
-      <div *ngIf="message" class="alert-success">
+    <!-- Main Content -->
+    <main class="dashboard-content">
+      <!-- Feedback Message -->
+      @if (message) {
+      <div class="toast-message">
         {{ message }}
       </div>
-
-      <div *ngIf="isLoading" class="loading">Loading...</div>
-
-      <!-- USERS TAB -->
-      <div *ngIf="activeTab === 'users' && !isLoading" class="table-responsive">
-        <table class="sketch-table">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let user of users">
-              <td>
-                <div class="user-cell">
-                  <img
-                    [src]="
-                      user.avatarUrl
-                        ? 'http://localhost:8080' + user.avatarUrl
-                        : 'assets/default-avatar.png'
-                    "
-                    class="table-avatar"
-                  />
-
-                  <a [routerLink]="['/profile', user.id]">{{ user.username }}</a>
-                </div>
-              </td>
-              <td>{{ user.email }}</td>
-              <td>
-                <span class="badge">{{ user.role }}</span>
-              </td>
-              <td>
-                <span class="badge" [class.banned]="user.banned">
-                  {{ user.banned ? 'BANNED' : 'ACTIVE' }}
-                </span>
-              </td>
-              <td class="actions-cell">
-                <button
-                  *ngIf="!user.banned"
-                  (click)="banUser(user.id)"
-                  class="action-btn ban"
-                  title="Ban User"
-                >
-                  <fa-icon [icon]="faBan"></fa-icon>
-                </button>
-
-                <button
-                  *ngIf="user.banned"
-                  (click)="banUser(user.id)"
-                  class="action-btn unban"
-                  title="Unban User"
-                >
-                  <fa-icon [icon]="faCheck"></fa-icon>
-                </button>
-
-                <button (click)="deleteUser(user.id)" class="action-btn delete" title="Delete User">
-                  <fa-icon [icon]="faTrash"></fa-icon>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      } @if (isLoading) {
+      <div class="loading-state">
+        <div class="spinner"></div>
       </div>
+      }
 
-      <!-- POSTS TAB -->
-      <div *ngIf="activeTab === 'posts' && !isLoading" class="table-responsive">
-        <table class="sketch-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Author</th>
-              <th>Date</th>
-              <th>View</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let post of posts">
-              <td>{{ post.title }}</td>
-              <td>{{ post.author?.username }}</td>
-              <td>{{ post.createdAt | date : 'short' }}</td>
-              <td class="actions-cell">
-                <a [routerLink]="['/posts', post.id]" class="action-btn view">
-                  <fa-icon [icon]="faLink"></fa-icon>
-                </a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <!-- 1. OVERVIEW TAB (Analytics) -->
+      @if (activeTab === 'overview' && !isLoading && stats) {
+      <section class="overview-section">
+        <!-- Summary Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value">{{ stats.totalUsers }}</div>
+            <div class="stat-label">Total Users</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ stats.totalPosts }}</div>
+            <div class="stat-label">Published Stories</div>
+          </div>
+          <div class="stat-card" [class.warning]="stats.pendingReports > 0">
+            <div class="stat-value">{{ stats.pendingReports }}</div>
+            <div class="stat-label">Pending Reports</div>
+          </div>
+        </div>
 
-      <!-- REPORTS TAB -->
-      <div *ngIf="activeTab === 'reports' && !isLoading" class="table-responsive">
-        <table class="sketch-table">
-          <thead>
-            <tr>
-              <th>Reason</th>
-              <th>Reporter</th>
-              <th>Reported User</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let report of reports">
-              <td>{{ report.reason }}</td>
-              <td>{{ report.reporter?.username }}</td>
-              <td>
-                <a [routerLink]="['/profile', report.reportedUser?.id]">
-                  {{ report.reportedUser?.username }}
-                </a>
-              </td>
-              <td>
-                <span
-                  class="badge"
-                  [class.resolved]="report.resolved"
-                  [class.pending]="!report.resolved"
-                >
-                  {{ report.resolved ? 'RESOLVED' : 'PENDING' }}
-                </span>
-              </td>
-              <td class="actions-cell">
-                <button
-                  *ngIf="!report.resolved"
-                  (click)="resolveReport(report.id)"
-                  class="action-btn resolve"
-                  title="Mark Resolved"
-                >
-                  <fa-icon [icon]="faCheck"></fa-icon>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <!-- Charts Row -->
+        <!-- Charts Row -->
+        <div class="charts-grid">
+          <div class="chart-container">
+            <h3>User Growth (Last 7 Days)</h3>
+            <div class="canvas-wrapper">
+              <canvas baseChart [data]="lineChartData" [options]="lineChartOptions" [type]="'line'">
+              </canvas>
+            </div>
+          </div>
+          <div class="chart-container">
+            <h3>Stories Created (Last 7 Days)</h3>
+            <div class="canvas-wrapper">
+              <!-- FIX: Use [options]="barChartOptions" here -->
+              <canvas baseChart [data]="postChartData" [options]="barChartOptions" [type]="'bar'">
+              </canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+      }
+
+      <!-- 2. USERS TAB -->
+      @if (activeTab === 'users' && !isLoading) {
+      <section class="data-section">
+        <div class="table-container">
+          <table class="clean-table">
+            <thead>
+              <tr>
+                <th class="col-user">User</th>
+                <th class="col-role">Role</th>
+                <th class="col-status">Status</th>
+                <th class="col-actions"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of users; track user) {
+              <tr [class.row-banned]="user.banned">
+                <td>
+                  <div class="user-info-cell">
+                    <img
+                      [src]="
+                        'http://localhost:8080' + user.avatarUrl || 'assets/default-avatar.png'
+                      "
+                      class="cell-avatar"
+                      onerror="this.src='assets/default-avatar.png'"
+                    />
+                    <div class="text-stack">
+                      <a [routerLink]="['/profile', user.id]" class="cell-name">{{
+                        user.username
+                      }}</a>
+                      <span class="cell-email">{{ user.email }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="role-badge">{{ user.role | titlecase }}</span>
+                </td>
+                <td>
+                  <span
+                    class="status-dot"
+                    [class.active]="!user.banned"
+                    [class.banned]="user.banned"
+                  ></span>
+                  <span class="status-text">{{ user.banned ? 'Suspended' : 'Active' }}</span>
+                </td>
+                <td class="cell-actions">
+                  <div class="action-buttons">
+                    <button
+                      (click)="banUser(user.id)"
+                      class="icon-btn"
+                      [title]="user.banned ? 'Unban User' : 'Ban User'"
+                      [class.destructive]="!user.banned"
+                    >
+                      <fa-icon [icon]="user.banned ? faCheck : faBan"></fa-icon>
+                    </button>
+                    <button
+                      (click)="deleteUser(user.id)"
+                      class="icon-btn destructive"
+                      title="Delete User"
+                    >
+                      <fa-icon [icon]="faTrash"></fa-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+      }
+
+      <!-- 3. POSTS TAB -->
+      @if (activeTab === 'posts' && !isLoading) {
+      <section class="data-section">
+        <div class="table-container">
+          <table class="clean-table">
+            <thead>
+              <tr>
+                <th class="col-wide">Title</th>
+                <th>Author</th>
+                <th>Date</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (post of posts; track post) {
+              <tr>
+                <td>
+                  <span class="post-title-cell" title="{{ post.title }}">{{ post.title }}</span>
+                </td>
+                <td>
+                  <a [routerLink]="['/profile', post.author?.id]" class="cell-link">
+                    {{ post.author?.username }}
+                  </a>
+                </td>
+                <td class="cell-meta">{{ post.createdAt | date : 'MMM d' }}</td>
+                <td class="cell-actions">
+                  <a [routerLink]="['/posts', post.id]" class="icon-btn" title="View Story">
+                    <fa-icon [icon]="faLink"></fa-icon>
+                  </a>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+      }
+
+      <!-- 4. REPORTS TAB -->
+      @if (activeTab === 'reports' && !isLoading) {
+      <section class="data-section">
+        <div class="table-container">
+          <table class="clean-table">
+            <thead>
+              <tr>
+                <th>Report Details</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (report of reports; track report) {
+              <tr>
+                <td>
+                  <div class="report-cell">
+                    <span class="report-reason">{{ report.reason }}</span>
+                    <div class="report-meta">
+                      Reported by <strong>{{ report.reporter?.username }}</strong> against
+                      <a [routerLink]="['/profile', report.reportedUser?.id]">
+                        @{{ report.reportedUser?.username }}
+                      </a>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span
+                    class="status-badge"
+                    [class.pending]="!report.resolved"
+                    [class.resolved]="report.resolved"
+                  >
+                    {{ report.resolved ? 'Resolved' : 'Review Needed' }}
+                  </span>
+                </td>
+                <td class="cell-actions">
+                  @if (!report.resolved) {
+                  <button
+                    (click)="resolveReport(report.id)"
+                    class="icon-btn success"
+                    title="Mark Resolved"
+                  >
+                    <fa-icon [icon]="faCheck"></fa-icon>
+                  </button>
+                  }
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+      }
     </main>
   </div>
 </div>

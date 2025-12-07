@@ -1,23 +1,42 @@
-<div class="report-container">
-  <h1>Report Post</h1>
+<div class="report-layout">
+  <div class="report-container">
+    <h1>Report Post</h1>
+    <p class="subtitle">Help us understand what's happening with this post.</p>
 
-  <div class="input-group">
-    <label>Select a reason</label>
-    <select [(ngModel)]="reason">
-      <option value="" disabled selected>Select a reason</option>
-      <option value="spam">Spam</option>
-      <option value="harassment">Harassment</option>
-      <option value="hate-speech">Hate Speech</option>
-      <option value="nsfw">NSFW / Inappropriate</option>
-      <option value="violence">Violence</option>
-      <option value="other">Other</option>
-    </select>
+    <!-- Reason Select -->
+    <div class="input-group">
+      <label>What is the issue?</label>
+      <div class="select-wrapper">
+        <select [(ngModel)]="reason">
+          <option value="" disabled selected>Select a reason</option>
+          <option value="spam">It's spam</option>
+          <option value="harassment">Harassment or bullying</option>
+          <option value="hate-speech">Hate speech</option>
+          <option value="nsfw">Nudity or sexual activity</option>
+          <option value="violence">Violence or dangerous organizations</option>
+          <option value="other">Something else</option>
+        </select>
+        <!-- Custom arrow icon for better styling -->
+        <span class="arrow-down">▼</span>
+      </div>
+    </div>
+
+    <!-- Description Textarea -->
+    <div class="input-group">
+      <label>Additional details (Optional)</label>
+      <textarea
+        placeholder="Please provide any specific details..."
+        [(ngModel)]="description"
+        rows="4"
+      ></textarea>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="main-btn" (click)="submitReport()" [disabled]="!reason">Submit Report</button>
+
+      <!-- Optional: Add a cancel/back button if this is a page -->
+      <a routerLink="/" class="cancel-link">Cancel</a>
+    </div>
   </div>
-
-  <div class="input-group">
-    <label>Additional details (optional)</label>
-    <textarea placeholder="Describe the issue..." [(ngModel)]="description"></textarea>
-  </div>
-
-  <button class="main-btn" (click)="submitReport()" [disabled]="!reason">Submit Report</button>
 </div>

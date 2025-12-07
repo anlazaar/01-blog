@@ -1,82 +1,117 @@
-/* Overlay background */
+/* --- Overlay --- */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(3px);
+  /* Medium uses a very white/clean overlay or a subtle dim */
+  background: rgba(255, 255, 255, 0.95);
+  /* If in dark mode, this might need a dark semi-transparent bg, 
+     but based on the variables provided, we use a glass effect */
+  backdrop-filter: blur(5px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
+  animation: fadeIn 0.2s ease-out;
 }
 
-/* Dialog box */
+/* --- Dialog Box --- */
 .dialog {
-  background: var(--card);
-  border: 2px solid var(--border);
+  background: var(--background);
+  /* Minimal border matching the global input/divider styles */
+  border: 1px solid var(--border);
+  /* Soft elegant shadow, no harsh offsets */
   box-shadow: var(--shadow-lg);
-  padding: 24px;
-  width: 320px;
-  max-width: 90%;
+  padding: 40px; /* Generous padding for a clean look */
+  width: 100%;
+  max-width: 380px;
   text-align: center;
+  border-radius: 8px; /* Subtle rounding for the card itself */
 
-  transform: translate(0, 0);
-  transition: transform var(--transition-medium), box-shadow var(--transition-medium);
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+
+  /* Initial Animation State */
+  animation: scaleIn 0.2s ease-out;
 }
 
-.dialog:hover {
-  transform: translate(-4px, -4px);
-  box-shadow: 6px 6px 0 var(--border);
-}
-
-/* Text */
-.dialog p {
-  margin-bottom: 20px;
+/* --- Typography --- */
+.dialog-content p {
+  margin: 0;
   color: var(--text-primary);
-  font-size: 15px;
+  /* UI elements in Medium are usually Sans-Serif, unlike the body text */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
 }
 
-/* Buttons container */
+/* --- Buttons Container --- */
 .buttons {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   gap: 12px;
+  width: 100%;
 }
 
-/* Cancel button */
-.cancel {
+/* --- Common Button Styles --- */
+.buttons button {
   flex: 1;
-  padding: 10px;
-  background: var(--secondary-elevated);
-  border: 2px solid var(--border);
-  color: var(--text-primary);
-  box-shadow: var(--shadow);
+  padding: 10px 24px;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 400;
   cursor: pointer;
-  transition: var(--transition-fast);
+  border-radius: 9999px; /* Pill shape matching global styles */
+  transition: all 0.2s ease;
+  height: 42px; /* Consistent height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Cancel (Secondary) --- */
+.cancel {
+  background: transparent;
+  border: 1px solid var(--text-primary); /* Thin subtle border */
+  color: var(--text-primary);
 }
 
 .cancel:hover {
-  background: var(--hover-overlay);
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--border);
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
 }
 
-/* Confirm button */
+/* --- Confirm (Primary) --- */
 .confirm {
-  flex: 1;
-  padding: 10px;
-  background: var(--accent-muted);
-  border: 2px solid var(--accent);
-  color: var(--accent);
-  font-weight: bold;
-  box-shadow: var(--shadow-accent);
-  cursor: pointer;
-  transition: var(--transition-fast);
+  background: var(--text-primary); /* Solid Black (or Dark Grey in Dark mode) */
+  border: 1px solid var(--text-primary);
+  color: var(--background); /* Inverted text */
 }
 
 .confirm:hover {
-  background: var(--accent-hover);
-  color: var(--text-inverse);
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--accent);
+  opacity: 0.8;
+  /* No transform/movement on hover, purely opacity for minimalism */
+}
+
+/* --- Animations --- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

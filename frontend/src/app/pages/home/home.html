@@ -1,74 +1,84 @@
-<!-- Instead of @if (!loading) -->
-<div *ngIf="!loading">
-  <!-- If Admin -->
-  <app-add-post *ngIf="showAddPost" (close)="toggleAddPost()"></app-add-post>
-
-  <!-- Blog Header -->
-  <div class="blogs-header">
-    <h1>Our Blogs</h1>
-
-    <div class="search-bar-container">
-      <input type="text" placeholder="Search blogs..." class="search-input" />
-      @if (currentUserId) {
-      <button class="main-btn" (click)="toggleAddPost()">Add Post</button>
-      }
-    </div>
-  </div>
-
-  <!-- Posts Section -->
-  <div *ngIf="posts.length != 0; else noPosts">
-    <div class="blogs-grid">
-      <div class="blog-card" *ngFor="let p of posts; let i = index">
-        <div class="post-header">
-          <p class="blog-info">{{ p.author.username }}</p>
-          @if (currentUserId) {
-          <app-post-options-menu
-            [canEdit]="currentUserId == p.author.id"
-            [canReport]="currentUserId != p.author.id"
-            class="post-menu"
-            (update)="onUpdate(p)"
-            (delete)="onDelete(p)"
-            (report)="onReport(p.author.id)"
-          >
-          </app-post-options-menu>
-          }
+@if (!loading) {
+<div class="feed-container">
+  <!-- Feed Header -->
+  <div class="feed-header">
+    <div class="header-content">
+      <h1>For you</h1>
+      <div class="header-actions">
+        <!-- Minimal Search -->
+        <div class="search-wrapper">
+          <input type="text" placeholder="Search..." class="search-input" />
         </div>
-
-        <div [routerLink]="['/posts', p.id]">
-          <ng-container *ngIf="p.mediaUrl">
-            <img
-              *ngIf="p.mediaType === 'IMAGE'"
-              class="blog-image"
-              [src]="'http://localhost:8080' + p.mediaUrl"
-              alt="Blog image"
-            />
-            <video
-              *ngIf="p.mediaType === 'VIDEO'"
-              class="blog-image"
-              [src]="'http://localhost:8080' + p.mediaUrl"
-              controls
-            ></video>
-          </ng-container>
-
-          <div class="blog-info">
-            <p class="meta">Insight • {{ p.createdAt | date }}</p>
-            <h2 class="blog-title">{{ p.title }}</h2>
-          </div>
-        </div>
+        <!-- FIX: Use an Anchor tag for navigation -->
+        @if (currentUserId) {
+        <a routerLink="new-story" class="write-btn">Write</a>
+        }
       </div>
     </div>
   </div>
-
-  <ng-template #noPosts>
-    <div><h2>No Post Yet!</h2></div>
-  </ng-template>
+  <!-- Posts Feed -->
+  @if (posts.length > 0) {
+  <div class="posts-list">
+    @for (p of posts; track p) {
+    <article class="post-item">
+      <!-- Post Header -->
+      <div class="post-meta-header">
+        <div class="author-info" [routerLink]="['/profile', p.author.id]">
+          <div class="author-avatar-placeholder">
+            {{ p.author.username.charAt(0) | uppercase }}
+          </div>
+          <span class="author-name">{{ p.author.username }}</span>
+          <span class="separator">·</span>
+          <span class="post-date">{{ p.createdAt | date : 'MMM d' }}</span>
+        </div>
+        <!-- Options Menu -->
+        @if (currentUserId) {
+        <app-post-options-menu
+          [canEdit]="currentUserId == p.author.id"
+          [canReport]="currentUserId != p.author.id"
+          (update)="onUpdate(p)"
+          (delete)="onDelete(p)"
+          (report)="onReport(p.author.id)"
+        ></app-post-options-menu>
+        }
+      </div>
+      <!-- Post Content -->
+      <div class="post-content" [routerLink]="['/posts', p.id]">
+        <div class="post-text">
+          <h2 class="post-title">{{ p.title }}</h2>
+          <!-- <div class="post-footer-meta">
+            <span class="read-time">3 min read</span>
+          </div> -->
+        </div>
+        <!-- Media -->
+        @if (p.mediaUrl) {
+        <div class="post-media">
+          @if (p.mediaType === 'IMAGE') {
+          <img [src]="'http://localhost:8080' + p.mediaUrl" alt="Cover" />
+          } @if (p.mediaType === 'VIDEO') {
+          <video [src]="'http://localhost:8080' + p.mediaUrl" controls muted></video>
+          }
+        </div>
+        }
+      </div>
+      <div class="post-divider"></div>
+    </article>
+    }
+  </div>
+  } @else {
+  <div class="empty-state">
+    <h2>No stories yet.</h2>
+    <p>Write the first one!</p>
+  </div>
+  }
 </div>
-
-<div *ngIf="loading" class="loading">Loading posts...</div>
+} @if (loading) {
+<div class="loading-state">Loading...</div>
+}
 
 <app-confirm-dialog
   [show]="showConfirm"
-  message="Are you sure you want to delete this post?"
+  message="Delete this story?"
   (confirm)="confirmDelete()"
   (cancel)="cancelDelete()"
 >

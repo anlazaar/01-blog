@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -11,7 +11,7 @@ import { TokenService } from '../../services/token.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, FontAwesomeModule, ...MaterialImports],
+  imports: [ReactiveFormsModule, RouterModule, FontAwesomeModule, ...MaterialImports],
   providers: [ApiService],
   templateUrl: './login.html',
   styleUrls: ['./login.css'],

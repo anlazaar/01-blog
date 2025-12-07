@@ -1,9 +1,8 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 import { PostService } from '../../services/post.service';
 import { TokenService } from '../../services/token.service';
-import { CommonModule } from '@angular/common';
-import { AddPost } from './add-post/add-post';
-import { Router, RouterLink } from '@angular/router';
 import { PostResponse } from '../../models/global.model';
 import { PostOptionsMenuComponent } from '../../share/PostOptionsMenu/post-options-menu';
 import { ConfirmDialogComponent } from '../../share/ConfirmDialogComponent/confirm-dialog';
@@ -11,59 +10,53 @@ import { ConfirmDialogComponent } from '../../share/ConfirmDialogComponent/confi
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, AddPost, RouterLink, PostOptionsMenuComponent, ConfirmDialogComponent],
+  // Removed AddPost from here
+  imports: [CommonModule, PostOptionsMenuComponent, ConfirmDialogComponent, RouterLink],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
-export class Home {
+export class Home implements OnInit {
   posts: PostResponse[] = [];
   loading = false;
   isAdmin = false;
   token: string | null = '';
   currentUserId: string | null = '';
+
   showConfirm = false;
   postToDelete: PostResponse | null = null;
-  showReport = false;
-  postToReport: PostResponse | null = null;
 
-  showAddPost = false;
-  router = inject(Router);
-
-  constructor(private postService: PostService, private tokenService: TokenService) {}
+  // Dependency Injection
+  private postService = inject(PostService);
+  private tokenService = inject(TokenService);
+  private router = inject(Router);
 
   ngOnInit(): void {
     this.token = this.tokenService.getToken();
     this.isAdmin = this.tokenService.isAdmin();
     this.currentUserId = this.tokenService.getUUID();
+    this.loadPosts();
+  }
 
+  loadPosts() {
+    this.loading = true;
     this.postService.getAllPosts().subscribe({
       next: (data) => {
         this.posts = data;
-        console.log('POSTS', data);
+        this.loading = false;
       },
       error: (err) => {
-        console.log(err);
+        console.error(err);
         this.loading = false;
       },
     });
-  }
-
-  toggleAddPost() {
-    this.showAddPost = !this.showAddPost;
   }
 
   onReport(id: string) {
     this.router.navigate(['/report', id]);
   }
 
-  cancelReport() {
-    this.showReport = false;
-    this.postToReport = null;
-  }
-
   onUpdate(post: PostResponse) {
     console.log('Update Post', post.id);
-    // this.router.navigate(['/update', post.id]);
   }
 
   onDelete(p: PostResponse) {

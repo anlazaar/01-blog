@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -8,7 +8,7 @@ import { UserService } from '../../services/UserService';
 @Component({
   selector: 'app-completeProfile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, FontAwesomeModule],
+  imports: [ReactiveFormsModule, RouterModule, FontAwesomeModule],
   providers: [UserService],
   templateUrl: './completeProfile.html',
   styleUrl: './completeProfile.css',

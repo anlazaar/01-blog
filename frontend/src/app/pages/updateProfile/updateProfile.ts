@@ -1,17 +1,15 @@
-import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { UserService } from '../../services/UserService';
-import { UserPublicProfile } from '../../models/global.model';
-import { switchMap } from 'rxjs';
 import { UserResponse } from '../../models/USER/UserResponse';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-updateprofile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, FontAwesomeModule],
+  imports: [ReactiveFormsModule, RouterModule, FontAwesomeModule, CommonModule],
   providers: [UserService],
   templateUrl: './updateProfile.html',
   styleUrl: './updateProfile.css',
@@ -55,8 +53,8 @@ export class UpdateProfile {
       this.fileError = 'Only images are allowed.';
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      // 5 MB limit
+    if (file.size > 20 * 1024 * 1024) {
+      // 20 MB limit
       this.fileError = 'File is too large. Max 5MB.';
       return;
     }

@@ -1,60 +1,75 @@
-<div class="login-page">
-  <div class="login-container">
+<div class="auth-page">
+  <div class="auth-container">
+    <!-- Header -->
+    <div class="auth-header">
+      <h1>Welcome back.</h1>
+      <p>Sign in to your account to continue writing.</p>
+    </div>
+
+    <!-- Social Login -->
+    <div class="social-login">
+      <button class="social-btn google">
+        <fa-icon [icon]="faGoogle"></fa-icon>
+        <span>Sign in with Google</span>
+      </button>
+      <button class="social-btn github">
+        <fa-icon [icon]="faGithub"></fa-icon>
+        <span>Sign in with GitHub</span>
+      </button>
+    </div>
+
+    <div class="divider">or</div>
+
+    <!-- Form -->
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <div class="title">
-        <h1>Login to your account</h1>
-        <p>Login to your account using github or google, or email and password</p>
-      </div>
-
-      <div class="social-login">
-        <button class="social-btn google">
-          <fa-icon [icon]="faGoogle"></fa-icon>
-          <span>Google</span>
-        </button>
-        <button class="social-btn github">
-          <fa-icon [icon]="faGithub"></fa-icon>
-          <span>GitHub</span>
-        </button>
-      </div>
-      <div class="divider">OR</div>
-
       <div class="input-group">
         <label>Email</label>
-        <input type="email" formControlName="email" />
+        <input type="email" formControlName="email" placeholder="name@example.com" />
 
-        <div
-          class="error"
-          *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
-        >
-          <small *ngIf="loginForm.get('email')?.errors?.['required']">Email is required.</small>
-          <small *ngIf="loginForm.get('email')?.errors?.['email']">Invalid email format.</small>
-        </div>
+        <!-- Error Messages -->
+        @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
+          <div
+            class="error-msg"
+            >
+            @if (loginForm.get('email')?.errors?.['required']) {
+              <small>Email is required.</small>
+            }
+            @if (loginForm.get('email')?.errors?.['email']) {
+              <small>Invalid email format.</small>
+            }
+          </div>
+        }
       </div>
 
       <div class="input-group">
         <label>Password</label>
         <input type="password" formControlName="password" placeholder="••••••••" />
 
-        <div
-          class="error"
-          *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
-        >
-          <small *ngIf="loginForm.get('password')?.errors?.['required']"
-            >Password is required.</small
-          >
-          <small *ngIf="loginForm.get('password')?.errors?.['minlength']">
-            Password must be at least 6 characters.
-          </small>
+        @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
+          <div
+            class="error-msg"
+            >
+            @if (loginForm.get('password')?.errors?.['required']) {
+              <small
+                >Password is required.</small
+                >
+              }
+            </div>
+          }
         </div>
-      </div>
 
-      <div class="error">
-        {{ errorMessage }}
-      </div>
+        <!-- General Error -->
+        @if (errorMessage) {
+          <div class="global-error">
+            {{ errorMessage }}
+          </div>
+        }
 
-      <button class="main-btn" type="submit" [disabled]="loginForm.invalid">Login</button>
+        <!-- Submit -->
+        <button class="submit-btn" type="submit" [disabled]="loginForm.invalid">Sign in</button>
 
-      <div class="footer">Don't have an account? <a routerLink="../register">Sign up</a></div>
-    </form>
+        <!-- Footer -->
+        <div class="auth-footer">No account? <a routerLink="/auth/register">Create one</a></div>
+      </form>
+    </div>
   </div>
-</div>

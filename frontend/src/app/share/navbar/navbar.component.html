@@ -1,78 +1,82 @@
 <nav class="navbar">
   <div class="navbar-container">
-    <!-- Logo -->
+    <!-- Logo: Editorial Style -->
     <a routerLink="/" class="navbar-brand" (click)="closeMobileMenu()">
-      <span class="brand-prefix">01</span>
-      <span class="brand-separator">-</span>
-      <span class="brand-name">blog</span>
+      <!-- We can keep the spans, but style them to look like one word or a logo -->
+      <span class="brand-logo">01</span>
+      <span class="brand-name">Blog</span>
     </a>
 
-    <!-- Desktop  -->
+    <!-- Desktop Menu -->
     <div class="navbar-desktop">
       <div class="navbar-actions">
+        <!-- Theme Toggle -->
         <app-theme-toggle></app-theme-toggle>
 
-        <ng-container *ngIf="!isLoggedIn">
-          <a routerLink="/auth/login" class="nav-link">Login</a>
-          <a routerLink="/auth/register" class="nav-btn primary">Register</a>
-        </ng-container>
+        <!-- Guest View -->
+        @if (!isLoggedIn) {
+          <a routerLink="/auth/login" class="nav-link">Sign in</a>
+          <a routerLink="/auth/register" class="nav-btn primary">Get started</a>
+        }
 
-        <ng-container *ngIf="isLoggedIn">
-          <img
-            [src]="avatarUrl"
-            class="nav-avatar"
-            [routerLink]="['/profile', userId]"
-            [alt]="username"
-            [aria-placeholder]="username"
-          />
-          <p style="text-align: center">{{ username }}</p>
-          <button (click)="logout()" class="nav-btn logout">Logout</button>
-        </ng-container>
+        <!-- Logged In View -->
+        @if (isLoggedIn) {
+          <!-- We usually hide the username text on desktop for a cleaner look -->
+          <div class="user-menu-trigger">
+            <img
+              [src]="avatarUrl"
+              class="nav-avatar"
+              [routerLink]="['/profile', userId]"
+              [alt]="username"
+              />
+            </div>
+            <button (click)="logout()" class="nav-link logout">Sign out</button>
+          }
+        </div>
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <div class="navbar-mobile-controls">
+        <app-theme-toggle></app-theme-toggle>
+        <button
+          class="hamburger"
+          (click)="toggleMobileMenu()"
+          [class.active]="isMobileMenuOpen"
+          aria-label="Toggle menu"
+          >
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
       </div>
     </div>
 
-    <!-- Mobile Menu Button -->
-    <div class="navbar-mobile-controls">
-      <app-theme-toggle></app-theme-toggle>
-      <button
-        class="hamburger"
-        (click)="toggleMobileMenu()"
-        [class.active]="isMobileMenuOpen"
-        aria-label="Toggle menu"
-      >
-        <span class="hamburger-line"></span>
-        <span class="hamburger-line"></span>
-        <span class="hamburger-line"></span>
-      </button>
-    </div>
-  </div>
+    <!-- Mobile Menu Dropdown -->
+    <div class="mobile-menu" [class.open]="isMobileMenuOpen">
+      <div class="mobile-menu-content">
+        @if (!isLoggedIn) {
+          <a routerLink="/auth/login" class="mobile-link" (click)="closeMobileMenu()">Sign in</a>
+          <a routerLink="/auth/register" class="mobile-link primary" (click)="closeMobileMenu()"
+            >Get started</a
+            >
+          }
 
-  <!-- Mobile Menu -->
-  <div class="mobile-menu" [class.open]="isMobileMenuOpen">
-    <div class="mobile-menu-content">
-      <ng-container *ngIf="!isLoggedIn">
-        <a routerLink="/login" class="mobile-link" (click)="closeMobileMenu()">Login</a>
-        <a routerLink="/register" class="mobile-link primary" (click)="closeMobileMenu()"
-          >Register</a
-        >
-      </ng-container>
+          @if (isLoggedIn) {
+            <div
+              class="mobile-user-profile"
+              [routerLink]="['/profile', userId]"
+              (click)="closeMobileMenu()"
+              >
+              @if (avatarUrl) {
+                <img [src]="avatarUrl" class="mobile-avatar" [alt]="username" />
+              }
+              <span class="mobile-username">{{ username }}</span>
+            </div>
+            <button (click)="logout()" class="mobile-link logout">Sign out</button>
+          }
+        </div>
+      </div>
+    </nav>
 
-      <ng-container *ngIf="isLoggedIn">
-        <!-- <button routerLink="/profile" style="cursor: pointer"> -->
-        <img
-          *ngIf="avatarUrl"
-          [src]="avatarUrl"
-          class="mobile-avatar"
-          [alt]="username"
-          [routerLink]="['/profile', userId]"
-        />
-        <p style="text-align: center">{{ username }}</p>
-        <!-- </button> -->
-        <button (click)="logout()" class="mobile-link logout">Logout</button>
-      </ng-container>
-    </div>
-  </div>
-</nav>
-
-<!-- Overlay for mobile menu -->
-<div class="mobile-overlay" [class.visible]="isMobileMenuOpen" (click)="closeMobileMenu()"></div>
+    <!-- Overlay -->
+    <div class="mobile-overlay" [class.visible]="isMobileMenuOpen" (click)="closeMobileMenu()"></div>
