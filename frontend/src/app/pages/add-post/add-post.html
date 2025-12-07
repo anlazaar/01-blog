@@ -1,0 +1,198 @@
+<div class="editor-layout">
+  <nav class="editor-nav">
+    <div class="nav-left">
+      <a routerLink="/" class="back-link">
+        <fa-icon [icon]="faArrowLeft"></fa-icon> <span>Back to feed</span>
+      </a>
+      <span class="draft-status">Draft in {{ postForm.get('title')?.value || 'Untitled' }}</span>
+    </div>
+
+    <!-- Publish Action Area -->
+    <div class="nav-right">
+      @if (!isSubmitting) {
+      <button
+        class="publish-btn"
+        (click)="onSubmit()"
+        [disabled]="postForm.invalid || editorMediaLoading"
+      >
+        Publish
+      </button>
+      } @if (isSubmitting) {
+      <div class="publishing-status">
+        <span class="status-text">Publishing {{ uploadProgress }}%</span>
+        <div class="progress-track">
+          <div class="progress-fill" [style.width.%]="uploadProgress"></div>
+        </div>
+      </div>
+      }
+    </div>
+  </nav>
+
+  <div class="editor-container">
+    @if (errorMessage) {
+    <div class="error-banner">
+      {{ errorMessage }}
+    </div>
+    }
+
+    <!-- Disable form while uploading -->
+    <form [formGroup]="postForm" [class.disabled-form]="isSubmitting || editorMediaLoading">
+      <!-- Cover Image -->
+      <div class="cover-image-area">
+        @if (!coverPreviewUrl) {
+        <button type="button" class="add-cover-btn" (click)="triggerFileInput()">
+          <fa-icon [icon]="faImage"></fa-icon> Add a cover image
+        </button>
+        } @else {
+        <div class="cover-preview">
+          <img [src]="coverPreviewUrl" alt="Cover" />
+          <button type="button" class="remove-cover-btn" (click)="removeCover()">×</button>
+        </div>
+        }
+        <!-- Cover Upload Input -->
+        <input
+          type="file"
+          id="cover-upload"
+          hidden
+          (change)="onFileSelected($event)"
+          accept="image/*"
+        />
+      </div>
+
+      <!-- Title -->
+      <textarea
+        class="title-input"
+        placeholder="Title"
+        formControlName="title"
+        rows="1"
+        (input)="autoResize($event)"
+      ></textarea>
+
+      <!-- HIDDEN INPUTS FOR EDITOR CONTENT -->
+      <input
+        type="file"
+        id="editor-image-upload"
+        hidden
+        accept="image/*"
+        (change)="onEditorFileSelected($event, 'image')"
+      />
+      <input
+        type="file"
+        id="editor-video-upload"
+        hidden
+        accept="video/*"
+        (change)="onEditorFileSelected($event, 'video')"
+      />
+
+      <!-- TIPTAP TOOLBAR -->
+      @if (editor) {
+      <div class="tiptap-toolbar">
+        <!-- Formatting -->
+        <button
+          type="button"
+          (click)="editor.chain().focus().toggleBold().run()"
+          [class.is-active]="editor.isActive('bold')"
+        >
+          <fa-icon [icon]="faBold"></fa-icon>
+        </button>
+        <button
+          type="button"
+          (click)="editor.chain().focus().toggleItalic().run()"
+          [class.is-active]="editor.isActive('italic')"
+        >
+          <fa-icon [icon]="faItalic"></fa-icon>
+        </button>
+        <button
+          type="button"
+          (click)="editor.chain().focus().toggleStrike().run()"
+          [class.is-active]="editor.isActive('strike')"
+        >
+          <fa-icon [icon]="faStrike"></fa-icon>
+        </button>
+        <button type="button" (click)="setLink()" [class.is-active]="editor.isActive('link')">
+          <fa-icon [icon]="faLink"></fa-icon>
+        </button>
+
+        <div class="separator"></div>
+
+        <!-- Headings & Blocks -->
+        <button
+          type="button"
+          (click)="editor.chain().focus().toggleHeading({ level: 2 }).run()"
+          [class.is-active]="editor.isActive('heading', { level: 2 })"
+        >
+          <fa-icon [icon]="faHeading"></fa-icon>
+        </button>
+        <button
+          type="button"
+          (click)="editor.chain().focus().toggleBlockquote().run()"
+          [class.is-active]="editor.isActive('blockquote')"
+        >
+          <fa-icon [icon]="faQuote"></fa-icon>
+        </button>
+        <button
+          type="button"
+          (click)="editor.chain().focus().toggleCodeBlock().run()"
+          [class.is-active]="editor.isActive('codeBlock')"
+        >
+          <fa-icon [icon]="faCode"></fa-icon>
+        </button>
+
+        <div class="separator"></div>
+
+        <!-- MEDIA BUTTONS (NEW) -->
+        <button type="button" (click)="triggerEditorImageInput()" title="Insert Image">
+          <fa-icon [icon]="faImage"></fa-icon>
+        </button>
+        <button type="button" (click)="triggerEditorVideoInput()" title="Insert Video">
+          <fa-icon [icon]="faVideo"></fa-icon>
+        </button>
+
+        <div class="separator"></div>
+
+        <!-- Lists -->
+        <button
+          type="button"
+          (click)="editor.chain().focus().toggleBulletList().run()"
+          [class.is-active]="editor.isActive('bulletList')"
+        >
+          <fa-icon [icon]="faListUl"></fa-icon>
+        </button>
+        <button
+          type="button"
+          (click)="editor.chain().focus().toggleOrderedList().run()"
+          [class.is-active]="editor.isActive('orderedList')"
+        >
+          <fa-icon [icon]="faListOl"></fa-icon>
+        </button>
+        <button type="button" (click)="editor.chain().focus().setHorizontalRule().run()">
+          <fa-icon [icon]="faMinus"></fa-icon>
+        </button>
+
+        <div class="separator"></div>
+
+        <!-- History -->
+        <button
+          type="button"
+          (click)="editor.chain().focus().undo().run()"
+          [disabled]="!editor.can().undo()"
+        >
+          <fa-icon [icon]="faUndo"></fa-icon>
+        </button>
+        <button
+          type="button"
+          (click)="editor.chain().focus().redo().run()"
+          [disabled]="!editor.can().redo()"
+        >
+          <fa-icon [icon]="faRedo"></fa-icon>
+        </button>
+      </div>
+      }
+
+      <!-- TIPTAP EDITOR -->
+      <div class="tiptap-container" [class.loading]="editorMediaLoading">
+        <tiptap-editor [editor]="editor"></tiptap-editor>
+      </div>
+    </form>
+  </div>
+</div>

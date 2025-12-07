@@ -25,27 +25,32 @@
           rows="4"
         ></textarea>
 
-        <div
-          class="error"
-          *ngIf="publicInfoForm.get('bio')?.touched && publicInfoForm.get('bio')?.invalid"
-        >
-          <small>Bio is required.</small>
-        </div>
+        @if (publicInfoForm.get('bio')?.touched && publicInfoForm.get('bio')?.invalid) {
+          <div
+            class="error"
+            >
+            <small>Bio is required.</small>
+          </div>
+        }
       </div>
 
       <div class="input-group">
         <label>Profile Image</label>
         <input type="file" (change)="onFileSelected($event)" accept="image/*" />
 
-        <div class="avatar-preview" *ngIf="avatarPreview">
-          <img [src]="avatarPreview" alt="Avatar Preview" />
-        </div>
+        @if (avatarPreview) {
+          <div class="avatar-preview">
+            <img [src]="avatarPreview" alt="Avatar Preview" />
+          </div>
+        }
 
-        <div class="error" *ngIf="fileError">
-          <small>{{ fileError }}</small>
-        </div>
+        @if (fileError) {
+          <div class="error">
+            <small>{{ fileError }}</small>
+          </div>
+        }
       </div>
-      
+
 
       <button class="main-btn" type="submit" [disabled]="publicInfoForm.invalid">
         Save Profile

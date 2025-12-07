@@ -1,73 +1,99 @@
-<div class="login-page">
-  <div class="login-container">
+<div class="auth-page">
+  <div class="auth-container">
+    <!-- Header -->
+    <div class="auth-header">
+      <h1>Join the community.</h1>
+      <p>Create an account to start sharing your stories.</p>
+    </div>
+
+    <!-- Social Login -->
+    <div class="social-login">
+      <button class="social-btn google">
+        <fa-icon [icon]="faGoogle"></fa-icon>
+        <span>Sign up with Google</span>
+      </button>
+      <button class="social-btn github">
+        <fa-icon [icon]="faGithub"></fa-icon>
+        <span>Sign up with GitHub</span>
+      </button>
+    </div>
+
+    <div class="divider">or</div>
+
+    <!-- Form -->
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-      <div class="title">
-        <h1>Create an account</h1>
-        <p>Register using github or google, or enter yoour information bellow</p>
-      </div>
-
-      <div class="social-login">
-        <button class="social-btn google">
-          <fa-icon [icon]="faGoogle"></fa-icon>
-          <span>Google</span>
-        </button>
-        <button class="social-btn github">
-          <fa-icon [icon]="faGithub"></fa-icon>
-          <span>GitHub</span>
-        </button>
-      </div>
-
-      <div class="divider">OR</div>
       <div class="input-group">
         <label>Email</label>
         <input type="email" formControlName="email" placeholder="name@example.com" />
-
-        <div
-          class="error"
-          *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
-        >
-          <small *ngIf="registerForm.get('email')?.errors?.['required']">Email is required.</small>
-          <small *ngIf="registerForm.get('email')?.errors?.['email']">Invalid email format.</small>
-        </div>
+        @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
+          <div
+            class="error-msg"
+            >
+            @if (registerForm.get('email')?.errors?.['required']) {
+              <small>Email is required.</small>
+            }
+            @if (registerForm.get('email')?.errors?.['email']) {
+              <small>Invalid email format.</small>
+            }
+          </div>
+        }
       </div>
 
       <div class="input-group">
-        <label>User Name</label>
+        <label>Username</label>
         <input type="text" formControlName="username" placeholder="Your Name" />
-
-        @if (registerForm.get('username')?.invalid && registerForm.get('username')?.touched) {
-        <div class="error">Name is required.</div>
+        @if (registerForm.get('username')?.touched && registerForm.get('username')?.invalid) {
+          <div
+            class="error-msg"
+            >
+            <small>Username is required.</small>
+          </div>
         }
       </div>
 
       <div class="input-group">
         <label>Password</label>
         <input type="password" formControlName="password" placeholder="••••••••" />
-
         @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
-        <div class="error">
-          @if (registerForm.get('password')?.errors?.['required']) {
-          <small>Password is required.</small>
-          } @else if (registerForm.get('password')?.errors?.['minlength']) {
-          <small> Password must be at least 6 characters. </small>
-          }
-        </div>
-        }
+          <div
+            class="error-msg"
+            >
+            @if (registerForm.get('password')?.errors?.['required']) {
+              <small
+                >Password is required.</small
+                >
+              }
+              @if (registerForm.get('password')?.errors?.['minlength']) {
+                <small
+                  >At least 6 characters.</small
+                  >
+                }
+              </div>
+            }
+          </div>
+
+          <div class="input-group">
+            <label>Confirm Password</label>
+            <input type="password" formControlName="repeatPassword" placeholder="••••••••" />
+            @if (
+              registerForm.get('repeatPassword')?.touched &&
+              registerForm.get('repeatPassword')?.invalid
+              ) {
+              <div
+                class="error-msg"
+                >
+                <small>Passwords must match.</small>
+              </div>
+            }
+          </div>
+
+          <!-- Submit -->
+          <button class="submit-btn" type="submit" [disabled]="registerForm.invalid">Sign up</button>
+
+          <!-- Footer -->
+          <div class="auth-footer">
+            Already have an account? <a routerLink="/auth/login">Sign in</a>
+          </div>
+        </form>
       </div>
-
-      <div class="input-group">
-        <label>Repeat Your Password</label>
-        <input type="password" formControlName="repeatPassword" placeholder="••••••••" />
-
-        @if (registerForm.get('repeatPassword')?.invalid &&
-        registerForm.get('repeatPassword')?.touched) {
-        <div class="error">Repeat Your password.</div>
-        }
-      </div>
-
-      <button class="main-btn" type="submit" [disabled]="registerForm.invalid">Login</button>
-
-      <div class="footer">Don't have an account? <a routerLink="../login">Sign in</a></div>
-    </form>
-  </div>
-</div>
+    </div>

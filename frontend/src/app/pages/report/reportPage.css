@@ -1,90 +1,146 @@
+/* --- Layout --- */
+.report-layout {
+  display: flex;
+  justify-content: center;
+  padding-top: 80px; /* Space from top nav */
+  padding-bottom: 80px;
+}
+
 .report-container {
-  max-width: 600px;
-  margin: 60px auto;
-  padding: 40px 50px;
-  border: 2px solid var(--border);
-  background-color: var(--secondary-elevated);
-  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 500px;
+  padding: 0 24px;
+  text-align: center; /* Center headings */
 }
 
+/* --- Typography --- */
 h1 {
-  margin-bottom: 30px;
-  font-size: 28px;
-  font-weight: bold;
+  font-family: 'Charter', 'Georgia', serif;
+  font-size: 32px;
   color: var(--text-primary);
+  margin-bottom: 8px;
+  font-weight: 400;
 }
 
-/* Input groups */
+.subtitle {
+  color: var(--text-secondary);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  margin-bottom: 48px;
+}
+
+/* --- Input Groups --- */
 .input-group {
-  margin-bottom: 25px;
+  margin-bottom: 32px;
+  text-align: left; /* Realign inputs to left */
 }
 
 label {
   display: block;
   margin-bottom: 8px;
-  font-weight: bold;
   color: var(--text-primary);
-  text-transform: uppercase;
-  font-size: 14px;
-  letter-spacing: 0.5px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
 }
 
-/* Select + Textarea styles same as inputs */
+/* --- Form Elements (Underline Style) --- */
 select,
 textarea {
   width: 100%;
-  padding: 14px 16px;
-  border: 2px solid var(--border);
-  background-color: var(--secondary);
-  color: var(--text-primary);
-  font-family: inherit;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 12px 0;
   font-size: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text-primary);
   outline: none;
-  transition: all var(--transition-fast);
-}
-
-select:hover,
-textarea:hover {
-  background-color: var(--hover-overlay);
-  border-color: var(--accent-hover);
+  transition: border-color 0.2s ease;
+  resize: none; /* Disable manual resize for cleaner look */
 }
 
 select:focus,
 textarea:focus {
-  background-color: var(--secondary-elevated);
-  border-color: var(--accent);
-  box-shadow: var(--shadow-sm);
+  border-bottom-color: var(--text-primary);
 }
 
 textarea {
-  resize: vertical;
-  min-height: 120px;
+  min-height: 100px;
+  line-height: 1.5;
 }
 
-/* Button (same as your main-btn) */
+/* --- Select Styling --- */
+.select-wrapper {
+  position: relative;
+}
+
+select {
+  appearance: none; /* Remove default arrow */
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 24px; /* Space for arrow */
+}
+
+.arrow-down {
+  position: absolute;
+  right: 0;
+  top: 14px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+/* Placeholder styling */
+textarea::placeholder,
+select:invalid {
+  color: var(--text-muted);
+}
+
+/* --- Buttons --- */
+.actions {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
 .main-btn {
   width: 100%;
-  padding: 14px 20px;
-  background-color: var(--accent);
-  color: var(--text-inverse);
-  border: 2px solid var(--accent);
-  font-size: 16px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  max-width: 200px; /* Limit width for elegance */
+  padding: 12px 24px;
+  background-color: var(--text-primary); /* Solid Black */
+  color: var(--background);
+  border: none;
+  border-radius: 9999px; /* Pill Shape */
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: opacity 0.2s ease;
 }
 
 .main-btn:hover {
-  background-color: var(--accent-hover);
-  transform: translate(-1px, -1px);
-  box-shadow: var(--shadow-sm);
+  opacity: 0.8;
+  transform: none;
+  box-shadow: none;
 }
 
 .main-btn:disabled {
-  opacity: 0.5;
+  background-color: var(--border);
+  color: var(--text-muted);
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+}
+
+.cancel-link {
+  color: var(--text-secondary);
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.cancel-link:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
 }

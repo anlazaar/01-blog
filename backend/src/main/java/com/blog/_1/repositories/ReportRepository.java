@@ -9,4 +9,6 @@ import com.blog._1.models.Report;
 
 public interface ReportRepository extends JpaRepository<Report, UUID> {
     List<Report> findByResolvedFalse();
+
+    long countByResolvedFalse();
 }

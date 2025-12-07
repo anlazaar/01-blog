@@ -2,12 +2,30 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+export interface ChartDataPoint {
+  label: string;
+  value: number;
+}
+
+export interface DashboardStats {
+  totalUsers: number;
+  totalPosts: number;
+  pendingReports: number;
+  userGrowth: ChartDataPoint[];
+  postGrowth: ChartDataPoint[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class AdminService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8080/api/admin';
+
+  // === STATS ===
+  getDashboardStats(): Observable<DashboardStats> {
+    return this.http.get<DashboardStats>(`${this.apiUrl}/stats`);
+  }
 
   // === USERS ===
   getAllUsers(): Observable<any[]> {

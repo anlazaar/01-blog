@@ -1,7 +1,9 @@
 package com.blog._1.repositories;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -15,4 +17,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByUsername(String username);
 
     Optional<User> findByUsername(String username);
+
+    List<User> findAllByCreatedAtAfter(LocalDateTime date);
 }

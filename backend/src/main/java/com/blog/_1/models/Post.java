@@ -17,10 +17,15 @@ public class Post extends BaseEntity {
     private UUID id;
 
     private String title;
-    private String description;
 
-    private String mediaUrl; // image or video link
-    private String mediaType; // MIME type
+    @Column(length = 500)
+    private String description; // Summary
+
+    private String mediaUrl;
+    private String mediaType;
+
+    @Enumerated(EnumType.STRING)
+    private PostStatus status = PostStatus.DRAFT; // Default to DRAFT
 
     @ManyToOne
     @JoinColumn(name = "author_id", nullable = false)
@@ -31,4 +36,7 @@ public class Post extends BaseEntity {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostContentChunk> contentChunks;
 }

@@ -1,203 +1,391 @@
-.admin-container {
-  max-width: 1200px;
-  margin: 40px auto;
+/* --- Layout --- */
+.admin-wrapper {
+  max-width: 1000px; /* Slightly wider for tables */
+  margin: 0 auto;
+  /* Adjust based on your fixed navbar height */
+  padding: 100px 24px 60px 24px;
 }
 
-.admin-header {
-  margin-bottom: 30px;
-  border-bottom: 2px solid var(--border);
-  padding-bottom: 15px;
+/* --- Header --- */
+.admin-page-header {
+  margin-bottom: 40px;
 }
 
-.admin-header h1 {
+.page-title {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 32px;
+  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
-.dashboard-grid {
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+/* --- Dashboard Grid --- */
+.dashboard-layout {
   display: grid;
-  grid-template-columns: 250px 1fr;
-  gap: 30px;
+  grid-template-columns: 200px 1fr;
+  gap: 48px;
 }
 
-/* Sidebar Buttons */
-.admin-sidebar {
+/* --- Sidebar Nav --- */
+.admin-nav {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-}
-
-.tab-btn {
-  background-color: var(--secondary-elevated);
-  border: 2px solid var(--border);
-  color: var(--text-primary);
-  padding: 15px;
-  text-align: left;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: bold;
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.tab-btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: var(--shadow);
-}
-
-.tab-btn.active {
-  background-color: var(--accent);
-  color: var(--text-inverse);
-  border-color: var(--accent);
-}
-
-/* Content Area */
-.admin-content {
-  background-color: var(--secondary-elevated);
-  border: 2px solid var(--border);
-  padding: 25px;
-  box-shadow: var(--shadow-lg);
-  min-height: 500px;
-  position: relative;
-}
-
-/* Sketchy Tables */
-.table-responsive {
-  overflow-x: auto;
-}
-
-.sketch-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.sketch-table th,
-.sketch-table td {
-  padding: 12px 15px;
-  border-bottom: 2px solid var(--border-muted);
-  text-align: left;
-}
-
-.sketch-table th {
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.sketch-table tr:hover {
-  background-color: var(--hover-overlay);
-}
-
-/* Cells & Badges */
-.user-cell {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.user-cell a {
-  color: var(--accent);
-  font-weight: bold;
-  text-decoration: none;
-}
-
-.table-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%; /* Optional: or square for retro feel */
-  border: 1px solid var(--border);
-  object-fit: cover;
-}
-
-.badge {
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  font-size: 11px;
-  font-weight: bold;
-  text-transform: uppercase;
-  background-color: var(--secondary);
-}
-
-.badge.banned {
-  background-color: var(--error-bg);
-  border-color: var(--error);
-  color: var(--error);
-}
-
-.badge.resolved {
-  background-color: var(--success-bg);
-  border-color: var(--success);
-  color: var(--success);
-}
-
-.badge.pending {
-  background-color: var(--warning-bg);
-  border-color: var(--warning);
-  color: var(--warning);
-}
-
-/* Actions */
-.actions-cell {
-  display: flex;
   gap: 8px;
 }
 
-.action-btn {
-  width: 32px;
-  height: 32px;
-  border: 2px solid var(--border);
-  background-color: var(--secondary);
-  cursor: pointer;
+.nav-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all var(--transition-fast);
+  gap: 12px;
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  text-align: left;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.nav-item:hover {
+  background-color: var(--secondary);
   color: var(--text-primary);
 }
 
-.action-btn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: var(--shadow-sm);
+.nav-item.active {
+  background-color: var(--secondary); /* or subtle grey background */
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
-.action-btn.ban:hover {
-  border-color: var(--warning);
-  color: var(--warning);
+.nav-icon {
+  width: 16px;
+  text-align: center;
 }
 
-.action-btn.delete:hover {
-  border-color: var(--error);
-  color: var(--error);
+/* --- Content Area --- */
+.dashboard-content {
+  min-height: 400px;
 }
 
-.action-btn.resolve:hover {
-  border-color: var(--success);
-  color: var(--success);
+/* --- Clean Tables --- */
+.table-container {
+  overflow-x: auto;
 }
 
-.alert-success {
-  background-color: var(--success-bg);
-  color: var(--success);
-  border: 2px solid var(--success);
-  padding: 10px;
-  margin-bottom: 20px;
-  font-weight: bold;
+.clean-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.action-btn.unban {
-  background: #4caf50;
-  color: white;
+.clean-table th {
+  text-align: left;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  font-weight: 600;
 }
 
+.clean-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.clean-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* User Cell */
+.user-info-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cell-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: var(--secondary);
+}
+
+.text-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.cell-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.cell-email {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Badges & Status */
+.role-badge {
+  background-color: var(--secondary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.status-dot.active {
+  background-color: #1a8917;
+} /* Green */
+.status-dot.banned {
+  background-color: var(--destructive);
+} /* Red */
+
+.status-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.status-badge {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 99px;
+}
+
+.status-badge.pending {
+  background-color: rgba(251, 191, 36, 0.1); /* Yellow tint */
+  color: #d97706;
+}
+
+.status-badge.resolved {
+  background-color: rgba(26, 137, 23, 0.1); /* Green tint */
+  color: #1a8917;
+}
+
+/* Report Cell */
+.report-reason {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.report-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.report-meta a {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+/* Actions */
+.cell-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background-color: var(--secondary);
+  color: var(--text-primary);
+}
+
+.icon-btn.destructive:hover {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: var(--destructive);
+}
+
+.icon-btn.success:hover {
+  color: #1a8917;
+}
+
+/* Post Title Truncate */
+.post-title-cell {
+  display: block;
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+/* Feedback */
+.toast-message {
+  background-color: var(--text-primary);
+  color: var(--background);
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+/* Loading */
+.loading-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
+  .dashboard-layout {
+    grid-template-columns: 1fr; /* Stack sidebar on top */
+    gap: 24px;
+  }
+
+  .admin-nav {
+    flex-direction: row; /* Horizontal tabs on mobile */
+    overflow-x: auto;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-item {
+    white-space: nowrap;
+  }
+
+  .clean-table th,
+  .clean-table td {
+    padding: 12px 8px;
+  }
+
+  .cell-email {
+    display: none; /* Hide email on small screens */
   }
 }
+
+/* ========================================= */
+/*       NEW: ANALYTICS / OVERVIEW STYLES    */
+/* ========================================= */
+
+.overview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Stats Cards Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+/* Individual Card */
+.stat-card {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.2s;
+}
+
+.stat-value {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+/* Warning Card (Pending Reports) */
+.stat-card.warning {
+  border-color: rgba(220, 38, 38, 0.3);
+  background-color: rgba(254, 242, 242, 1);
+}
+.stat-card.warning .stat-value {
+  color: var(--destructive);
+}
+.stat-card.warning .stat-label {
+  color: var(--destructive);
+  opacity: 0.8;
+}
+
+/* Dark Mode Override for Warning Card */
+/* Angular way to target if parent has dark class */
+:host-context(.dark) .stat-card.warning {
+  background-color: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+/* Charts Layout */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+.chart-container {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.chart-container h3 {
+  font-size: 16px;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Canvas Wrapper - Important for ChartJS responsiveness */
+.canvas-wrapper {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+  

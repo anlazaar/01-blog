@@ -24,9 +24,6 @@ public class SecurityConfig {
     private final JwtService jwtService;
     private final UserService userService;
 
-    // ---------------------------
-    // CORS for Angular
-    // ---------------------------
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
@@ -47,56 +44,40 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
 
-                        // ------------------------------------------
                         // PUBLIC ROUTES
-                        // ------------------------------------------
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-
-                        // Public block page + public posts
                         .requestMatchers(HttpMethod.GET, "/api/users/{id}/block").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+                        // Ensure serving uploaded files is public
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
 
-                        // ------------------------------------------
-                        // USER ROUTES (ROLE_USER)
-                        // ------------------------------------------
-                        // Post CRUD
+                        // USER ROUTES
+                        // Explicitly allow Media Upload (POST)
+                        .requestMatchers(HttpMethod.POST, "/api/posts/media/upload").hasRole("USER")
+
+                        // General Post CRUD
                         .requestMatchers(HttpMethod.GET, "/api/users/{id}").hasRole("USER")
                         .requestMatchers(HttpMethod.POST, "/api/posts").hasRole("USER")
+                        .requestMatchers(HttpMethod.POST, "/api/posts/**").hasRole("USER")
                         .requestMatchers(HttpMethod.PUT, "/api/posts/**").hasRole("USER")
                         .requestMatchers(HttpMethod.PATCH, "/api/posts/**").hasRole("USER")
                         .requestMatchers(HttpMethod.DELETE, "/api/posts/**").hasRole("USER")
 
-                        // Comments
+                        // Other User Routes
                         .requestMatchers("/api/comments/**").hasRole("USER")
-
-                        // Likes
                         .requestMatchers("/api/likes/**").hasRole("USER")
-
-                        // Subscriptions (follow)
                         .requestMatchers("/api/subscriptions/**").hasRole("USER")
-
-                        // Notifications
                         .requestMatchers("/api/notifications/**").hasRole("USER")
-
-                        // Report creation
                         .requestMatchers(HttpMethod.POST, "/api/reports/**").hasRole("USER")
-
-                        // User profile editing
                         .requestMatchers(HttpMethod.PUT, "/api/users/profile/update/**").hasRole("USER")
                         .requestMatchers(HttpMethod.PATCH, "/api/users/**").hasRole("USER")
 
-                        // ------------------------------------------
                         // ADMIN ROUTES
-                        // ------------------------------------------
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                        // Reports dashboard
                         .requestMatchers(HttpMethod.GET, "/api/reports/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/reports/**").hasRole("ADMIN")
 
-                        // Any other request must be authenticated
                         .anyRequest().authenticated())
                 .addFilterBefore(new JwtAuthFilter(jwtService, userService),
                         UsernamePasswordAuthenticationFilter.class);

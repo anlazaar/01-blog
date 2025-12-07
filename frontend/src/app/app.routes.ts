@@ -11,12 +11,14 @@ import { ReportPage } from './pages/report/reportPage';
 import { BannedPageComponent } from './share/BannedPageComponent/BannedPageComponent';
 import { AdminGuard } from './core/guards/admin.guard';
 import { AdminDashboardComponent } from './pages/admin/adminDashboard/dashboard';
+import { AddPost } from './pages/add-post/add-post';
 
 export const routes: Routes = [
   { path: '', component: Home },
   { path: 'auth/login', component: Login, canActivate: [AuthGuard] },
   { path: 'auth/register', component: Register, canActivate: [AuthGuard] },
   { path: 'posts/:id', component: PostPage },
+  { path: 'new-story', component: AddPost },
   { path: 'profile/:id', component: ProfilePage },
   { path: 'profile/complete-profile/:id', component: CompleteProfile },
   { path: 'profile/update/:id', component: UpdateProfile },

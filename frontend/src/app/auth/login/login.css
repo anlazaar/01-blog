@@ -1,7 +1,201 @@
-.title {
-  margin-bottom: 1rem;
-  padding: 0;
+/* --- Page Layout --- */
+.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  /* Add padding to account for fixed navbar */
+  padding-top: 60px;
+  background-color: var(--background);
 }
-.title h1 {
-  margin-bottom: 0.4rem;
+
+.auth-container {
+  width: 100%;
+  max-width: 360px; /* Slim column width */
+  padding: 20px;
+  text-align: center;
+  /* No border, no shadow - minimalist */
+}
+
+/* --- Header --- */
+.auth-header {
+  margin-bottom: 40px;
+}
+
+.auth-header h1 {
+  font-family: 'Charter', 'Georgia', serif; /* Serif Title */
+  font-size: 32px;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.auth-header p {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+/* --- Social Buttons --- */
+.social-login {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  background-color: transparent;
+  border: 1px solid var(--text-primary); /* Thin dark border */
+  border-radius: 999px; /* Pill shape */
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.social-btn:hover {
+  background-color: var(--secondary); /* Light grey hover */
+  transform: none;
+  box-shadow: none;
+}
+
+/* --- Divider --- */
+.divider {
+  margin: 24px 0;
+  color: var(--text-primary);
+  font-size: 12px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--border);
+}
+
+.divider::before {
+  margin-right: 12px;
+}
+.divider::after {
+  margin-left: 12px;
+}
+
+/* --- Inputs --- */
+.input-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+input {
+  width: 100%;
+  padding: 10px 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  font-size: 16px;
+  color: var(--text-primary);
+  border-radius: 0; /* Remove default radius */
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus {
+  border-bottom-color: var(--text-primary);
+}
+
+input::placeholder {
+  color: var(--text-muted);
+}
+
+/* --- Error Messages --- */
+.error-msg,
+.global-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--destructive);
+  text-align: left;
+}
+
+.global-error {
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 10px;
+  background-color: rgba(220, 38, 38, 0.1);
+  border-radius: 4px;
+}
+
+/* --- Submit Button --- */
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--text-primary); /* Solid Black */
+  color: var(--background);
+  border: none;
+  border-radius: 999px; /* Pill shape */
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: opacity 0.2s;
+}
+
+.submit-btn:hover {
+  opacity: 0.85;
+  transform: none;
+  box-shadow: none;
+}
+
+.submit-btn:disabled {
+  background-color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* --- Footer --- */
+.auth-footer {
+  margin-top: 32px;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.auth-footer a {
+  color: #1a8917; /* Green highlight for links */
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+  color: #157b14;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 20px 25px;
+  }
+
+  .auth-header h1 {
+    font-size: 28px;
+  }
 }
