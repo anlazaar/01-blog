@@ -5,8 +5,9 @@ import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 @Component({
   selector: 'app-theme-toggle',
   templateUrl: './theme-toggle.html',
+  standalone: true,
   imports: [FontAwesomeModule],
-  styleUrls: ['./theme-toggle.css', '../navbar/navbar.component.css'],
+  styleUrls: ['./theme-toggle.css'], // Removed dependency on navbar css
 })
 export class ThemeToggleComponent implements OnInit {
   isDarkMode: boolean = false;
@@ -14,7 +15,15 @@ export class ThemeToggleComponent implements OnInit {
   faMoon = faMoon;
 
   ngOnInit(): void {
-    this.isDarkMode = localStorage.getItem('darkMode') === 'true';
+    // Check local storage or system preference
+    const savedTheme = localStorage.getItem('darkMode');
+    if (savedTheme) {
+      this.isDarkMode = savedTheme === 'true';
+    } else {
+      // Optional: Check system preference if no user preference is saved
+      this.isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
     this.updateBodyClass();
   }
 
@@ -25,10 +34,11 @@ export class ThemeToggleComponent implements OnInit {
   }
 
   private updateBodyClass(): void {
+    // We toggle the class 'dark' to match the Global CSS :root .dark selector
     if (this.isDarkMode) {
-      document.body.classList.add('dark-theme');
+      document.body.classList.add('dark');
     } else {
-      document.body.classList.remove('dark-theme');
+      document.body.classList.remove('dark');
     }
   }
 }

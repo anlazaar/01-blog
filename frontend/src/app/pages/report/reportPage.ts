@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PostService } from '../../services/post.service';
@@ -7,7 +7,7 @@ import { PostService } from '../../services/post.service';
 @Component({
   selector: 'app-report-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   providers: [PostService],
   templateUrl: './reportPage.html',
   styleUrls: ['./reportPage.css'],

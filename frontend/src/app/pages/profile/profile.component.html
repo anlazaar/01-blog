@@ -1,83 +1,95 @@
-@if (user){
-<div class="profile-container">
-  <div class="profile-card">
-    <!-- Avatar -->
-    <div class="avatar-wrapper">
-      <img
-        [src]="user.avatarUrl ? user.avatarUrl : '/default.png'"
-        alt="User avatar"
-        class="avatar"
-      />
+@if (user) {
+  <div class="profile-page-container">
+    <!-- 1. Minimal Profile Header -->
+    <header class="profile-header">
+      <div class="header-content">
+        <div class="info-group">
+          <h1 class="profile-name">{{ user.lastname }} {{ user.firstname }}</h1>
+          <p class="profile-username">@{{ user.username }}</p>
+          @if (user.bio) {
+            <p class="profile-bio">{{ user.bio }}</p>
+          }
+          @if (!user.bio) {
+            <p class="profile-bio empty">Writer on Blog.</p>
+          }
+
+          <div class="profile-meta-row">
+            <span class="meta-item">
+              <strong>{{ user.followersCount || 0 }}</strong> Followers
+            </span>
+            <span class="meta-item">
+              <strong>{{ user.followingCount || 0 }}</strong> Following
+            </span>
+
+            <!-- Edit / Follow Actions -->
+            <div class="action-buttons">
+              @if (isCurrentUser) {
+                <a [routerLink]="['/profile/update', user.id]" class="text-btn">Edit profile</a>
+              } @else {
+                <button class="pill-btn" [class.outline]="user.following" (click)="toggleFollow()">
+                  {{ user.following ? 'Following' : 'Follow' }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Avatar on Right (Desktop) or Top (Mobile) -->
+        <div class="avatar-group">
+          <img
+            [src]="user.avatarUrl ? user.avatarUrl : 'assets/default-avatar.png'"
+            alt="Avatar"
+            class="profile-avatar"
+            />
+          </div>
+        </div>
+      </header>
+
+      <div class="content-divider"></div>
+
+      <!-- 2. User's Posts Feed (List View) -->
+      <section class="user-feed">
+        <h3 class="section-title">{{ isCurrentUser ? 'Your stories' : 'Latest' }}</h3>
+
+        @if (user.posts.length > 0) {
+          <div class="posts-list">
+            @for (p of user.posts; track $index) {
+              <article class="feed-item">
+                <div class="item-content" [routerLink]="['/posts', p.id]">
+                  <div class="text-content">
+                    <span class="post-date">{{ p.createdAt | date : 'MMM d, y' }}</span>
+                    <h2 class="post-title">{{ p.title }}</h2>
+                    <p class="post-snippet">{{ p.description }}</p>
+                    <div class="post-footer">
+                      <span>Read more...</span>
+                    </div>
+                  </div>
+
+                  <!-- Thumbnail if exists -->
+                  @if (p.mediaUrl) {
+                    <div class="media-thumbnail">
+                      @if (p.mediaType === 'IMAGE') {
+                        <img [src]="'http://localhost:8080' + p.mediaUrl" />
+                      }
+                      @if (p.mediaType === 'VIDEO') {
+                        <video
+                          [src]="'http://localhost:8080' + p.mediaUrl"
+                        ></video>
+                      }
+                    </div>
+                  }
+                </div>
+                <div class="item-divider"></div>
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="empty-state">
+            <p>No stories published yet.</p>
+          </div>
+        }
+      </section>
     </div>
-
-    <!-- User Info -->
-    <div class="profile-info-section">
-      <h2 class="name">{{ user.lastname }} {{ user.firstname }}</h2>
-
-      <p class="username">@{{ user.username }}</p>
-
-      <p class="bio">
-        {{ user.bio ? user.bio : 'No Bio' }}
-      </p>
-      <ng-template #noBio>
-        <p class="bio empty">No bio yet.</p>
-      </ng-template>
-
-      <!-- Follow Button -->
-      @if (!isCurrentUser) {
-      <div class="btn-wrapper">
-        <button class="btn follow-btn" (click)="toggleFollow()">
-          {{ user.following ? 'Unfollow' : 'Follow' }}
-        </button>
-      </div>
-      } @else if (isCurrentUser) {
-      <div class="btn-wrapper">
-        <button class="btn follow-btn" [routerLink]="['/profile/update', user.id]">
-          Edit Profile
-        </button>
-      </div>
-      }
-    </div>
-
-    <!-- Stats -->
-    <div class="stats">
-      <div class="stat-box">
-        <span class="stat-number">{{ user.followersCount || 0 }}</span>
-        <span class="stat-label">Followers</span>
-      </div>
-
-      <div class="stat-box">
-        <span class="stat-number">{{ user.followingCount || 0 }}</span>
-        <span class="stat-label">Following</span>
-      </div>
-    </div>
-  </div>
-</div>
-@if (user.posts.length != 0) {
-<h1 class="post-header">{{ isCurrentUser ? 'Your Posts' : 'User Posts' }}</h1>
-<div class="blogs-grid">
-  @for (p of user.posts; track $index) {
-  <div class="blog-card" [routerLink]="['/posts', p.id]">
-    <!-- Author info -->
-    <p class="blog-info">{{ p.author }}</p>
-
-    <!-- Media -->
-    @if (p.mediaUrl) { @if (p.mediaType == "IMAGE") {
-    <img class="blog-image" [src]="'http://localhost:8080' + p.mediaUrl" alt="Blog image" />
-    } @else {
-    <video class="blog-image" [src]="'http://localhost:8080' + p.mediaUrl" controls></video>
-    } }
-
-    <!-- Post content -->
-    <div class="blog-info">
-      <p class="meta">Insight • {{ p.createdAt | date }}</p>
-      <h2 class="blog-title">{{ p.title }}</h2>
-      <p class="blog-desc">{{ p.description }}</p>
-    </div>
-  </div>
+  } @else {
+    <div class="loading-state">Loading profile...</div>
   }
-</div>
-
-} @else {
-<div><h2 class="post-header">No Post Yet!</h2></div>
-} }

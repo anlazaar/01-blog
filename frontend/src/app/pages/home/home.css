@@ -1,94 +1,205 @@
-.products-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* smaller min for mobile */
-  gap: 20px;
-  padding: 20px;
+/* --- Feed Layout --- */
+.feed-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 680px; /* Standard Medium width */
   margin: 0 auto;
+  padding: 100px 24px 40px 24px; /* Top padding clears fixed navbar */
 }
 
-.product-card {
-  border: 3px solid var(--primary);
-  padding: 20px;
-  background-color: var(--secondary);
-  box-shadow: var(--shadow);
-  font-family: 'Courier New', monospace;
-  position: relative;
-  transition: transform 0.2s ease;
+/* --- Header --- */
+.feed-header {
+  margin-bottom: 48px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+}
+
+.header-content {
   display: flex;
-  flex-direction: column;
   justify-content: space-between;
-  word-wrap: break-word; /* prevents overflow on small screens */
-  cursor: pointer;
+  align-items: center;
 }
 
-.product-card:hover {
-  transform: translate(-4px, -4px);
-  box-shadow: 10px 10px 0px var(--primary);
-}
-
-h1 {
-  text-align: center;
-}
-
-.product-card h2 {
-  font-size: 18px; /* slightly smaller for mobile readability */
-  margin-bottom: 10px;
-}
-
-.product-card p {
-  margin: 6px 0;
-  font-size: 14px;
-}
-
-.loading {
-  font-size: 22px;
-  font-weight: bold;
-  color: var(--primary);
-}
-
-/* Page Header */
-.blogs-header {
-  position: sticky;
-  top: 0;
-  z-index: 999;
-  background: var(--bg);
-  padding: 1rem;
-}
-
-.blogs-header h1 {
-  font-size: 32px;
-  font-weight: bold;
+.feed-header h1 {
+  font-size: 42px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  margin: 0;
   color: var(--text-primary);
-  margin-bottom: 20px;
 }
 
-/* Search Bar */
-.search-bar-container {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
+/* Search Input */
 .search-input {
-  width: 100%;
-  padding: 14px 18px;
-  border: 2px solid var(--border);
-  background-color: var(--secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
   color: var(--text-primary);
-  font-family: inherit;
-  font-size: 16px;
-  border-radius: 6px;
-  transition: var(--transition-fast);
+  padding: 8px 0;
+  font-size: 14px;
+  width: 160px;
+  outline: none;
+  transition: width 0.3s ease, border-color 0.3s ease;
 }
 
 .search-input:focus {
-  border-color: var(--accent);
-  background-color: var(--secondary-elevated);
-  outline: 2px solid var(--focus-ring);
+  width: 200px;
+  border-color: var(--text-primary);
 }
 
-.post-header {
-  margin-right: 12px;
+/* Write Button */
+.write-btn {
+  background-color: #1a8917; /* Medium Green */
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 99px; /* Pill shape */
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 400;
+  transition: opacity 0.2s;
+  display: inline-block;
+}
+
+.write-btn:hover {
+  opacity: 0.9;
+}
+
+/* --- Post Item --- */
+.post-item {
+  margin-bottom: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Gap between meta and content */
+}
+
+/* 1. Meta Header (Author + Date) */
+.post-meta-header {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.author-avatar-img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.author-avatar-placeholder {
+  width: 24px;
+  height: 24px;
+  background-color: var(--secondary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.author-name {
+  font-weight: 500;
+}
+
+.separator,
+.post-date {
+  color: var(--text-secondary);
+}
+
+/* 2. Main Content (Flex Row) */
+.post-content {
+  display: flex;
+  justify-content: space-between; /* Pushes text left, image right */
+  align-items: flex-start;
+  gap: 24px;
+  cursor: pointer;
+}
+
+.post-text {
+  flex: 1; /* Takes all available space */
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0; /* Important for word-break to work in flex */
+}
+
+.post-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.25;
+  margin: 0;
+  color: var(--text-primary);
+
+  /* CRITICAL FIX: Handles long strings like "oihcoih..." */
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.post-footer-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+
+/* 3. Post Image */
+.post-media {
+  width: 112px; /* Fixed Medium size */
+  height: 112px;
+  flex-shrink: 0; /* Prevents squishing */
+}
+
+.post-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 2px;
+  background-color: var(--secondary);
+}
+
+/* Divider */
+.post-divider {
+  margin-top: 32px;
+  height: 1px;
+  background-color: var(--border);
+  opacity: 0.6;
+}
+
+/* --- Empty State --- */
+.empty-state {
+  text-align: center;
+  margin-top: 100px;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+  .post-content {
+    flex-direction: column-reverse; /* Text goes below image */
+    gap: 12px;
+  }
+
+  .post-media {
+    width: 100%; /* Full width image on mobile */
+    height: 200px;
+  }
 }

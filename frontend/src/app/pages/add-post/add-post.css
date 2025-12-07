@@ -1,0 +1,394 @@
+/* --- Layout --- */
+.editor-layout {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 10000;
+  background-color: var(--background);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Navigation --- */
+.editor-nav {
+  height: 65px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  background-color: var(--background);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.back-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 20px;
+}
+.draft-status {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.publish-btn {
+  background-color: #1a8917;
+  color: white;
+  border: none;
+  border-radius: 99px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.publish-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.publish-btn:disabled {
+  background-color: var(--border);
+  cursor: not-allowed;
+}
+
+/* --- Container --- */
+.editor-container {
+  width: 100%;
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 40px 20px 100px 20px;
+}
+
+/* --- Cover Image --- */
+.cover-image-area {
+  margin-bottom: 24px;
+}
+.add-cover-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cover-preview {
+  position: relative;
+  width: 100%;
+  max-height: 400px;
+  overflow: hidden;
+}
+.cover-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.remove-cover-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* --- Title Input --- */
+.title-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  display: block;
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 12px;
+  min-height: 50px;
+}
+.title-input::placeholder {
+  color: #b3b3b1;
+}
+
+/* --- Tiptap Toolbar --- */
+.tiptap-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+  position: sticky;
+  top: 65px; /* Height of nav */
+  background: var(--background);
+  z-index: 40;
+}
+
+.tiptap-toolbar button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tiptap-toolbar button:hover {
+  background-color: var(--secondary);
+  color: var(--text-primary);
+}
+.tiptap-toolbar button.is-active {
+  background-color: var(--text-primary);
+  color: var(--background);
+}
+.separator {
+  width: 1px;
+  height: 20px;
+  background-color: var(--border);
+  margin: 0 6px;
+}
+
+/* --- Tiptap Editor Content (.ProseMirror) --- */
+/* This styles the actual content area to look like Medium */
+.tiptap-container {
+  min-height: 300px;
+  cursor: text;
+}
+
+.ProseMirror {
+  outline: none; /* Remove blue border on focus */
+  font-family: 'Charter', 'Georgia', serif;
+  font-size: 21px;
+  line-height: 1.58;
+  color: var(--text-primary);
+}
+
+.ProseMirror p {
+  margin-bottom: 24px;
+}
+
+/* Placeholder style */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #b3b3b1;
+  pointer-events: none;
+  height: 0;
+  font-style: italic;
+}
+
+/* Headings */
+.ProseMirror h2 {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  margin-top: 48px;
+  margin-bottom: 12px;
+}
+
+.ProseMirror blockquote {
+  border-left: 3px solid var(--text-primary);
+  padding-left: 20px;
+  margin-left: 0;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.ProseMirror pre {
+  background: var(--secondary);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: 'Courier New', Courier, monospace;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding: 0 1rem;
+  margin-bottom: 24px;
+}
+
+.error-banner {
+  background-color: var(--destructive);
+  color: white;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* ... Your existing styles ... */
+
+.tiptap-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--background);
+  /* Slight border for definition */
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Toolbar button styling to match Medium */
+.tiptap-toolbar button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tiptap-toolbar button:hover {
+  background: var(--secondary);
+  color: var(--text-primary);
+}
+
+.tiptap-toolbar button.is-active {
+  background: var(--text-primary); /* Black bg for active state */
+  color: var(--background); /* White text */
+}
+
+.tiptap-toolbar button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.separator {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 8px;
+}
+
+/* Styles inside the editor content area */
+.medium-editor-content a {
+  color: var(--text-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.medium-editor-content hr {
+  border: none;
+  border-top: 3px solid var(--border);
+  margin: 2rem 0;
+}
+
+/* Progress Bar Container in Navbar */
+.publishing-status {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 140px; /* Fixed width to prevent nav jumping */
+}
+
+.status-text {
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 4px;
+  text-align: right;
+  font-weight: 500;
+}
+
+.progress-track {
+  width: 100%;
+  height: 4px;
+  background-color: #e6e6e6;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #1a8917; /* Medium Green */
+  transition: width 0.2s ease-out;
+}
+
+/* Optional: Slight fade on form when uploading */
+.disabled-form {
+  opacity: 0.7;
+  pointer-events: none; /* Prevents clicking while uploading */
+}
+
+.tiptap-container {
+  min-height: 300px;
+  cursor: text;
+  position: relative;
+}
+
+/* Loading state for media upload */
+.tiptap-container.loading {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: wait;
+}
+
+.ProseMirror {
+  outline: none;
+  font-family: 'Charter', 'Georgia', serif;
+  font-size: 21px;
+  line-height: 1.58;
+  color: var(--text-primary);
+}
+
+/* --- Media Styling inside Editor --- */
+
+/* Images */
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 24px 0;
+  display: block; /* Ensures they behave like blocks */
+}
+
+/* Videos */
+.ProseMirror video {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 24px 0;
+  background-color: #000; /* Placeholder bg while loading */
+  display: block;
+}
+
+/* Selected state (when user clicks an image in editor) */
+.ProseMirror .ProseMirror-selectednode {
+  outline: 3px solid #1a8917; /* Medium Green outline */
+  outline-offset: 2px;
+}
+
+.disabled-form {
+  opacity: 0.7;
+  pointer-events: none;
+}

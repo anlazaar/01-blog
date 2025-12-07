@@ -1,3 +1,7 @@
-<button (click)="toggleTheme()" class="nav-btn primary">
+<button
+  (click)="toggleTheme()"
+  class="theme-toggle-btn"
+  [attr.aria-label]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+>
   <fa-icon [icon]="isDarkMode ? faSun : faMoon"></fa-icon>
 </button>
