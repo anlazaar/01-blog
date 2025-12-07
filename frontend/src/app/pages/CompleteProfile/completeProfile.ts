@@ -1,14 +1,14 @@
-
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { UserService } from '../../services/UserService';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-completeProfile',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule, FontAwesomeModule],
+  imports: [ReactiveFormsModule, RouterModule, FontAwesomeModule, CommonModule],
   providers: [UserService],
   templateUrl: './completeProfile.html',
   styleUrl: './completeProfile.css',
