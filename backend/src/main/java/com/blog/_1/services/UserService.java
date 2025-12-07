@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.blog._1.dto.post.PostMinimalDTO;
-import com.blog._1.dto.user.UserPatchRequest;
 import com.blog._1.dto.user.UserPublicProfileDTO;
 import com.blog._1.dto.user.UserResponse;
 import com.blog._1.models.Role;
@@ -198,22 +197,34 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // ========================
-    // Subscription functionality
-    // ========================
+    public List<UserPublicProfileDTO> getSuggestedUsers(UUID currentUserId) {
+        List<User> users;
 
-    public void subscribeToUser(UUID targetUserId) {
-        User target = getUserById(targetUserId);
-        // TODO: Implement subscription logic (add current user to target's subscribers)
-        // e.g., target.getSubscribers().add(currentUser);
-        // userRepository.save(target);
-    }
+        // 1. Fetch Users
+        if (currentUserId == null) {
+            // Not logged in: Just show top 3 or random 3
+            users = userRepository.findAll().stream().limit(3).toList();
+        } else {
+            // Logged in: Fetch users excluding self AND already followed users
+            users = userRepository.findSuggestedUsers(currentUserId);
+        }
 
-    public void unsubscribeFromUser(UUID targetUserId) {
-        User target = getUserById(targetUserId);
-        // TODO: Implement unsubscribe logic (remove current user from target's
-        // subscribers)
-        // e.g., target.getSubscribers().remove(currentUser);
-        // userRepository.save(target);
+        // 2. Map to DTO
+        return users.stream().map(user -> {
+            UserPublicProfileDTO dto = new UserPublicProfileDTO();
+            dto.setId(user.getId());
+            dto.setUsername(user.getUsername());
+            dto.setBio(user.getBio());
+            dto.setAvatarUrl(user.getAvatarUrl());
+
+            if (currentUserId != null && !currentUserId.equals(user.getId())) {
+                boolean isFollowing = subscriptionService.isFollowing(currentUserId, user.getId());
+                dto.setFollowing(isFollowing);
+            } else {
+                dto.setFollowing(false);
+            }
+
+            return dto;
+        }).toList();
     }
 }
