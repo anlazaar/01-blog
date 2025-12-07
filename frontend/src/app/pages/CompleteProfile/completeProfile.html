@@ -1,62 +1,70 @@
-<div class="login-page">
+<div class="login-page onboarding-page">
   <div class="login-container">
     <form [formGroup]="publicInfoForm" (ngSubmit)="onSubmit()">
       <div class="title">
         <h1>Complete Your Profile</h1>
-        <p>Add the information you want to show on your public profile.</p>
+        <p>Help readers know who you are.</p>
       </div>
 
-      <div class="social-login">
-        <div>
-          <label>First name</label>
-          <input type="text" formControlName="firstname" placeholder="Anass" />
+      <!-- 1. Avatar Section (Top) -->
+      <div class="avatar-upload-section">
+        <div class="avatar-circle">
+          @if (avatarPreview) {
+          <img [src]="avatarPreview" alt="Preview" />
+          } @else {
+          <div class="placeholder">
+            <!-- Requires CommonModule for uppercase pipe -->
+            {{ publicInfoForm.get('firstname')?.value?.charAt(0) || '?' | uppercase }}
+          </div>
+          }
         </div>
-        <div>
-          <label>Last name</label>
-          <input type="text" formControlName="lastname" placeholder="lazaar" />
+
+        <div class="upload-trigger">
+          <label for="fileInput">Add a photo</label>
+          <input
+            id="fileInput"
+            type="file"
+            (change)="onFileSelected($event)"
+            accept="image/*"
+            hidden
+          />
+          @if (fileError) {
+          <span class="error-msg">{{ fileError }}</span>
+          }
         </div>
       </div>
 
+      <!-- 2. Name Fields (Side by Side) -->
+      <div class="form-row">
+        <div class="input-group">
+          <label>First Name</label>
+          <input type="text" formControlName="firstname" placeholder="Jane" />
+        </div>
+        <div class="input-group">
+          <label>Last Name</label>
+          <input type="text" formControlName="lastname" placeholder="Doe" />
+        </div>
+      </div>
+
+      <!-- 3. Bio -->
       <div class="input-group">
-        <label>Bio</label>
-        <textarea
-          formControlName="bio"
-          placeholder="Tell us something about yourself..."
-          rows="4"
-        ></textarea>
+        <label>Short Bio</label>
+        <textarea formControlName="bio" placeholder="Tell your story..." rows="3"></textarea>
 
         @if (publicInfoForm.get('bio')?.touched && publicInfoForm.get('bio')?.invalid) {
-          <div
-            class="error"
-            >
-            <small>Bio is required.</small>
-          </div>
+        <div class="error-banner">
+          <small>Bio is required.</small>
+        </div>
         }
       </div>
 
-      <div class="input-group">
-        <label>Profile Image</label>
-        <input type="file" (change)="onFileSelected($event)" accept="image/*" />
+      <!-- 4. Actions -->
+      <div class="actions">
+        <button class="main-btn" type="submit" [disabled]="publicInfoForm.invalid">Continue</button>
 
-        @if (avatarPreview) {
-          <div class="avatar-preview">
-            <img [src]="avatarPreview" alt="Avatar Preview" />
-          </div>
-        }
-
-        @if (fileError) {
-          <div class="error">
-            <small>{{ fileError }}</small>
-          </div>
-        }
+        <button class="skip-btn" type="button" (click)="skip()">I'll do this later</button>
       </div>
-
-
-      <button class="main-btn" type="submit" [disabled]="publicInfoForm.invalid">
-        Save Profile
-      </button>
-
-      <button class="secondary-btn" type="button" (click)="skip()">Do it later</button>
     </form>
   </div>
 </div>
+  
