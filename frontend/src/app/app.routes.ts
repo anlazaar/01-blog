@@ -12,6 +12,8 @@ import { BannedPageComponent } from './share/BannedPageComponent/BannedPageCompo
 import { AdminGuard } from './core/guards/admin.guard';
 import { AdminDashboardComponent } from './pages/admin/adminDashboard/dashboard';
 import { AddPost } from './pages/add-post/add-post';
+// 1. Import the Privacy Page
+import { PrivacyPage } from './pages/privacy/privacy';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -25,4 +27,7 @@ export const routes: Routes = [
   { path: 'report/:id', component: ReportPage },
   { path: 'banned', component: BannedPageComponent },
   { path: 'admin', component: AdminDashboardComponent, canActivate: [AdminGuard] },
+
+  // 2. Add the route definition
+  { path: 'privacy', component: PrivacyPage },
 ];

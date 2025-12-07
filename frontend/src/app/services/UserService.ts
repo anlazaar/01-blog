@@ -38,4 +38,9 @@ export class UserService {
       { withCredentials: true }
     );
   }
+
+  // Add to your UserService
+  getSuggestedUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.api}/suggested`);
+  }
 }
