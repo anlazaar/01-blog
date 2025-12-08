@@ -1,0 +1,122 @@
+.help-layout {
+  display: flex;
+  justify-content: center;
+  padding-top: 60px;
+  padding-bottom: 80px;
+}
+
+.help-container {
+  width: 100%;
+  max-width: 900px;
+  padding: 0 24px;
+}
+
+/* --- Hero --- */
+.help-hero {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.help-hero h1 {
+  font-family: 'Charter', 'Georgia', serif;
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.subtitle {
+  font-size: 20px;
+  color: var(--text-secondary);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  margin-bottom: 32px;
+}
+
+/* Search Input Override */
+.search-wrapper {
+  position: relative;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.help-search {
+  /* Inherits your global input styles but adds padding for icon */
+  padding-left: 40px;
+  font-size: 18px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0;
+  top: 14px;
+  color: var(--text-muted);
+}
+
+/* --- Grid --- */
+.help-topics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 64px;
+}
+
+.topic-card {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+.topic-card:hover {
+  border-color: var(--text-primary);
+  transform: translateY(-2px);
+  background-color: var(--secondary); /* Subtle background on hover */
+}
+
+.topic-card h3 {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.topic-card p {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  flex-grow: 1;
+}
+
+.topic-link {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.topic-link:hover {
+  text-decoration: underline;
+}
+
+/* --- Footer --- */
+.help-footer {
+  text-align: center;
+  padding-top: 40px;
+  border-top: 1px solid var(--border);
+}
+
+.help-footer h2 {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.help-footer p {
+  color: var(--text-secondary);
+}
+
+.help-footer a {
+  color: var(--text-primary);
+  text-decoration: underline;
+}

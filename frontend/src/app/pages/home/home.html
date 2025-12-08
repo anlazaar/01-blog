@@ -1,16 +1,21 @@
 @if (!loading) {
 <div class="home-layout">
   <!-- LEFT COLUMN: The Feed -->
-  <main class="feed-container">
+  <!-- We add a class if sidebar is missing to center it for admins -->
+  <main class="feed-container" [class.full-width]="isAdmin">
     <!-- Feed Header -->
     <div class="feed-header">
       <div class="header-content">
-        <h1>For you</h1>
+        <!-- 1. CHANGE: Dynamic Title -->
+        <h1>{{ isAdmin ? 'Published Post' : 'For you' }}</h1>
+
         <div class="header-actions">
           <div class="search-wrapper">
             <input type="text" placeholder="Search..." class="search-input" />
           </div>
-          @if (currentUserId) {
+
+          <!-- 2. CHANGE: Only show Write button if logged in AND NOT ADMIN -->
+          @if (currentUserId && !isAdmin) {
           <a routerLink="new-story" class="write-btn">Write</a>
           }
         </div>
@@ -31,10 +36,12 @@
             <span class="separator">·</span>
             <span class="post-date">{{ p.createdAt | date : 'MMM d' }}</span>
           </div>
+
+          <!-- Options Menu (Admins can delete/edit too depending on your logic) -->
           @if (currentUserId) {
           <app-post-options-menu
-            [canEdit]="currentUserId == p.author.id"
-            [canReport]="currentUserId != p.author.id"
+            [canEdit]="currentUserId == p.author.id || isAdmin"
+            [canReport]="currentUserId != p.author.id && !isAdmin"
             (update)="onUpdate(p)"
             (delete)="onDelete(p)"
             (report)="onReport(p.author.id)"
@@ -63,12 +70,13 @@
     } @else {
     <div class="empty-state">
       <h2>No stories yet.</h2>
-      <p>Write the first one!</p>
     </div>
     }
   </main>
 
   <!-- RIGHT COLUMN: Sidebar (Suggested Users) -->
+  <!-- 3. CHANGE: Completely hide sidebar for admins -->
+  @if (!isAdmin) {
   <aside class="sidebar-container">
     <div class="sidebar-sticky">
       <h3 class="sidebar-title">Who to follow</h3>
@@ -106,13 +114,12 @@
         } @if(suggestedUsers.length === 0 && currentUserId != null ) {
         <p class="no-suggestions">No suggestions available.</p>
         } @else if (currentUserId == null) {
-        <p class="no-suggestions">Login or Reggister to see suggested user.</p>
+        <p class="no-suggestions">Login to see suggestions.</p>
         }
       </div>
 
-      <!-- Footer Links (Optional Medium Style) -->
       <div class="sidebar-footer">
-        <a href="#">Help</a>
+        <a routerLink="/help">Help</a>
         <a href="#">Status</a>
         <a href="#">Writers</a>
         <a href="#">Blog</a>
@@ -120,6 +127,7 @@
       </div>
     </div>
   </aside>
+  }
 </div>
 } @if (loading) {
 <div class="loading-state">Loading...</div>

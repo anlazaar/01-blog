@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-// import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -37,13 +36,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        String token = null;
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // 1. Try to get token from Authorization Header
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
+
+        // 2. If not in Header, try to get from Query Parameter (For SSE/Notifications)
+        if (token == null) {
+            token = request.getParameter("token");
+        }
+
+        // 3. If token is still null, continue filter chain (User is anonymous)
+        if (token == null) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        final String token = authHeader.substring(7);
 
         try {
             final UUID userId = jwtService.extractUserId(token);
@@ -79,6 +88,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
+            // For standard API calls, we return 401.
+            // For SSE, the browser will see the error and close the connection.
             writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Token expired or invalid");
             return;
         }
