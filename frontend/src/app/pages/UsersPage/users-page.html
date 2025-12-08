@@ -1,0 +1,62 @@
+<div class="users-layout">
+  <div class="users-container">
+    <header class="page-header">
+      <h1>Explore Writers</h1>
+      <p class="subtitle">Discover new voices and follow creators.</p>
+    </header>
+
+    @if (loading) {
+    <!-- SKELETON GRID -->
+    <div class="users-grid">
+      @for(item of skeletonItems; track $index) {
+      <div class="user-card skeleton-card">
+        <!-- Header: Avatar + Button -->
+        <div class="card-header">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-btn"></div>
+        </div>
+
+        <!-- Body: Name + Bio Lines -->
+        <div class="card-body">
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line bio"></div>
+          <div class="skeleton-line bio short"></div>
+        </div>
+      </div>
+      }
+    </div>
+    } @else {
+    <!-- REAL CONTENT GRID -->
+    <div class="users-grid">
+      @for (user of users; track user.id) {
+      <div class="user-card">
+        <div class="card-header">
+          <img
+            [src]="
+              user.avatarUrl
+                ? 'http://localhost:8080' + user.avatarUrl
+                : 'assets/default-avatar.png'
+            "
+            class="card-avatar"
+            [routerLink]="['/profile', user.id]"
+            onerror="this.src='assets/default-avatar.png'"
+          />
+          <button
+            class="follow-btn"
+            [class.following]="user.following"
+            (click)="toggleFollow(user)"
+          >
+            {{ user.following ? 'Following' : 'Follow' }}
+          </button>
+        </div>
+
+        <div class="card-body">
+          <h3 [routerLink]="['/profile', user.id]">{{ user.username }}</h3>
+          <p class="user-bio">{{ user.bio || 'Writer on 01Blog' }}</p>
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>

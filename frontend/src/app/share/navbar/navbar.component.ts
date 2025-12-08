@@ -145,4 +145,5 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.closeMobileMenu();
     this.router.navigate(['auth/login']);
   }
+  
 }

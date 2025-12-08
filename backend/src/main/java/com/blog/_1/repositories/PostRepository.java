@@ -21,4 +21,8 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     List<Post> findByStatus(PostStatus status);
 
     List<Post> findAllByCreatedAtAfter(LocalDateTime date);
+
+    List<Post> findAllByStatus(PostStatus status);
+
+    List<Post> findByAuthorIdAndStatusOrderByUpdatedAtDesc(UUID authorId, PostStatus status);
 }

@@ -401,3 +401,34 @@
     margin: 0 auto; /* Center if max-width is hit */
   }
 }
+
+.draft-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+  margin-right: 8px;
+}
+
+.draft-link svg {
+  margin-bottom: 2px; /* Slight optical alignment */
+}
+
+.draft-link:hover {
+  color: var(--text-primary);
+}
+
+/* Ensure Write button icon aligns nicely */
+.write-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Hide "Drafts" text on smaller tablets if space is tight, keep icon */
+@media (max-width: 900px) {
+  .draft-link span {
+    display: none;
+  }
+}

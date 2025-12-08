@@ -1,8 +1,7 @@
-@if (!loading) {
 <div class="home-layout">
   <!-- LEFT COLUMN: The Feed -->
   <main class="feed-container" [class.full-width]="isAdmin">
-    <!-- Feed Header -->
+    <!-- Feed Header (Always visible) -->
     <div class="feed-header">
       <div class="header-content">
         <h1>{{ isAdmin ? 'Published Post' : 'For you' }}</h1>
@@ -19,8 +18,29 @@
       </div>
     </div>
 
-    <!-- Posts Feed -->
-    @if (posts.length > 0) {
+    <!-- === LOADING STATE: SKELETONS === -->
+    @if (loading) {
+    <div class="skeleton-list">
+      @for (item of skeletonItems; track $index) {
+      <div class="skeleton-item">
+        <div class="skeleton-header">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+        <div class="skeleton-content">
+          <div class="skeleton-text-group">
+            <div class="skeleton-line title"></div>
+            <div class="skeleton-line body"></div>
+            <div class="skeleton-line body short"></div>
+          </div>
+          <div class="skeleton-image"></div>
+        </div>
+      </div>
+      }
+    </div>
+    }
+    <!-- === REAL CONTENT === -->
+    @else { @if (posts.length > 0) {
     <div class="posts-list">
       @for (p of posts; track p) {
       <article class="post-item">
@@ -68,19 +88,18 @@
     <div class="empty-state">
       <h2>No stories yet.</h2>
     </div>
-    }
+    } }
   </main>
 
-  <!-- RIGHT COLUMN: Sidebar (Now utilizing the new component) -->
+  <!-- RIGHT COLUMN: Sidebar -->
   @if (!isAdmin) {
   <aside class="sidebar-container">
+    <!-- You can optionally wrap this in @if(!loading) if you want the sidebar to blink too, 
+         but usually sidebar loads separately or stays persistent -->
     <app-suggested-users></app-suggested-users>
   </aside>
   }
 </div>
-} @if (loading) {
-<div class="loading-state">Loading...</div>
-}
 
 <app-confirm-dialog
   [show]="showConfirm"

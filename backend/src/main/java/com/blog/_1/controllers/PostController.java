@@ -76,6 +76,19 @@ public class PostController {
         return ResponseEntity.ok(postService.get(id));
     }
 
+    @GetMapping("/drafts")
+    public ResponseEntity<List<PostResponse>> getMyDrafts() {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(postService.getDrafts(currentUser.getId()));
+    }
+
+    @DeleteMapping("/{id}/content")
+    public ResponseEntity<?> clearContent(@PathVariable UUID id) {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        postService.clearPostContent(id, currentUser.getId());
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/{id}/content")
     public ResponseEntity<List<PostChunkResponse>> getContentChunks(
             @PathVariable UUID id,
@@ -96,8 +109,9 @@ public class PostController {
             @PathVariable UUID id,
             @RequestBody PostCreateRequest request,
             Authentication auth) {
-        UUID userId = UUID.fromString(auth.getName());
-        return ResponseEntity.ok(postService.update(id, userId, request));
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        return ResponseEntity.ok(postService.update(id, currentUser.getId(), request));
     }
 
     // Delete post (author or admin)

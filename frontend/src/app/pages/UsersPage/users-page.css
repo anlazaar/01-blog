@@ -1,0 +1,159 @@
+.users-layout {
+  display: flex;
+  justify-content: center;
+  padding: 80px 24px;
+}
+
+.users-container {
+  width: 100%;
+  max-width: 1000px;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 64px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 32px;
+}
+
+.page-header h1 {
+  font-size: 42px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 18px;
+}
+
+/* Grid Layout */
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 32px;
+}
+
+/* User Card Styling */
+.user-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.user-card:hover {
+  border-color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.card-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.card-body h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.user-bio {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Follow Button */
+.follow-btn {
+  background: transparent;
+  border: 1px solid var(--text-primary);
+  color: var(--text-primary);
+  border-radius: 99px;
+  padding: 6px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.follow-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.follow-btn.following {
+  background: var(--text-primary);
+  color: var(--background);
+}
+
+.skeleton-card {
+  pointer-events: none; /* Prevent clicking while loading */
+  border-color: transparent; /* Optional: Make border invisible or keep it */
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+/* 1. Header Elements */
+.skeleton-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: var(--secondary);
+}
+
+.skeleton-btn {
+  width: 80px;
+  height: 32px;
+  border-radius: 99px;
+  background-color: var(--secondary);
+}
+
+/* 2. Body Text Lines */
+.skeleton-line {
+  background-color: var(--secondary);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.skeleton-line.title {
+  height: 20px;
+  width: 60%; /* Simulate username length */
+  margin-bottom: 16px;
+}
+
+.skeleton-line.bio {
+  height: 14px;
+  width: 100%;
+}
+
+.skeleton-line.bio.short {
+  width: 70%; 
+}
+
+/* Animation */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}

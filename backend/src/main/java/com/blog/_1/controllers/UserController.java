@@ -89,4 +89,17 @@ public class UserController {
         UUID currentId = (currentUser != null) ? currentUser.getId() : null;
         return ResponseEntity.ok(userService.getSuggestedUsers(currentId));
     }
+
+    @GetMapping("/explore")
+    public ResponseEntity<List<UserPublicProfileDTO>> getAllUsers() {
+        User currentUser = null;
+        try {
+            currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        } catch (Exception e) {
+            // User anonymous
+        }
+        UUID currentId = (currentUser != null) ? currentUser.getId() : null;
+
+        return ResponseEntity.ok(userService.getAllPublicUsers(currentId));
+    }
 }

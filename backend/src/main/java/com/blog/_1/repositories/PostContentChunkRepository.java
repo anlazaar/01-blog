@@ -14,4 +14,6 @@ public interface PostContentChunkRepository extends JpaRepository<PostContentChu
     List<PostContentChunk> findByPostIdOrderByChunkIndexAsc(UUID postId, Pageable pageable);
 
     long countByPostId(UUID postId);
+
+    void deleteByPostId(UUID postId);
 }

@@ -43,4 +43,8 @@ export class UserService {
   getSuggestedUsers(): Observable<any[]> {
     return this.http.get<any[]>(`${this.api}/suggested`);
   }
+
+  getAllUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.api}/explore`);
+  }
 }

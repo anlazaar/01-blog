@@ -182,6 +182,26 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    public List<UserPublicProfileDTO> getAllPublicUsers(UUID currentUserId) {
+        List<User> users = userRepository.findAll();
+
+        return users.stream().map(user -> {
+            UserPublicProfileDTO dto = new UserPublicProfileDTO();
+            dto.setId(user.getId());
+            dto.setUsername(user.getUsername());
+            dto.setBio(user.getBio());
+            dto.setAvatarUrl(user.getAvatarUrl());
+
+            if (currentUserId != null && !currentUserId.equals(user.getId())) {
+                boolean isFollowing = subscriptionService.isFollowing(currentUserId, user.getId());
+                dto.setFollowing(isFollowing);
+            } else {
+                dto.setFollowing(false);
+            }
+            return dto;
+        }).toList();
+    }
+
     public void deleteUser(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
