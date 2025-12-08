@@ -26,6 +26,7 @@ export interface PostResponse {
 
   author: UserPublicProfile;
   likedByCurrentUser: boolean;
+  savedByCurrentUser: boolean;
   likeCount: number;
 
   comments: CommentResponse[];

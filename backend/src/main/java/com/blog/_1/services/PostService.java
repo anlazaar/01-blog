@@ -8,9 +8,11 @@ import com.blog._1.dto.post.PostResponse;
 import com.blog._1.models.Post;
 import com.blog._1.models.PostContentChunk;
 import com.blog._1.models.PostStatus;
+import com.blog._1.models.SavedPost;
 import com.blog._1.models.User;
 import com.blog._1.repositories.LikeRepository;
 import com.blog._1.repositories.PostRepository;
+import com.blog._1.repositories.SavedPostRepository;
 import com.blog._1.repositories.SubscriptionRepository;
 import com.blog._1.repositories.UserRepository;
 import com.blog._1.repositories.PostContentChunkRepository;
@@ -43,6 +45,7 @@ public class PostService {
     private final PostContentChunkRepository chunkRepository;
     private final NotificationService notificationService;
     private final SubscriptionRepository subscriptionRepository;
+    private final SavedPostRepository savedPostRepository;
 
     @Value("${file.upload-dir:uploads}")
     private String uploadDir;
@@ -239,9 +242,25 @@ public class PostService {
 
     // Get all posts
     public List<PostResponse> getAll() {
-        return postRepository.findAllByStatus(PostStatus.PUBLISHED)
-                .stream().map(PostResponse::from)
+        // 1. Fetch raw posts
+        List<PostResponse> posts = postRepository.findAllByStatus(PostStatus.PUBLISHED)
+                .stream()
+                .map(PostResponse::from)
                 .collect(Collectors.toList());
+
+        // 2. Check if a user is currently logged in
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof User) {
+            User currentUser = (User) auth.getPrincipal();
+
+            // 3. Loop through posts and check if saved/liked by THIS user
+            for (PostResponse post : posts) {
+                enrichPostResponse(post, currentUser.getId());
+            }
+        }
+
+        return posts;
     }
 
     // Get Draft posts
@@ -303,5 +322,47 @@ public class PostService {
         }
 
         postRepository.delete(post);
+    }
+
+    @Transactional
+    public boolean toggleSave(UUID postId, UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        if (savedPostRepository.existsByUserAndPost(user, post)) {
+            savedPostRepository.deleteByUserAndPost(user, post);
+            return false; // Not saved anymore
+        } else {
+            SavedPost saved = SavedPost.builder().user(user).post(post).build();
+            savedPostRepository.save(saved);
+            return true; // Now saved
+        }
+    }
+
+    public List<PostResponse> getSavedPosts(UUID userId) {
+        List<SavedPost> savedPosts = savedPostRepository.findByUserIdOrderByCreatedAtDesc(userId);
+
+        return savedPosts.stream()
+                .map(sp -> {
+                    PostResponse resp = PostResponse.from(sp.getPost());
+                    resp.setSavedByCurrentUser(true); // Obviously true here
+                    // You might want to set likedByCurrentUser here too via repository check
+                    return resp;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private void enrichPostResponse(PostResponse response, UUID userId) {
+        if (userId != null) {
+            boolean isSaved = savedPostRepository.existsByUserAndPost(
+                    userRepository.getReferenceById(userId),
+                    postRepository.getReferenceById(response.getId()));
+            response.setSavedByCurrentUser(isSaved);
+
+            boolean isLiked = likeRepository.existsByPostIdAndUserId(response.getId(), userId);
+            response.setLikedByCurrentUser(isLiked);
+        }
     }
 }

@@ -143,4 +143,17 @@ public class PostController {
     public ResponseEntity<List<PostResponse>> getByUser(@PathVariable UUID userId) {
         return ResponseEntity.ok(postService.getByUser(userId));
     }
+
+    @PostMapping("/{id}/save")
+    public ResponseEntity<Map<String, Object>> toggleSave(@PathVariable UUID id) {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        boolean isSaved = postService.toggleSave(id, currentUser.getId());
+        return ResponseEntity.ok(Map.of("isSaved", isSaved));
+    }
+
+    @GetMapping("/saved")
+    public ResponseEntity<List<PostResponse>> getSavedPosts() {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(postService.getSavedPosts(currentUser.getId()));
+    }
 }
