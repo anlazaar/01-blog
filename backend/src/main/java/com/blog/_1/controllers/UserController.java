@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -74,5 +75,18 @@ public class UserController {
                 .body(Map.of("res", userService.patchUser(currentUserId, firstname, lastname, bio, avatar, email,
                         password, oldpassword, username)));
 
+    }
+
+    @GetMapping("/suggested")
+    public ResponseEntity<List<UserPublicProfileDTO>> getSuggestedUsers() {
+        User currentUser = null;
+        try {
+            currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        } catch (Exception e) {
+            // User might be anonymous
+        }
+
+        UUID currentId = (currentUser != null) ? currentUser.getId() : null;
+        return ResponseEntity.ok(userService.getSuggestedUsers(currentId));
     }
 }

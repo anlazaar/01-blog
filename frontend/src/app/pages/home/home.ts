@@ -6,6 +6,7 @@ import { TokenService } from '../../services/token.service';
 import { PostResponse } from '../../models/global.model';
 import { PostOptionsMenuComponent } from '../../share/PostOptionsMenu/post-options-menu';
 import { ConfirmDialogComponent } from '../../share/ConfirmDialogComponent/confirm-dialog';
+import { UserService } from '../../services/UserService';
 
 @Component({
   selector: 'app-home',
@@ -21,6 +22,7 @@ export class Home implements OnInit {
   isAdmin = false;
   token: string | null = '';
   currentUserId: string | null = '';
+  suggestedUsers: any[] = []; // New Array
 
   showConfirm = false;
   postToDelete: PostResponse | null = null;
@@ -29,12 +31,53 @@ export class Home implements OnInit {
   private postService = inject(PostService);
   private tokenService = inject(TokenService);
   private router = inject(Router);
+  private userService = inject(UserService);
 
   ngOnInit(): void {
     this.token = this.tokenService.getToken();
     this.isAdmin = this.tokenService.isAdmin();
     this.currentUserId = this.tokenService.getUUID();
     this.loadPosts();
+    if (!this.isAdmin) {
+      this.loadSuggestedUsers();
+    }
+  }
+
+  toggleFollow(user: any) {
+    if (!this.currentUserId) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    if (user.following) {
+      this.userService.unfollowUser(user.id).subscribe({
+        next: (res) => {
+          user.following = false;
+          console.log('Unfollowed ' + user.username);
+        },
+        error: (err) => {
+          console.error('ERROR UNFOLLOWING USER :', err);
+        },
+      });
+    } else {
+      this.userService.followUser(user.id).subscribe({
+        next: (res) => {
+          user.following = true;
+          console.log('Followed ' + user.username);
+        },
+        error: (err) => {
+          console.error('ERROR FOLLOWING USER :', err);
+        },
+      });
+    }
+  }
+
+  loadSuggestedUsers() {
+    this.userService.getSuggestedUsers().subscribe({
+      next: (data) => {
+        this.suggestedUsers = data;
+      },
+    });
   }
 
   loadPosts() {

@@ -5,7 +5,7 @@ import java.util.Map;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.blog._1.dto.auth.LoginResponse;
+
 import com.blog._1.models.Role;
 import com.blog._1.models.User;
 import com.blog._1.repositories.UserRepository;

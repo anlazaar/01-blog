@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.blog._1.dto.user.UserLoginRequest;
 import com.blog._1.dto.user.UserRegisterRequest;
-import com.blog._1.models.User;
 import com.blog._1.services.AuthenticationService;
 
 import jakarta.validation.Valid;

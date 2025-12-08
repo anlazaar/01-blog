@@ -1,75 +1,132 @@
 @if (!loading) {
-<div class="feed-container">
-  <!-- Feed Header -->
-  <div class="feed-header">
-    <div class="header-content">
-      <h1>For you</h1>
-      <div class="header-actions">
-        <!-- Minimal Search -->
-        <div class="search-wrapper">
-          <input type="text" placeholder="Search..." class="search-input" />
-        </div>
-        <!-- FIX: Use an Anchor tag for navigation -->
-        @if (currentUserId) {
-        <a routerLink="new-story" class="write-btn">Write</a>
-        }
-      </div>
-    </div>
-  </div>
-  <!-- Posts Feed -->
-  @if (posts.length > 0) {
-  <div class="posts-list">
-    @for (p of posts; track p) {
-    <article class="post-item">
-      <!-- Post Header -->
-      <div class="post-meta-header">
-        <div class="author-info" [routerLink]="['/profile', p.author.id]">
-          <div class="author-avatar-placeholder">
-            {{ p.author.username.charAt(0) | uppercase }}
+<div class="home-layout">
+  <!-- LEFT COLUMN: The Feed -->
+  <!-- We add a class if sidebar is missing to center it for admins -->
+  <main class="feed-container" [class.full-width]="isAdmin">
+    <!-- Feed Header -->
+    <div class="feed-header">
+      <div class="header-content">
+        <!-- 1. CHANGE: Dynamic Title -->
+        <h1>{{ isAdmin ? 'Published Post' : 'For you' }}</h1>
+
+        <div class="header-actions">
+          <div class="search-wrapper">
+            <input type="text" placeholder="Search..." class="search-input" />
           </div>
-          <span class="author-name">{{ p.author.username }}</span>
-          <span class="separator">·</span>
-          <span class="post-date">{{ p.createdAt | date : 'MMM d' }}</span>
-        </div>
-        <!-- Options Menu -->
-        @if (currentUserId) {
-        <app-post-options-menu
-          [canEdit]="currentUserId == p.author.id"
-          [canReport]="currentUserId != p.author.id"
-          (update)="onUpdate(p)"
-          (delete)="onDelete(p)"
-          (report)="onReport(p.author.id)"
-        ></app-post-options-menu>
-        }
-      </div>
-      <!-- Post Content -->
-      <div class="post-content" [routerLink]="['/posts', p.id]">
-        <div class="post-text">
-          <h2 class="post-title">{{ p.title }}</h2>
-          <!-- <div class="post-footer-meta">
-            <span class="read-time">3 min read</span>
-          </div> -->
-        </div>
-        <!-- Media -->
-        @if (p.mediaUrl) {
-        <div class="post-media">
-          @if (p.mediaType === 'IMAGE') {
-          <img [src]="'http://localhost:8080' + p.mediaUrl" alt="Cover" />
-          } @if (p.mediaType === 'VIDEO') {
-          <video [src]="'http://localhost:8080' + p.mediaUrl" controls muted></video>
+
+          <!-- 2. CHANGE: Only show Write button if logged in AND NOT ADMIN -->
+          @if (currentUserId && !isAdmin) {
+          <a routerLink="new-story" class="write-btn">Write</a>
           }
         </div>
+      </div>
+    </div>
+
+    <!-- Posts Feed -->
+    @if (posts.length > 0) {
+    <div class="posts-list">
+      @for (p of posts; track p) {
+      <article class="post-item">
+        <div class="post-meta-header">
+          <div class="author-info" [routerLink]="['/profile', p.author.id]">
+            <div class="author-avatar-placeholder">
+              {{ p.author.username.charAt(0) | uppercase }}
+            </div>
+            <span class="author-name">{{ p.author.username }}</span>
+            <span class="separator">·</span>
+            <span class="post-date">{{ p.createdAt | date : 'MMM d' }}</span>
+          </div>
+
+          <!-- Options Menu (Admins can delete/edit too depending on your logic) -->
+          @if (currentUserId) {
+          <app-post-options-menu
+            [canEdit]="currentUserId == p.author.id || isAdmin"
+            [canReport]="currentUserId != p.author.id && !isAdmin"
+            (update)="onUpdate(p)"
+            (delete)="onDelete(p)"
+            (report)="onReport(p.author.id)"
+          ></app-post-options-menu>
+          }
+        </div>
+
+        <div class="post-content" [routerLink]="['/posts', p.id]">
+          <div class="post-text">
+            <h2 class="post-title">{{ p.title }}</h2>
+          </div>
+          @if (p.mediaUrl) {
+          <div class="post-media">
+            @if (p.mediaType === 'IMAGE') {
+            <img [src]="'http://localhost:8080' + p.mediaUrl" alt="Cover" />
+            } @if (p.mediaType === 'VIDEO') {
+            <video [src]="'http://localhost:8080' + p.mediaUrl" controls muted></video>
+            }
+          </div>
+          }
+        </div>
+        <div class="post-divider"></div>
+      </article>
+      }
+    </div>
+    } @else {
+    <div class="empty-state">
+      <h2>No stories yet.</h2>
+    </div>
+    }
+  </main>
+
+  <!-- RIGHT COLUMN: Sidebar (Suggested Users) -->
+  <!-- 3. CHANGE: Completely hide sidebar for admins -->
+  @if (!isAdmin) {
+  <aside class="sidebar-container">
+    <div class="sidebar-sticky">
+      <h3 class="sidebar-title">Who to follow</h3>
+
+      <div class="suggested-list">
+        @for(user of suggestedUsers; track user.id) {
+        <div class="suggested-user-card">
+          <div class="user-card-left" [routerLink]="['/profile', user.id]">
+            @if(user.avatarUrl) {
+            <img [src]="'http://localhost:8080' + user.avatarUrl" class="user-avatar" />
+            } @else {
+            <div class="user-avatar-placeholder">
+              {{ user.username.charAt(0) | uppercase }}
+            </div>
+            }
+            <div class="user-info">
+              <span class="user-name">{{ user.username }}</span>
+              <p class="user-bio" title="{{ user.bio }}">
+                {{
+                  user.bio
+                    ? (user.bio | slice : 0 : 30) + (user.bio.length > 30 ? '...' : '')
+                    : 'Writer'
+                }}
+              </p>
+            </div>
+          </div>
+          <button
+            class="follow-btn"
+            [class.is-following]="user.following"
+            (click)="toggleFollow(user)"
+          >
+            {{ user.following ? 'Following' : 'Follow' }}
+          </button>
+        </div>
+        } @if(suggestedUsers.length === 0 && currentUserId != null ) {
+        <p class="no-suggestions">No suggestions available.</p>
+        } @else if (currentUserId == null) {
+        <p class="no-suggestions">Login to see suggestions.</p>
         }
       </div>
-      <div class="post-divider"></div>
-    </article>
-    }
-  </div>
-  } @else {
-  <div class="empty-state">
-    <h2>No stories yet.</h2>
-    <p>Write the first one!</p>
-  </div>
+
+      <div class="sidebar-footer">
+        <a routerLink="/help">Help</a>
+        <a href="#">Status</a>
+        <a href="#">Writers</a>
+        <a href="#">Blog</a>
+        <a routerLink="/privacy">Privacy</a>
+      </div>
+    </div>
+  </aside>
   }
 </div>
 } @if (loading) {
