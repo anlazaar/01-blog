@@ -11,6 +11,7 @@ import com.blog._1.models.PostStatus;
 import com.blog._1.models.User;
 import com.blog._1.repositories.LikeRepository;
 import com.blog._1.repositories.PostRepository;
+import com.blog._1.repositories.SubscriptionRepository;
 import com.blog._1.repositories.UserRepository;
 import com.blog._1.repositories.PostContentChunkRepository;
 
@@ -40,6 +41,8 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final PostContentChunkRepository chunkRepository;
+    private final NotificationService notificationService;
+    private final SubscriptionRepository subscriptionRepository;
 
     @Value("${file.upload-dir:uploads}")
     private String uploadDir;
@@ -181,7 +184,25 @@ public class PostService {
         }
 
         post.setStatus(PostStatus.PUBLISHED);
-        return PostResponse.from(postRepository.save(post));
+        Post savedPost = postRepository.save(post);
+
+        try {
+            List<User> followers = subscriptionRepository.findByFollowing_Id(userId).stream()
+                    .map(sub -> sub.getFollower())
+                    .toList();
+
+            // Add a log for debugging
+            System.out.println("Found " + followers.size() + " followers for user " + userId);
+
+            if (!followers.isEmpty()) {
+                notificationService.notifyFollowers(savedPost, followers);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to send notifications: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return PostResponse.from(savedPost);
     }
 
     public List<PostChunkResponse> getContentChunks(UUID postId, int page, int size) {

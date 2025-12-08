@@ -270,3 +270,10 @@
   height: 1px;
   background-color: #e5e5e5;
 }
+
+
+.feed-container.full-width {
+  margin: 0 auto; 
+  max-width: 800px; 
+  border-right: none;
+}

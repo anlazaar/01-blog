@@ -254,7 +254,6 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.9); /* White haze instead of dark */
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s ease;
@@ -283,5 +282,122 @@
 
   .navbar-container {
     padding: 0 20px;
+  }
+}
+
+.mobile-bell {
+  margin-right: 8px;
+}
+
+/* --- Notifications --- */
+.notification-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav-btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 8px;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.nav-btn-icon:hover {
+  color: var(--text-primary);
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: var(--destructive); /* Red color defined in your root */
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  height: 16px;
+  min-width: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 1px solid var(--background);
+}
+
+/* Dropdown */
+.notification-dropdown {
+  position: absolute;
+  top: 50px; /* Below navbar */
+  right: -80px; /* Center alignment adjustment */
+  width: 320px;
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: var(--shadow-lg); /* Using your defined variable */
+  z-index: 10000;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.dropdown-header {
+  padding: 16px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.dropdown-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-item {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.notif-item:hover {
+  background-color: var(--secondary);
+}
+
+.notif-item.unread {
+  background-color: var(--secondary-sunken); /* Slightly distinct background */
+  border-left: 3px solid var(--text-primary);
+}
+
+.notif-msg {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.notif-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.empty-state {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .notification-dropdown.mobile-dropdown {
+    position: fixed; /* Use fixed to ensure it stays on screen regardless of scroll */
+    top: 65px; /* Height of navbar */
+    right: 10px; /* Stick to the right edge with small padding */
+    left: 10px; /* Stretch across screen if needed */
+    width: auto; /* Auto width to respect left/right */
+    max-width: 400px;
+    margin: 0 auto; /* Center if max-width is hit */
   }
 }

@@ -1,0 +1,39 @@
+<div class="help-layout">
+  <div class="help-container">
+    <!-- Hero Section -->
+    <section class="help-hero">
+      <h1>Help Center</h1>
+      <p class="subtitle">How can we help you today?</p>
+
+      <div class="search-wrapper">
+        <input type="text" placeholder="Search for help..." class="help-search" />
+        <svg class="search-icon" width="20" height="20" fill="none" viewBox="0 0 24 24">
+          <path
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+          />
+        </svg>
+      </div>
+    </section>
+
+    <!-- Categories Grid -->
+    <section class="help-topics">
+      @for (cat of categories; track cat.title) {
+      <div class="topic-card">
+        <h3>{{ cat.title }}</h3>
+        <p>{{ cat.desc }}</p>
+        <a href="#" class="topic-link">View articles &rarr;</a>
+      </div>
+      }
+    </section>
+
+    <!-- FAQ / Footer Area -->
+    <section class="help-footer">
+      <h2>Still need help?</h2>
+      <p>Check out our <a routerLink="/">Status Page</a> or email support.</p>
+    </section>
+  </div>
+</div>

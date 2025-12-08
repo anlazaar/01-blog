@@ -38,7 +38,9 @@ export class Home implements OnInit {
     this.isAdmin = this.tokenService.isAdmin();
     this.currentUserId = this.tokenService.getUUID();
     this.loadPosts();
-    this.loadSuggestedUsers();
+    if (!this.isAdmin) {
+      this.loadSuggestedUsers();
+    }
   }
 
   toggleFollow(user: any) {

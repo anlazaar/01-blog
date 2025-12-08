@@ -58,7 +58,12 @@ textarea {
   color: var(--text-primary);
   outline: none;
   transition: border-color 0.2s ease;
-  resize: none; /* Disable manual resize for cleaner look */
+  resize: none;
+}
+
+select option {
+  background-color: var(--background);
+  color: var(--text-primary);
 }
 
 select:focus,

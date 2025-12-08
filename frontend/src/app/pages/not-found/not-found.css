@@ -1,0 +1,42 @@
+.error-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  text-align: center;
+  padding: 20px;
+}
+
+.error-container {
+  max-width: 500px;
+}
+
+.error-code {
+  font-family: 'Charter', 'Georgia', serif;
+  font-size: 120px;
+  line-height: 1;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  font-weight: 400;
+}
+
+.error-title {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 24px;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.error-desc {
+  font-family: 'Charter', 'Georgia', serif;
+  font-size: 18px;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+.home-btn {
+  display: inline-block;
+  text-decoration: none;
+}
