@@ -3,7 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PostResponse } from '../../models/global.model';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { switchMap } from 'rxjs';
+import { switchMap, tap } from 'rxjs'; // <--- 1. Import tap
 import { PostService } from '../../services/post.service';
 import {
   faHeart as faHeartRegular,
@@ -16,6 +16,7 @@ import { TokenService } from '../../services/token.service';
 import { ConfirmDialogComponent } from '../../share/ConfirmDialogComponent/confirm-dialog';
 import { FormsModule } from '@angular/forms';
 import { MarkdownComponent } from 'ngx-markdown';
+import { SuggestedUsersComponent } from '../../share/SuggestedAccounts/suggested-users';
 
 @Component({
   selector: 'app-post-page',
@@ -28,6 +29,7 @@ import { MarkdownComponent } from 'ngx-markdown';
     FormsModule,
     RouterLink,
     MarkdownComponent,
+    SuggestedUsersComponent,
   ],
   providers: [PostService],
   templateUrl: './post.html',
@@ -40,16 +42,17 @@ export class PostPage implements OnInit, OnDestroy {
   faCommentRegular = faCommentRegular;
 
   // State
+  isAdmin = false;
   showConfirm = false;
   postToDelete: PostResponse | null = null;
   postId!: string;
-  post!: PostResponse;
+  post: PostResponse | null = null; // Changed to nullable for reset safety
   loading = true;
   currentUserId: string | null = '';
   newComment: string = '';
 
   // Chunking State
-  private readonly CHUNK_PAGE_SIZE = 2; // Keep small for testing
+  private readonly CHUNK_PAGE_SIZE = 2;
   fullContentDisplay = '';
   currentPage = 0;
   hasMoreChunks = true;
@@ -65,7 +68,6 @@ export class PostPage implements OnInit, OnDestroy {
   constructor(private route: ActivatedRoute, private http: HttpClient) {}
 
   // --- OBSERVER SETUP ---
-  // This setter triggers whenever the #scrollAnchor div is rendered in the DOM
   @ViewChild('scrollAnchor') set scrollAnchor(element: ElementRef) {
     if (element && !this.observer) {
       this.setupObserver(element.nativeElement);
@@ -74,14 +76,13 @@ export class PostPage implements OnInit, OnDestroy {
 
   private setupObserver(target: HTMLElement) {
     const options = {
-      root: null, // viewport
-      rootMargin: '200px', // Load next chunk when user is within 200px of bottom
+      root: null,
+      rootMargin: '200px',
       threshold: 0.1,
     };
 
     this.observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
-        // Only load if visible, we have more data, and we aren't currently loading
         if (entry.isIntersecting && this.hasMoreChunks && !this.isLoadingChunks) {
           this.loadNextChunk();
         }
@@ -93,9 +94,12 @@ export class PostPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUserId = this.tokenService.getUUID();
+    this.isAdmin = this.tokenService.isAdmin();
 
     this.route.paramMap
       .pipe(
+        // 2. FIX: Reset state immediately when route params change
+        tap(() => this.resetState()),
         switchMap((params) => {
           this.postId = params.get('id')!;
           return this.postService.getPostMetadata(this.postId);
@@ -105,14 +109,28 @@ export class PostPage implements OnInit, OnDestroy {
         next: (res) => {
           this.post = res;
           this.loading = false;
-
-          // Load the FIRST batch immediately so the screen isn't empty
+          // Load the FIRST batch immediately
           this.loadNextChunk();
         },
         error: (err) => {
           this.loading = false;
+          console.error(err);
         },
       });
+  }
+
+  // 3. FIX: Helper to clear all variables
+  private resetState() {
+    this.loading = true; // Shows loading spinner, hides old content
+    this.post = null; // Clear old metadata
+    this.fullContentDisplay = ''; // Clear old markdown
+    this.currentPage = 0; // Reset pagination
+    this.hasMoreChunks = true;
+    this.isLoadingChunks = false;
+    this.newComment = '';
+
+    // Important: Disconnect old observer to prevent memory leaks/logic errors
+    this.disconnectObserver();
   }
 
   loadNextChunk() {
@@ -196,11 +214,11 @@ export class PostPage implements OnInit, OnDestroy {
   }
 
   sendComment() {
-    if (!this.newComment.trim()) return;
+    if (!this.newComment.trim() || !this.post) return;
     this.postService.createComment(this.post.id, this.newComment).subscribe({
       next: (comment) => {
-        if (!this.post.comments) this.post.comments = [];
-        this.post.comments.push(comment);
+        if (!this.post!.comments) this.post!.comments = [];
+        this.post!.comments.push(comment);
         this.newComment = '';
       },
       error: (err) => console.log(err),

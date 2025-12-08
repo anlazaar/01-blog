@@ -1,0 +1,44 @@
+<div class="sidebar-sticky">
+  <h3 class="sidebar-title">Who to follow</h3>
+
+  <div class="suggested-list">
+    @for(user of suggestedUsers; track user.id) {
+    <div class="suggested-user-card">
+      <div class="user-card-left" [routerLink]="['/profile', user.id]">
+        @if(user.avatarUrl) {
+        <img [src]="'http://localhost:8080' + user.avatarUrl" class="user-avatar" />
+        } @else {
+        <div class="user-avatar-placeholder">
+          {{ user.username.charAt(0) | uppercase }}
+        </div>
+        }
+        <div class="user-info">
+          <span class="user-name">{{ user.username }}</span>
+          <p class="user-bio" title="{{ user.bio }}">
+            {{
+              user.bio
+                ? (user.bio | slice : 0 : 30) + (user.bio.length > 30 ? '...' : '')
+                : 'Writer'
+            }}
+          </p>
+        </div>
+      </div>
+      <button class="follow-btn" [class.is-following]="user.following" (click)="toggleFollow(user)">
+        {{ user.following ? 'Following' : 'Follow' }}
+      </button>
+    </div>
+    } @if(suggestedUsers.length === 0 && currentUserId != null ) {
+    <p class="no-suggestions">No suggestions available.</p>
+    } @else if (currentUserId == null) {
+    <p class="no-suggestions">Login to see suggestions.</p>
+    }
+  </div>
+
+  <div class="sidebar-footer">
+    <a routerLink="/help">Help</a>
+    <a href="#">Status</a>
+    <a href="#">Writers</a>
+    <a href="#">Blog</a>
+    <a routerLink="/privacy">Privacy</a>
+  </div>
+</div>
