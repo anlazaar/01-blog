@@ -75,9 +75,10 @@
     </section>
 
     <!-- 4. Engagement Bar -->
+    @if (!isAdmin) {
     <section class="engagement-bar">
       <div class="engagement-left">
-        @if (currentUserId) {
+        @if (currentUserId ) {
         <button
           class="action-btn like-btn"
           [class.active]="post.likedByCurrentUser"
@@ -93,6 +94,7 @@
         </button>
       </div>
     </section>
+    }
 
     <div class="separator"></div>
 
@@ -100,7 +102,7 @@
     <section class="responses-section">
       <h3>Responses ({{ post.comments.length }})</h3>
 
-      @if (currentUserId) {
+      @if (currentUserId && !isAdmin) {
       <div class="add-response-box">
         <div class="user-avatar-small">
           <span>{{ post.author.username.charAt(0) | uppercase }}</span>

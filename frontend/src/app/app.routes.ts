@@ -16,19 +16,24 @@ import { AddPost } from './pages/add-post/add-post';
 import { PrivacyPage } from './pages/privacy/privacy';
 import { HelpComponent } from './pages/help/help';
 import { NotFoundComponent } from './pages/not-found/not-found';
+import { UsersPageComponent } from './pages/UsersPage/users-page';
+import { DraftsComponent } from './pages/drafts/drafts';
 
 export const routes: Routes = [
   { path: '', component: Home },
   { path: 'auth/login', component: Login, canActivate: [AuthGuard] },
   { path: 'auth/register', component: Register, canActivate: [AuthGuard] },
   { path: 'posts/:id', component: PostPage },
-  { path: 'new-story', component: AddPost },
   { path: 'profile/:id', component: ProfilePage },
   { path: 'profile/complete-profile/:id', component: CompleteProfile },
   { path: 'profile/update/:id', component: UpdateProfile },
   { path: 'report/:id', component: ReportPage },
   { path: 'banned', component: BannedPageComponent },
-  { path: 'admin', component: AdminDashboardComponent, canActivate: [AdminGuard] },
+  { path: 'writers', component: UsersPageComponent },
+  { path: 'admin/dashboard', component: AdminDashboardComponent, canActivate: [AdminGuard] },
+  { path: 'new-story', component: AddPost },
+  { path: 'p/:id/edit', component: AddPost },
+  { path: 'me/drafts', component: DraftsComponent },
 
   { path: 'help', component: HelpComponent },
   { path: 'privacy', component: PrivacyPage },

@@ -13,17 +13,24 @@ import { SuggestedUsersComponent } from '../../share/SuggestedAccounts/suggested
   selector: 'app-home',
   standalone: true,
   // Removed AddPost from here
-  imports: [CommonModule, PostOptionsMenuComponent, ConfirmDialogComponent, RouterLink, SuggestedUsersComponent],
+  imports: [
+    CommonModule,
+    PostOptionsMenuComponent,
+    ConfirmDialogComponent,
+    RouterLink,
+    SuggestedUsersComponent,
+  ],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
 export class Home implements OnInit {
   posts: PostResponse[] = [];
-  loading = false;
+  loading = true;
   isAdmin = false;
   token: string | null = '';
   currentUserId: string | null = '';
   suggestedUsers: any[] = []; // New Array
+  skeletonItems = new Array(5);
 
   showConfirm = false;
   postToDelete: PostResponse | null = null;
@@ -40,8 +47,6 @@ export class Home implements OnInit {
     this.currentUserId = this.tokenService.getUUID();
     this.loadPosts();
   }
-
-
 
   loadPosts() {
     this.loading = true;

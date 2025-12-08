@@ -239,9 +239,30 @@ public class PostService {
 
     // Get all posts
     public List<PostResponse> getAll() {
-        return postRepository.findAll()
+        return postRepository.findAllByStatus(PostStatus.PUBLISHED)
                 .stream().map(PostResponse::from)
                 .collect(Collectors.toList());
+    }
+
+    // Get Draft posts
+    public List<PostResponse> getDrafts(UUID userId) {
+        return postRepository.findByAuthorIdAndStatusOrderByUpdatedAtDesc(userId, PostStatus.DRAFT)
+                .stream()
+                .map(PostResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void clearPostContent(UUID postId, UUID userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        if (!post.getAuthor().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        // Delete all existing chunks so we can re-upload new version
+        chunkRepository.deleteByPostId(postId);
     }
 
     // Get posts by user
@@ -259,6 +280,10 @@ public class PostService {
         if (!post.getAuthor().getId().equals(userId)) {
             throw new RuntimeException("You are not allowed to edit this post");
         }
+
+        // --- FIX: Update Title ---
+        post.setTitle(request.getTitle());
+        // -------------------------
 
         post.setDescription(request.getDescription());
         post.setMediaUrl(request.getMediaUrl());

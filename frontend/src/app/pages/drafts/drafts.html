@@ -1,0 +1,30 @@
+<div class="drafts-layout">
+  <div class="drafts-container">
+    <h1>Your Drafts</h1>
+
+    @if(loading) {
+    <div class="loading">Loading...</div>
+    } @else if (drafts.length === 0) {
+    <div class="empty-state">
+      <p>You have no drafts.</p>
+      <a routerLink="/new-story" class="write-btn">Write a story</a>
+    </div>
+    } @else {
+    <div class="draft-list">
+      @for(post of drafts; track post.id) {
+      <div class="draft-item">
+        <div class="draft-info" [routerLink]="['/p', post.id, 'edit']">
+          <h3>{{ post.title || 'Untitled Story' }}</h3>
+          <p class="draft-desc">{{ post.description }}</p>
+          <span class="draft-date">Last edited: {{ post.updatedAt | date : 'medium' }}</span>
+        </div>
+        <div class="draft-actions">
+          <button class="btn-edit" [routerLink]="['/p', post.id, 'edit']">Edit</button>
+          <button class="btn-delete" (click)="deleteDraft(post.id)">Delete</button>
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>
