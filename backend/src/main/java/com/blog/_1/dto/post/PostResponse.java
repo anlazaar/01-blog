@@ -23,6 +23,7 @@ public class PostResponse {
 
     private int likeCount;
 
+    private boolean savedByCurrentUser;
     private boolean likedByCurrentUser;
 
     private List<CommentResponse> comments;

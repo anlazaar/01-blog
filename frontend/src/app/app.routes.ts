@@ -18,6 +18,7 @@ import { HelpComponent } from './pages/help/help';
 import { NotFoundComponent } from './pages/not-found/not-found';
 import { UsersPageComponent } from './pages/UsersPage/users-page';
 import { DraftsComponent } from './pages/drafts/drafts';
+import { SavedPostsComponent } from './pages/saved-posts/saved-posts';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -34,6 +35,7 @@ export const routes: Routes = [
   { path: 'new-story', component: AddPost },
   { path: 'p/:id/edit', component: AddPost },
   { path: 'me/drafts', component: DraftsComponent },
+  { path: 'me/saved', component: SavedPostsComponent },
 
   { path: 'help', component: HelpComponent },
   { path: 'privacy', component: PrivacyPage },

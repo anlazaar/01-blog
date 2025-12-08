@@ -62,6 +62,24 @@ export class Home implements OnInit {
     });
   }
 
+  toggleSave(event: Event, post: PostResponse) {
+    event.stopPropagation();
+
+    // Optimistic UI Update
+    const originalState = post.savedByCurrentUser;
+    post.savedByCurrentUser = !post.savedByCurrentUser;
+
+    this.postService.toggleSavePost(post.id).subscribe({
+      next: (res) => {
+        post.savedByCurrentUser = res.isSaved;
+      },
+      error: () => {
+        // Revert on error
+        post.savedByCurrentUser = originalState;
+      },
+    });
+  }
+
   onReport(id: string) {
     this.router.navigate(['/report', id]);
   }

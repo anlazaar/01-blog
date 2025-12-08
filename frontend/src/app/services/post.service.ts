@@ -127,4 +127,12 @@ export class PostService {
       map((chunks) => chunks.map((c) => c.content).join(''))
     );
   }
+
+  toggleSavePost(id: string): Observable<{ isSaved: boolean }> {
+    return this.http.post<{ isSaved: boolean }>(`${this.API_URL}/${id}/save`, {});
+  }
+
+  getSavedPosts(): Observable<PostResponse[]> {
+    return this.http.get<PostResponse[]>(`${this.API_URL}/saved`);
+  }
 }

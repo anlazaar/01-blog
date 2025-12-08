@@ -80,6 +80,34 @@
           </div>
           }
         </div>
+        <div class="post-actions-footer">
+          <!-- <div class="left-actions">
+            <span class="read-time"></span>
+          </div> -->
+
+          <div class="right-actions">
+            <!-- SAVE BUTTON -->
+            @if (currentUserId) {
+            <button
+              class="icon-btn"
+              (click)="toggleSave($event, p)"
+              [class.active]="p.savedByCurrentUser"
+            >
+              <!-- Bookmark Icon SVG -->
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                  d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
+                  [attr.fill]="p.savedByCurrentUser ? 'currentColor' : 'none'"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                ></path>
+              </svg>
+            </button>
+            }
+          </div>
+        </div>
+
         <div class="post-divider"></div>
       </article>
       }
