@@ -1,12 +1,10 @@
 @if (!loading) {
 <div class="home-layout">
   <!-- LEFT COLUMN: The Feed -->
-  <!-- We add a class if sidebar is missing to center it for admins -->
   <main class="feed-container" [class.full-width]="isAdmin">
     <!-- Feed Header -->
     <div class="feed-header">
       <div class="header-content">
-        <!-- 1. CHANGE: Dynamic Title -->
         <h1>{{ isAdmin ? 'Published Post' : 'For you' }}</h1>
 
         <div class="header-actions">
@@ -14,7 +12,6 @@
             <input type="text" placeholder="Search..." class="search-input" />
           </div>
 
-          <!-- 2. CHANGE: Only show Write button if logged in AND NOT ADMIN -->
           @if (currentUserId && !isAdmin) {
           <a routerLink="new-story" class="write-btn">Write</a>
           }
@@ -37,7 +34,6 @@
             <span class="post-date">{{ p.createdAt | date : 'MMM d' }}</span>
           </div>
 
-          <!-- Options Menu (Admins can delete/edit too depending on your logic) -->
           @if (currentUserId) {
           <app-post-options-menu
             [canEdit]="currentUserId == p.author.id || isAdmin"
@@ -52,6 +48,7 @@
         <div class="post-content" [routerLink]="['/posts', p.id]">
           <div class="post-text">
             <h2 class="post-title">{{ p.title }}</h2>
+            <p class="post-preview">{{ p.description }}</p>
           </div>
           @if (p.mediaUrl) {
           <div class="post-media">
@@ -74,58 +71,10 @@
     }
   </main>
 
-  <!-- RIGHT COLUMN: Sidebar (Suggested Users) -->
-  <!-- 3. CHANGE: Completely hide sidebar for admins -->
+  <!-- RIGHT COLUMN: Sidebar (Now utilizing the new component) -->
   @if (!isAdmin) {
   <aside class="sidebar-container">
-    <div class="sidebar-sticky">
-      <h3 class="sidebar-title">Who to follow</h3>
-
-      <div class="suggested-list">
-        @for(user of suggestedUsers; track user.id) {
-        <div class="suggested-user-card">
-          <div class="user-card-left" [routerLink]="['/profile', user.id]">
-            @if(user.avatarUrl) {
-            <img [src]="'http://localhost:8080' + user.avatarUrl" class="user-avatar" />
-            } @else {
-            <div class="user-avatar-placeholder">
-              {{ user.username.charAt(0) | uppercase }}
-            </div>
-            }
-            <div class="user-info">
-              <span class="user-name">{{ user.username }}</span>
-              <p class="user-bio" title="{{ user.bio }}">
-                {{
-                  user.bio
-                    ? (user.bio | slice : 0 : 30) + (user.bio.length > 30 ? '...' : '')
-                    : 'Writer'
-                }}
-              </p>
-            </div>
-          </div>
-          <button
-            class="follow-btn"
-            [class.is-following]="user.following"
-            (click)="toggleFollow(user)"
-          >
-            {{ user.following ? 'Following' : 'Follow' }}
-          </button>
-        </div>
-        } @if(suggestedUsers.length === 0 && currentUserId != null ) {
-        <p class="no-suggestions">No suggestions available.</p>
-        } @else if (currentUserId == null) {
-        <p class="no-suggestions">Login to see suggestions.</p>
-        }
-      </div>
-
-      <div class="sidebar-footer">
-        <a routerLink="/help">Help</a>
-        <a href="#">Status</a>
-        <a href="#">Writers</a>
-        <a href="#">Blog</a>
-        <a routerLink="/privacy">Privacy</a>
-      </div>
-    </div>
+    <app-suggested-users></app-suggested-users>
   </aside>
   }
 </div>

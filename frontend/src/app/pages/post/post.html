@@ -4,160 +4,158 @@
   <p>Loading story...</p>
 </div>
 } @else if (post) {
-<div class="article-container">
-  <!-- 1. Article Header -->
-  <header class="article-header">
-    <h1 class="article-title">{{ post.title }}</h1>
 
-    <!-- Author & Meta -->
-    <div class="author-meta-block">
-      <div class="author-info">
-        <div class="author-avatar">
-          <img
-            [src]="
-              post.author.avatarUrl
-                ? 'http://localhost:8080' + post.author.avatarUrl
-                : 'assets/default-avatar.png'
-            "
-            alt="{{ post.author.username }}"
-            onerror="this.src='assets/default-avatar.png'"
-          />
-          @if (!post.author.avatarUrl) {
-          <span class="avatar-fallback">
-            {{ post.author.username.charAt(0) | uppercase }}
-          </span>
+<!-- LAYOUT WRAPPER -->
+<div class="post-page-layout">
+  <!-- LEFT COLUMN: The Article -->
+  <main class="article-container">
+    <!-- 1. Article Header -->
+    <header class="article-header">
+      <h1 class="article-title">{{ post.title }}</h1>
+
+      <!-- Author & Meta -->
+      <div class="author-meta-block">
+        <div class="author-info">
+          <div class="author-avatar">
+            <img
+              [src]="
+                post.author.avatarUrl
+                  ? 'http://localhost:8080' + post.author.avatarUrl
+                  : 'assets/default-avatar.png'
+              "
+              alt="{{ post.author.username }}"
+              onerror="this.src='assets/default-avatar.png'"
+            />
+          </div>
+          <div class="meta-text">
+            <div class="author-name" [routerLink]="['/profile', post.author.id]">
+              {{ post.author.username }}
+            </div>
+            <div class="publish-date">
+              <span>{{ post.createdAt | date : 'MMM d, y' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Post Menu -->
+        @if (currentUserId) {
+        <app-post-options-menu
+          [canEdit]="currentUserId == post.author.id"
+          [canReport]="currentUserId != post.author.id"
+          (update)="onUpdate(post)"
+          (delete)="onDelete(post)"
+        ></app-post-options-menu>
+        }
+      </div>
+    </header>
+
+    <!-- 2. Main Media (Cover) -->
+    @if (post.mediaUrl) {
+    <figure class="article-feature-media">
+      @if (post.mediaType == 'IMAGE') {
+      <img [src]="'http://localhost:8080' + post.mediaUrl" alt="Feature image" />
+      } @if (post.mediaType == 'VIDEO') {
+      <video [src]="'http://localhost:8080' + post.mediaUrl" controls></video>
+      }
+    </figure>
+    }
+
+    <!-- 3. Article Body -->
+    <section class="article-content">
+      <div class="post-body">
+        <markdown [data]="fullContentDisplay"></markdown>
+      </div>
+
+      @if (isLoadingChunks) {
+      <div class="chunk-loading-indicator">
+        <span>Loading...</span>
+      </div>
+      }
+      <div #scrollAnchor style="height: 20px; width: 100%"></div>
+    </section>
+
+    <!-- 4. Engagement Bar -->
+    <section class="engagement-bar">
+      <div class="engagement-left">
+        @if (currentUserId) {
+        <button
+          class="action-btn like-btn"
+          [class.active]="post.likedByCurrentUser"
+          (click)="toggleLike(post)"
+        >
+          <fa-icon [icon]="post.likedByCurrentUser ? faHeartSolid : faHeartRegular"></fa-icon>
+          <span>{{ post.likeCount }}</span>
+        </button>
+        }
+        <button class="action-btn comment-trigger">
+          <fa-icon [icon]="faCommentRegular"></fa-icon>
+          <span>{{ post.comments.length }}</span>
+        </button>
+      </div>
+    </section>
+
+    <div class="separator"></div>
+
+    <!-- 5. Comments Section -->
+    <section class="responses-section">
+      <h3>Responses ({{ post.comments.length }})</h3>
+
+      @if (currentUserId) {
+      <div class="add-response-box">
+        <div class="user-avatar-small">
+          <span>{{ post.author.username.charAt(0) | uppercase }}</span>
+        </div>
+        <div class="input-wrapper">
+          <textarea
+            placeholder="What are your thoughts?"
+            [(ngModel)]="newComment"
+            rows="1"
+          ></textarea>
+          @if (newComment) {
+          <div class="input-actions">
+            <button class="cancel-btn" (click)="newComment = ''">Cancel</button>
+            <button class="submit-btn" (click)="sendComment()">Respond</button>
+          </div>
           }
         </div>
-        <div class="meta-text">
-          <div class="author-name" [routerLink]="['/profile', post.author.id]">
-            {{ post.author.username }}
-          </div>
-          <div class="publish-date">
-            <span>{{ post.createdAt | date : 'MMM d, y' }}</span> · <span>4 min read</span>
-          </div>
-        </div>
       </div>
-
-      <!-- Post Menu -->
-      @if (currentUserId) {
-      <app-post-options-menu
-        [canEdit]="currentUserId == post.author.id"
-        [canReport]="currentUserId != post.author.id"
-        (update)="onUpdate(post)"
-        (delete)="onDelete(post)"
-      ></app-post-options-menu>
       }
-    </div>
-  </header>
 
-  <!-- 2. Main Media (Cover) -->
-  @if (post.mediaUrl) {
-  <figure class="article-feature-media">
-    @if (post.mediaType == 'IMAGE') {
-    <img [src]="'http://localhost:8080' + post.mediaUrl" alt="Feature image" />
-    } @if (post.mediaType == 'VIDEO') {
-    <video [src]="'http://localhost:8080' + post.mediaUrl" controls></video>
-    }
-  </figure>
-  }
-
-  <!-- 3. Article Body (CHUNKED MARKDOWN) -->
-  <section class="article-content">
-    <div class="post-body">
-      <!-- UPDATED: Bind to fullContentDisplay instead of post.description -->
-      <markdown [data]="fullContentDisplay"></markdown>
-    </div>
-
-    <!-- Loading Indicator for next chunk -->
-    @if (isLoadingChunks) {
-    <div
-      class="chunk-loading-indicator"
-      style="text-align: center; padding: 20px; color: var(--text-secondary)"
-    >
-      <span>Loading...</span>
-    </div>
-    }
-
-    <!-- Scroll Anchor for Intersection Observer -->
-    <!-- This invisible element triggers the next load when scrolled into view -->
-    <div #scrollAnchor style="height: 20px; width: 100%"></div>
-  </section>
-
-  <!-- 4. Engagement Bar -->
-  <section class="engagement-bar">
-    <div class="engagement-left">
-      @if (currentUserId) {
-      <button
-        class="action-btn like-btn"
-        [class.active]="post.likedByCurrentUser"
-        (click)="toggleLike(post)"
-      >
-        <fa-icon [icon]="post.likedByCurrentUser ? faHeartSolid : faHeartRegular"></fa-icon>
-        <span>{{ post.likeCount }}</span>
-      </button>
-      }
-      <button class="action-btn comment-trigger">
-        <fa-icon [icon]="faCommentRegular"></fa-icon>
-        <span>{{ post.comments.length }}</span>
-      </button>
-    </div>
-  </section>
-
-  <div class="separator"></div>
-
-  <!-- 5. Comments Section -->
-  <section class="responses-section">
-    <h3>Responses ({{ post.comments.length }})</h3>
-
-    <!-- Add Comment -->
-    @if (currentUserId) {
-    <div class="add-response-box">
-      <div class="user-avatar-small">
-        <span>{{ post.author.username.charAt(0) | uppercase }}</span>
-      </div>
-      <div class="input-wrapper">
-        <textarea
-          placeholder="What are your thoughts?"
-          [(ngModel)]="newComment"
-          rows="1"
-        ></textarea>
-        @if (newComment) {
-        <div class="input-actions">
-          <button class="cancel-btn" (click)="newComment = ''">Cancel</button>
-          <button class="submit-btn" (click)="sendComment()">Respond</button>
+      <div class="response-list">
+        @if (post.comments.length == 0) {
+        <p class="empty-responses">No responses yet.</p>
+        } @for (c of post.comments; track c) {
+        <div class="response-item">
+          <div class="response-header">
+            <div class="response-author" [routerLink]="['/profile', c.author.id]">
+              <img
+                [src]="
+                  c.author.avatarUrl
+                    ? 'http://localhost:8080' + c.author.avatarUrl
+                    : 'assets/default-avatar.png'
+                "
+                onerror="this.src='assets/default-avatar.png'"
+              />
+              <span class="response-name">{{ c.author.username }}</span>
+              <span class="response-date">{{ c.createdAt | date : 'MMM d' }}</span>
+            </div>
+          </div>
+          <div class="response-body">
+            <p>{{ c.text }}</p>
+          </div>
         </div>
         }
       </div>
-    </div>
-    }
+    </section>
+  </main>
 
-    <!-- Comment List -->
-    <div class="response-list">
-      @if (post.comments.length == 0) {
-      <p class="empty-responses">No responses yet.</p>
-      } @for (c of post.comments; track c) {
-      <div class="response-item">
-        <div class="response-header">
-          <div class="response-author" [routerLink]="['/profile', c.author.id]">
-            <img
-              [src]="
-                c.author.avatarUrl
-                  ? 'http://localhost:8080' + c.author.avatarUrl
-                  : 'assets/default-avatar.png'
-              "
-              onerror="this.src='assets/default-avatar.png'"
-            />
-            <span class="response-name">{{ c.author.username }}</span>
-            <span class="response-date">{{ c.createdAt | date : 'MMM d' }}</span>
-          </div>
-        </div>
-        <div class="response-body">
-          <p>{{ c.text }}</p>
-        </div>
-      </div>
-      }
-    </div>
-  </section>
+  <!-- RIGHT COLUMN: Sidebar (Suggested Users) -->
+  <!-- Hidden for Admins just like Home Page -->
+  @if (!isAdmin) {
+  <aside class="sidebar-container">
+    <app-suggested-users></app-suggested-users>
+  </aside>
+  }
 </div>
 } @else {
 <div class="not-found">
