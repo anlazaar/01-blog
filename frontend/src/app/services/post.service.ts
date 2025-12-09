@@ -1,22 +1,10 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { PostResponse } from '../models/global.model';
-
-export interface Product {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-}
+import { PostResponse, SinglePostResponse, CommentDTO } from '../models/POST/PostResponse';
+import { Page } from '../models/Page';
 
 export interface PostChunkResponse {
-  index: number;
-  content: string;
-  isLast: boolean;
-}
-
-export interface PostChunk {
   index: number;
   content: string;
   isLast: boolean;
@@ -55,32 +43,28 @@ export class PostService {
     });
   }
 
-  // 2. Get Metadata Only
-  getPostMetadata(id: string) {
-    return this.http.get<PostResponse>(`${this.API_URL}/${id}`);
+  // 4. Get Metadata Only (Single Post View)
+  // UPDATED: Returns SinglePostResponse (includes comments)
+  getPostMetadata(id: string): Observable<SinglePostResponse> {
+    return this.http.get<SinglePostResponse>(`${this.API_URL}/${id}`);
   }
 
-  // 3. Lazy Load Chunks
+  // 5. Lazy Load Chunks
   getPostContentChunks(
     postId: string,
     page: number,
     size: number
   ): Observable<PostChunkResponse[]> {
-    // Explicitly sending page and size params
     return this.http.get<PostChunkResponse[]>(
       `${this.API_URL}/${postId}/content?page=${page}&size=${size}`
     );
   }
 
-  getPostById(id: string) {
-    return this.http.get<PostResponse>(this.API_URL + '/' + id);
-  }
-
-  getAllPosts(page: number = 0, size: number = 4): Observable<PostResponse[]> {
-    // Using HttpParams is cleaner for URL parameters
+  // 6. Get All Posts (Feed)
+  // Returns Page<PostResponse> (Lightweight, no comments)
+  getAllPosts(page: number = 0, size: number = 4): Observable<Page<PostResponse>> {
     let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
-
-    return this.http.get<PostResponse[]>(this.API_URL, { params });
+    return this.http.get<Page<PostResponse>>(this.API_URL, { params });
   }
 
   likePost(id: string) {
@@ -91,8 +75,11 @@ export class PostService {
     return this.http.post(`http://localhost:8080/api/likes/${id}/unlike`, {});
   }
 
-  createComment(postId: string, text: string) {
-    return this.http.post<any>(`http://localhost:8080/api/comments/post/${postId}`, { text });
+  // UPDATED: Returns CommentDTO so we can push it to the array
+  createComment(postId: string, text: string): Observable<CommentDTO> {
+    return this.http.post<CommentDTO>(`http://localhost:8080/api/comments/post/${postId}`, {
+      text,
+    });
   }
 
   deletePost(id: string) {
@@ -106,11 +93,9 @@ export class PostService {
     });
   }
 
-  // post.service.ts
   uploadEditorMedia(file: File): Observable<{ url: string }> {
     const formData = new FormData();
     formData.append('file', file);
-    // Matches the Backend Controller: @PostMapping("/media/upload")
     return this.http.post<{ url: string }>(`${this.API_URL}/media/upload`, formData);
   }
 
@@ -118,14 +103,11 @@ export class PostService {
     return this.http.get<PostResponse[]>(`${this.API_URL}/drafts`);
   }
 
-  // Used before re-uploading chunks in edit mode
   clearPostContent(id: string): Observable<void> {
     return this.http.delete<void>(`${this.API_URL}/${id}/content`);
   }
 
-  // Helper to fetch full content (all chunks) as string for the editor
   getFullPostContent(id: string): Observable<string> {
-    // For simplicity here, assuming 100 chunk max, should cover most posts but not spam XD.
     return this.getPostContentChunks(id, 0, 100).pipe(
       map((chunks) => chunks.map((c) => c.content).join(''))
     );

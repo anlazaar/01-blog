@@ -13,9 +13,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/api/users")
@@ -44,6 +48,7 @@ public class UserController {
     @PatchMapping("/profile/update/{id}")
     public ResponseEntity<Map<String, String>> updateProfileWithAvatar(
             @PathVariable UUID id,
+            @AuthenticationPrincipal User currentUser,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String oldpassword,
@@ -53,28 +58,34 @@ public class UserController {
             @RequestParam(required = false) String bio,
             @RequestParam(required = false) MultipartFile avatar) throws IOException {
 
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         if (!id.equals(currentUser.getId()) && currentUser.getRole() != Role.ADMIN) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
+        
         String result = userService.patchUser(id, firstname, lastname, bio, avatar, email, password, oldpassword,
                 username);
         return ResponseEntity.ok(Map.of("res", result));
     }
 
     @GetMapping("/suggested")
-    public ResponseEntity<List<UserPublicProfileDTO>> getSuggestedUsers() {
-        UUID currentId = getSafeCurrentUserId();
-        return ResponseEntity.ok(userService.getSuggestedUsers(currentId));
+    public ResponseEntity<List<UserPublicProfileDTO>> getSuggestedUsers(@AuthenticationPrincipal User currentUser) {
+        UUID currentUserId = (currentUser != null) ? currentUser.getId() : null;
+        return ResponseEntity.ok(userService.getSuggestedUsers(currentUserId));
     }
 
     @GetMapping("/explore")
-    public ResponseEntity<List<UserPublicProfileDTO>> getAllUsers() {
-        UUID currentId = getSafeCurrentUserId();
-        // In the future, add Pagination here too
-        return ResponseEntity.ok(userService.getAllPublicUsers(currentId));
+    public ResponseEntity<Page<UserPublicProfileDTO>> getAllUsers(
+            @AuthenticationPrincipal User currentUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        UUID currentUserId = (currentUser != null) ? currentUser.getId() : null;
+
+        return ResponseEntity.ok(userService.getAllPublicUsers(currentUserId, PageRequest.of(page, size)));
     }
 
     // Helper to safely get ID or null (for guest view)

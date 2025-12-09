@@ -1,10 +1,12 @@
 package com.blog._1.services;
 
+import com.blog._1.dto.comment.CommentDTO;
 import com.blog._1.dto.post.*;
 import com.blog._1.models.*;
 import com.blog._1.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -140,13 +142,20 @@ public class PostService {
     }
 
     // --- GETTERS ---
-
-    public List<PostResponse> getAll(int page, int size) {
+    public Page<PostResponse> getAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        List<PostResponse> posts = postRepository.findByStatus(PostStatus.PUBLISHED, pageable)
-                .stream().map(PostResponse::from).collect(Collectors.toList());
-        enrichWithUserInteraction(posts);
-        return posts;
+
+        // 1. Fetch the Page of Entities
+        Page<Post> postsPage = postRepository.findByStatus(PostStatus.PUBLISHED, pageable);
+
+        // 2. Convert Page<Post> to Page<PostResponse>
+        // CRITICAL: Use postsPage.map(), DO NOT use .stream()
+        Page<PostResponse> dtoPage = postsPage.map(PostResponse::from);
+
+        // 3. Enrich the content (dtoPage.getContent() returns the modifiable list)
+        enrichWithUserInteraction(dtoPage.getContent());
+
+        return dtoPage;
     }
 
     public List<PostResponse> getByUser(UUID userId, int page, int size) {
@@ -211,14 +220,42 @@ public class PostService {
         }
     }
 
-    public PostResponse get(UUID id) {
-        Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
-        PostResponse dto = PostResponse.from(post);
+    @Transactional(readOnly = true)
+    public SinglePostResponse get(UUID id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        // 1. Create the heavy DTO
+        SinglePostResponse dto = new SinglePostResponse();
+
+        // 2. Manual copy of base fields (since i;m not using a mapper library)
+        PostResponse base = PostResponse.from(post);
+        dto.setId(base.getId());
+        dto.setTitle(base.getTitle());
+        dto.setDescription(base.getDescription());
+        dto.setMediaUrl(base.getMediaUrl());
+        dto.setMediaType(base.getMediaType());
+        dto.setCreatedAt(base.getCreatedAt());
+        dto.setUpdatedAt(base.getUpdatedAt());
+        dto.setAuthor(base.getAuthor());
+        dto.setLikeCount(base.getLikeCount());
+        dto.setCommentCount(base.getCommentCount());
+
+        // 3. Map Comments explicitly
+        if (post.getComments() != null) {
+            List<CommentDTO> commentDTOs = post.getComments().stream()
+                    .map(CommentDTO::from)
+                    .collect(Collectors.toList());
+            dto.setComments(commentDTOs);
+        }
+
+        // 4. Enrich Interaction
         var auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof User u) {
             dto.setLikedByCurrentUser(likeRepository.existsByPostIdAndUserId(post.getId(), u.getId()));
             dto.setSavedByCurrentUser(savedPostRepository.existsByUserIdAndPostId(u.getId(), post.getId()));
         }
+
         return dto;
     }
 

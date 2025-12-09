@@ -3,9 +3,12 @@ package com.blog._1.services;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import java.util.Collections;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -113,26 +116,38 @@ public class UserService {
     }
 
     // Restored: getAllPublicUsers (Mapped to DTO)
-    public List<UserPublicProfileDTO> getAllPublicUsers(UUID currentUserId) {
-        // Optimization note: In production, this needs pagination!
-        List<User> users = userRepository.findAll();
+    public Page<UserPublicProfileDTO> getAllPublicUsers(UUID currentUserId, Pageable pageable) {
+        // 1. Query #1: Fetch Page of DTOs with Counts already calculated by DB
+        Page<UserPublicProfileDTO> page = userRepository.findAllUserSummaries(pageable);
 
-        return users.stream().map(user -> {
-            UserPublicProfileDTO dto = new UserPublicProfileDTO();
-            dto.setId(user.getId());
-            dto.setUsername(user.getUsername());
-            dto.setBio(user.getBio());
-            dto.setAvatarUrl(user.getAvatarUrl());
+        // 2. Query #2: Batch fetch "Is Following" status
+        // If user is guest, no need to check
+        if (currentUserId == null) {
+            return page; // Returns immediately, no mapping needed
+        }
 
-            if (currentUserId != null && !currentUserId.equals(user.getId())) {
-                boolean isFollowing = subscriptionRepository.findByFollowerIdAndFollowingId(currentUserId, user.getId())
-                        .isPresent();
-                dto.setFollowing(isFollowing);
-            } else {
-                dto.setFollowing(false);
-            }
-            return dto;
-        }).collect(Collectors.toList());
+        // Get all IDs from the current page
+        List<UUID> userIdsOnPage = page.getContent().stream()
+                .map(UserPublicProfileDTO::getId)
+                .toList();
+
+        if (userIdsOnPage.isEmpty())
+            return page;
+
+        // Optimized: Check subscription only for these specific users
+        // Create this method in SubscriptionRepository (see Step 3)
+        Set<UUID> followingIds = subscriptionRepository.findFollowingIdsByFollowerIdAndFollowingIdIn(
+                currentUserId,
+                userIdsOnPage);
+
+        // 3. In-Memory Map (No DB calls)
+        page.forEach(dto -> {
+            dto.setFollowing(followingIds.contains(dto.getId()));
+            // Explicitly ensure posts are empty for the list view to save bandwidth
+            dto.setPosts(Collections.emptyList());
+        });
+
+        return page;
     }
 
     public List<UserPublicProfileDTO> getSuggestedUsers(UUID currentUserId) {

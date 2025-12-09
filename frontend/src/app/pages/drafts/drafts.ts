@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PostService } from '../../services/post.service';
-import { PostResponse } from '../../models/global.model';
+import { PostResponse } from '../../models/POST/PostResponse'; 
 
 @Component({
   selector: 'app-drafts',

@@ -3,6 +3,7 @@ package com.blog._1.repositories;
 import com.blog._1.models.Post;
 import com.blog._1.models.PostStatus;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,7 +23,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     // OPTIMIZATION: Added Pageable.
     @Query("SELECT p FROM Post p JOIN FETCH p.author WHERE p.status = :status")
-    List<Post> findByStatus(@Param("status") PostStatus status, Pageable pageable);
+    Page<Post> findByStatus(@Param("status") PostStatus status, Pageable pageable);
 
     // OPTIMIZATION: Added Pageable.
     List<Post> findByCreatedAtAfter(LocalDateTime date, Pageable pageable);

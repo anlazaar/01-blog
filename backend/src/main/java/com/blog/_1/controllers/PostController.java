@@ -5,6 +5,8 @@ import com.blog._1.models.User;
 import com.blog._1.services.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -55,7 +57,7 @@ public class PostController {
     // --- Fetching (Optimized with Pagination) ---
 
     @GetMapping
-    public ResponseEntity<List<PostResponse>> getAll(
+    public ResponseEntity<Page<PostResponse>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(postService.getAll(page, size));
@@ -78,7 +80,7 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PostResponse> get(@PathVariable UUID id) {
+    public ResponseEntity<SinglePostResponse> get(@PathVariable UUID id) {
         return ResponseEntity.ok(postService.get(id));
     }
 

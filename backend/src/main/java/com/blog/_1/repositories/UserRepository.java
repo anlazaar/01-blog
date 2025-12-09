@@ -5,11 +5,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.blog._1.dto.user.UserPublicProfileDTO;
 import com.blog._1.models.User;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
@@ -43,4 +45,19 @@ public interface UserRepository extends JpaRepository<User, UUID> {
             LIMIT :limit
             """, nativeQuery = true)
     List<User> findSuggestedUsers(@Param("userId") UUID userId, @Param("limit") int limit);
+
+    @Query("""
+                SELECT new com.blog._1.dto.user.UserPublicProfileDTO(
+                    u.id,
+                    u.username,
+                    u.firstname,
+                    u.lastname,
+                    u.bio,
+                    u.avatarUrl,
+                    (SELECT COUNT(s1) FROM Subscription s1 WHERE s1.following.id = u.id),
+                    (SELECT COUNT(s2) FROM Subscription s2 WHERE s2.follower.id = u.id)
+                )
+                FROM User u
+            """)
+    Page<UserPublicProfileDTO> findAllUserSummaries(Pageable pageable);
 }

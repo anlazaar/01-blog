@@ -1,9 +1,10 @@
 import { Component, inject, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { PostResponse } from '../../models/global.model';
+// UPDATED IMPORTS
+import { PostResponse, SinglePostResponse } from '../../models/POST/PostResponse';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { switchMap, tap } from 'rxjs'; // <--- 1. Import tap
+import { switchMap, tap } from 'rxjs';
 import { PostService } from '../../services/post.service';
 import {
   faHeart as faHeartRegular,
@@ -45,8 +46,12 @@ export class PostPage implements OnInit, OnDestroy {
   isAdmin = false;
   showConfirm = false;
   postToDelete: PostResponse | null = null;
+
   postId!: string;
-  post: PostResponse | null = null; // Changed to nullable for reset safety
+
+  // UPDATED: This must be SinglePostResponse to access 'comments'
+  post: SinglePostResponse | null = null;
+
   loading = true;
   currentUserId: string | null = '';
   newComment: string = '';
@@ -62,7 +67,6 @@ export class PostPage implements OnInit, OnDestroy {
   postService = inject(PostService);
   tokenService = inject(TokenService);
 
-  // Observer
   private observer: IntersectionObserver | null = null;
 
   constructor(private route: ActivatedRoute, private http: HttpClient) {}
@@ -75,11 +79,7 @@ export class PostPage implements OnInit, OnDestroy {
   }
 
   private setupObserver(target: HTMLElement) {
-    const options = {
-      root: null,
-      rootMargin: '200px',
-      threshold: 0.1,
-    };
+    const options = { root: null, rootMargin: '200px', threshold: 0.1 };
 
     this.observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -98,18 +98,23 @@ export class PostPage implements OnInit, OnDestroy {
 
     this.route.paramMap
       .pipe(
-        // 2. FIX: Reset state immediately when route params change
         tap(() => this.resetState()),
         switchMap((params) => {
           this.postId = params.get('id')!;
+          // Returns SinglePostResponse now
           return this.postService.getPostMetadata(this.postId);
         })
       )
       .subscribe({
         next: (res) => {
           this.post = res;
+
+          // Defensive Check: Ensure comments array exists
+          if (!this.post.comments) {
+            this.post.comments = [];
+          }
+
           this.loading = false;
-          // Load the FIRST batch immediately
           this.loadNextChunk();
         },
         error: (err) => {
@@ -119,17 +124,14 @@ export class PostPage implements OnInit, OnDestroy {
       });
   }
 
-  // 3. FIX: Helper to clear all variables
   private resetState() {
-    this.loading = true; // Shows loading spinner, hides old content
-    this.post = null; // Clear old metadata
-    this.fullContentDisplay = ''; // Clear old markdown
-    this.currentPage = 0; // Reset pagination
+    this.loading = true;
+    this.post = null;
+    this.fullContentDisplay = '';
+    this.currentPage = 0;
     this.hasMoreChunks = true;
     this.isLoadingChunks = false;
     this.newComment = '';
-
-    // Important: Disconnect old observer to prevent memory leaks/logic errors
     this.disconnectObserver();
   }
 
@@ -215,10 +217,15 @@ export class PostPage implements OnInit, OnDestroy {
 
   sendComment() {
     if (!this.newComment.trim() || !this.post) return;
+
     this.postService.createComment(this.post.id, this.newComment).subscribe({
       next: (comment) => {
+        // Now valid because this.post is SinglePostResponse
         if (!this.post!.comments) this.post!.comments = [];
+
         this.post!.comments.push(comment);
+        this.post!.commentCount++; // Keep UI sync
+
         this.newComment = '';
       },
       error: (err) => console.log(err),
