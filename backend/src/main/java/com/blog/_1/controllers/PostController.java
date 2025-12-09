@@ -1,13 +1,8 @@
 package com.blog._1.controllers;
 
-import com.blog._1.dto.post.ChunkUploadRequest;
-import com.blog._1.dto.post.PostChunkResponse;
-import com.blog._1.dto.post.PostCreateRequest;
-import com.blog._1.dto.post.PostPatchRequest;
-import com.blog._1.dto.post.PostResponse;
+import com.blog._1.dto.post.*;
 import com.blog._1.models.User;
 import com.blog._1.services.PostService;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -16,7 +11,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,21 +22,13 @@ public class PostController {
 
     private final PostService postService;
 
-    // --- NEW ENDPOINT: Standalone Media Upload for Editor ---
+    // --- Standalone Media Upload ---
     @PostMapping(value = "/media/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Map<String, String>> uploadEditorMedia(
-            @RequestParam("file") MultipartFile file) {
-
-        // No User check needed if purely public, but usually you want them logged in:
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        String fileUrl = postService.uploadPostMedia(file);
-
-        // Return JSON: { "url": "/uploads/xyz.jpg" }
-        return ResponseEntity.ok(Map.of("url", fileUrl));
+    public ResponseEntity<Map<String, String>> uploadEditorMedia(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(Map.of("url", postService.uploadPostMedia(file)));
     }
 
-    // 1. Init Post (Metadata only)
+    // --- Post Lifecycle ---
     @PostMapping(value = "/init", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PostResponse> initPost(
             @RequestParam("title") String title,
@@ -53,24 +39,44 @@ public class PostController {
         return ResponseEntity.ok(postService.initPost(title, summary, mediaType, mediaFile, currentUser.getId()));
     }
 
-    // 2. Upload Chunk (JSON body now)
     @PostMapping("/chunk")
-    public ResponseEntity<?> uploadChunk(@RequestBody @Valid ChunkUploadRequest request) {
+    public ResponseEntity<Void> uploadChunk(@RequestBody @Valid ChunkUploadRequest request) {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         postService.uploadChunk(request, currentUser.getId());
         return ResponseEntity.ok().build();
     }
 
-    // 3. Finalize
     @PostMapping("/{id}/publish")
-    public ResponseEntity<PostResponse> publishPost(
-            @PathVariable UUID id,
-            @RequestParam int totalChunks) {
+    public ResponseEntity<PostResponse> publishPost(@PathVariable UUID id, @RequestParam int totalChunks) {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.ok(postService.finalizePost(id, currentUser.getId(), totalChunks));
     }
 
-    // Get post by ID (public)
+    // --- Fetching (Optimized with Pagination) ---
+
+    @GetMapping
+    public ResponseEntity<List<PostResponse>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(postService.getAll(page, size));
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<PostResponse>> getByUser(
+            @PathVariable UUID userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(postService.getByUser(userId, page, size));
+    }
+
+    @GetMapping("/saved")
+    public ResponseEntity<List<PostResponse>> getSavedPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(postService.getSavedPosts(currentUser.getId(), page, size));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<PostResponse> get(@PathVariable UUID id) {
         return ResponseEntity.ok(postService.get(id));
@@ -82,12 +88,7 @@ public class PostController {
         return ResponseEntity.ok(postService.getDrafts(currentUser.getId()));
     }
 
-    @DeleteMapping("/{id}/content")
-    public ResponseEntity<?> clearContent(@PathVariable UUID id) {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        postService.clearPostContent(id, currentUser.getId());
-        return ResponseEntity.ok().build();
-    }
+    // --- Content & Actions ---
 
     @GetMapping("/{id}/content")
     public ResponseEntity<List<PostChunkResponse>> getContentChunks(
@@ -97,51 +98,11 @@ public class PostController {
         return ResponseEntity.ok(postService.getContentChunks(id, page, size));
     }
 
-    // Get all posts (public)
-    @GetMapping
-    public ResponseEntity<List<PostResponse>> getAll() {
-        return ResponseEntity.ok(postService.getAll());
-    }
-
-    // Update post
-    @PutMapping("/{id}")
-    public ResponseEntity<PostResponse> update(
-            @PathVariable UUID id,
-            @RequestBody PostCreateRequest request,
-            Authentication auth) {
+    @DeleteMapping("/{id}/content")
+    public ResponseEntity<Void> clearContent(@PathVariable UUID id) {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        return ResponseEntity.ok(postService.update(id, currentUser.getId(), request));
-    }
-
-    // Delete post (author or admin)
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(
-            @PathVariable UUID id,
-            Authentication auth) {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        postService.delete(id, currentUser.getId(), isAdmin);
-
-        return ResponseEntity.ok().body(Map.of("res", "Post deleted successfully"));
-    }
-
-    @PatchMapping("/{id}")
-    public ResponseEntity<PostResponse> patch(
-            @PathVariable UUID id,
-            @RequestBody PostPatchRequest request,
-            Authentication auth) {
-
-        UUID userId = UUID.fromString(auth.getName());
-        return ResponseEntity.ok(postService.patch(id, userId, request));
-    }
-
-    // Get posts by user
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<PostResponse>> getByUser(@PathVariable UUID userId) {
-        return ResponseEntity.ok(postService.getByUser(userId));
+        postService.clearPostContent(id, currentUser.getId());
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/save")
@@ -151,9 +112,26 @@ public class PostController {
         return ResponseEntity.ok(Map.of("isSaved", isSaved));
     }
 
-    @GetMapping("/saved")
-    public ResponseEntity<List<PostResponse>> getSavedPosts() {
+    // --- Updates & Deletes ---
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PostResponse> update(
+            @PathVariable UUID id, @RequestBody PostCreateRequest request) {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(postService.getSavedPosts(currentUser.getId()));
+        return ResponseEntity.ok(postService.update(id, currentUser.getId(), request));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<PostResponse> patch(@PathVariable UUID id, @RequestBody PostPatchRequest request) {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(postService.patch(id, currentUser.getId(), request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> delete(@PathVariable UUID id, Authentication auth) {
+        User currentUser = (User) auth.getPrincipal();
+        boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        postService.delete(id, currentUser.getId(), isAdmin);
+        return ResponseEntity.ok(Map.of("res", "Post deleted successfully"));
     }
 }

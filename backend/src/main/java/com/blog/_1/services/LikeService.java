@@ -5,7 +5,6 @@ import java.util.UUID;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import com.blog._1.models.Post;
 import com.blog._1.models.PostLike;
 import com.blog._1.models.User;
 import com.blog._1.repositories.LikeRepository;
@@ -24,18 +23,16 @@ public class LikeService {
         return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
-    // LIKE a post
     public void like(UUID postId) {
         User user = getCurrentUser();
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        boolean alreadyLiked = likeRepository
-                .findByPost_IdAndUser_Id(postId, user.getId())
-                .isPresent();
-
-        if (alreadyLiked)
+        // OPTIMIZATION: Don't fetch the whole object if we just want to check existence
+        if (likeRepository.existsByPostIdAndUserId(postId, user.getId())) {
             return;
+        }
+
+        // OPTIMIZATION: Use getReference to avoid SELECT on Post table
+        var post = postRepository.getReferenceById(postId);
 
         PostLike like = new PostLike();
         like.setPost(post);
@@ -44,20 +41,24 @@ public class LikeService {
         likeRepository.save(like);
     }
 
-    // UNLIKE a post
     public void unlike(UUID postId) {
         User user = getCurrentUser();
-
-        likeRepository.findByPost_IdAndUser_Id(postId, user.getId())
+        // Standard JPA delete is fine here
+        likeRepository.findByPostIdAndUserId(postId, user.getId())
                 .ifPresent(likeRepository::delete);
     }
 
     public long countLikes(UUID postId) {
-        return likeRepository.countByPost_Id(postId);
+        // OPTIMIZATION: Count query
+        return likeRepository.countByPostId(postId);
     }
 
     public boolean isLikedByCurrentUser(UUID postId) {
-        User user = getCurrentUser();
-        return likeRepository.findByPost_IdAndUser_Id(postId, user.getId()).isPresent();
+        try {
+            User user = getCurrentUser();
+            return likeRepository.existsByPostIdAndUserId(postId, user.getId());
+        } catch (Exception e) {
+            return false; // For anonymous users
+        }
     }
 }

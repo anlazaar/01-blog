@@ -32,6 +32,12 @@ export class Home implements OnInit {
   suggestedUsers: any[] = []; // New Array
   skeletonItems = new Array(5);
 
+  // Pagination State
+  loadingMore = false; // Loading subsequent pages
+  currentPage = 0;
+  pageSize = 4;
+  hasMorePosts = true; // To hide 'Load More' button when done
+
   showConfirm = false;
   postToDelete: PostResponse | null = null;
 
@@ -45,19 +51,52 @@ export class Home implements OnInit {
     this.token = this.tokenService.getToken();
     this.isAdmin = this.tokenService.isAdmin();
     this.currentUserId = this.tokenService.getUUID();
+
+    // Reset state on init
+    this.currentPage = 0;
+    this.posts = [];
     this.loadPosts();
   }
 
   loadPosts() {
     this.loading = true;
-    this.postService.getAllPosts().subscribe({
+    this.postService.getAllPosts(this.currentPage, this.pageSize).subscribe({
       next: (data) => {
         this.posts = data;
         this.loading = false;
+        // If we received fewer items than requested, we are at the end
+        if (data.length < this.pageSize) {
+          this.hasMorePosts = false;
+        }
       },
       error: (err) => {
         console.error(err);
         this.loading = false;
+      },
+    });
+  }
+
+  loadMore() {
+    if (this.loadingMore || !this.hasMorePosts) return;
+
+    this.loadingMore = true;
+    this.currentPage++;
+
+    this.postService.getAllPosts(this.currentPage, this.pageSize).subscribe({
+      next: (data) => {
+        // Append new posts to existing list
+        this.posts = [...this.posts, ...data];
+        this.loadingMore = false;
+
+        // Check if we reached the end
+        if (data.length === 0 || data.length < this.pageSize) {
+          this.hasMorePosts = false;
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load more posts', err);
+        this.loadingMore = false;
+        this.currentPage--; // Revert page on error
       },
     });
   }
