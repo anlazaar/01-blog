@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -108,7 +109,7 @@ public class AdminController {
     }
 
     @GetMapping("/posts")
-    public ResponseEntity<List<PostResponse>> getAllPosts(
+    public ResponseEntity<Page<PostResponse>> getAllPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(postService.getAll(page, size));

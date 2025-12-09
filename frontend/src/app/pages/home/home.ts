@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { PostService } from '../../services/post.service';
 import { TokenService } from '../../services/token.service';
-import { PostResponse } from '../../models/global.model';
+import { PostResponse } from '../../models/POST/PostResponse';
 import { PostOptionsMenuComponent } from '../../share/PostOptionsMenu/post-options-menu';
 import { ConfirmDialogComponent } from '../../share/ConfirmDialogComponent/confirm-dialog';
 import { UserService } from '../../services/UserService';
 import { SuggestedUsersComponent } from '../../share/SuggestedAccounts/suggested-users';
+import { Page } from '../../models/Page';
 
 @Component({
   selector: 'app-home',
@@ -61,13 +62,17 @@ export class Home implements OnInit {
   loadPosts() {
     this.loading = true;
     this.postService.getAllPosts(this.currentPage, this.pageSize).subscribe({
-      next: (data) => {
-        this.posts = data;
+      next: (data: Page<PostResponse>) => {
+        // 1. Get the list from .content
+        this.posts = data.content;
         this.loading = false;
-        // If we received fewer items than requested, we are at the end
-        if (data.length < this.pageSize) {
-          this.hasMorePosts = false;
-        }
+
+        // 2. Check if there are more pages using the DTO metadata
+        // If current page index is less than (total pages - 1), we have more.
+        this.hasMorePosts = data.page.number < data.page.totalPages - 1;
+
+        // Edge case: if totalPages is 0 (no posts at all)
+        if (data.page.totalPages === 0) this.hasMorePosts = false;
       },
       error: (err) => {
         console.error(err);
@@ -83,15 +88,13 @@ export class Home implements OnInit {
     this.currentPage++;
 
     this.postService.getAllPosts(this.currentPage, this.pageSize).subscribe({
-      next: (data) => {
-        // Append new posts to existing list
-        this.posts = [...this.posts, ...data];
+      next: (data: Page<PostResponse>) => {
+        // 1. Append the new content
+        this.posts = [...this.posts, ...data.content];
         this.loadingMore = false;
 
-        // Check if we reached the end
-        if (data.length === 0 || data.length < this.pageSize) {
-          this.hasMorePosts = false;
-        }
+        // 2. Re-evaluate if we have more
+        this.hasMorePosts = data.page.number < data.page.totalPages - 1;
       },
       error: (err) => {
         console.error('Failed to load more posts', err);

@@ -296,13 +296,22 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
   loadPosts() {
     this.isLoading = true;
+    // Use 'any' or 'Page<PostResponse>' type to access properties safely
     this.adminService.getAllPosts().subscribe({
-      next: (res) => {
-        this.posts = res;
+      next: (res: any) => {
+        if (res.content && Array.isArray(res.content)) {
+          this.posts = res.content;
+        } else if (Array.isArray(res)) {
+          this.posts = res;
+        } else {
+          this.posts = []; // Fallback
+        }
+
         this.isLoading = false;
       },
       error: (err) => {
         this.isLoading = false;
+        console.error(err);
       },
     });
   }
@@ -310,8 +319,14 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   loadReports() {
     this.isLoading = true;
     this.adminService.getAllReports().subscribe({
-      next: (res) => {
-        this.reports = res;
+      next: (res: any) => {
+        if (res.content && Array.isArray(res.content)) {
+          this.reports = res.content;
+        } else if (Array.isArray(res)) {
+          this.reports = res;
+        } else {
+          this.reports = [];
+        }
         this.isLoading = false;
       },
       error: (err) => {

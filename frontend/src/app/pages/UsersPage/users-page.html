@@ -5,18 +5,15 @@
       <p class="subtitle">Discover new voices and follow creators.</p>
     </header>
 
+    <!-- LOADING SKELETON (Only for initial load) -->
     @if (loading) {
-    <!-- SKELETON GRID -->
     <div class="users-grid">
       @for(item of skeletonItems; track $index) {
       <div class="user-card skeleton-card">
-        <!-- Header: Avatar + Button -->
         <div class="card-header">
           <div class="skeleton-avatar"></div>
           <div class="skeleton-btn"></div>
         </div>
-
-        <!-- Body: Name + Bio Lines -->
         <div class="card-body">
           <div class="skeleton-line title"></div>
           <div class="skeleton-line bio"></div>
@@ -25,8 +22,10 @@
       </div>
       }
     </div>
-    } @else {
-    <!-- REAL CONTENT GRID -->
+    }
+
+    <!-- DATA GRID -->
+    @else {
     <div class="users-grid">
       @for (user of users; track user.id) {
       <div class="user-card">
@@ -57,6 +56,20 @@
       </div>
       }
     </div>
-    }
+
+    <!-- PAGINATION / LOAD MORE -->
+    @if (!isLastPage) {
+    <div class="load-more-container">
+      <button class="load-more-btn" (click)="loadMore()" [disabled]="loadingMore">
+        @if (loadingMore) {
+        <span>Loading...</span>
+        } @else { Load More }
+      </button>
+    </div>
+    } @if (users.length === 0 && !loading) {
+    <div class="empty-state">
+      <p>No writers found.</p>
+    </div>
+    } }
   </div>
 </div>
