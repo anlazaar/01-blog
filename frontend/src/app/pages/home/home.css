@@ -472,3 +472,42 @@
 .icon-btn.active {
   color: var(--text-primary); /* Black filled */
 }
+
+/* Add this at the bottom of home.css */
+
+.load-more-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+  margin-bottom: 48px;
+}
+
+.load-more-btn {
+  background-color: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 10px 24px;
+  border-radius: 99px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.load-more-btn:hover {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}
+
+.load-more-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.end-of-feed {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-top: 32px;
+  margin-bottom: 48px;
+  font-size: 14px;
+  font-style: italic;
+}

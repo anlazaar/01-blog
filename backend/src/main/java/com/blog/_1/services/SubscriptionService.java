@@ -23,22 +23,18 @@ public class SubscriptionService {
         return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
-    // FOLLOW a user
     public void subscribe(UUID targetUserId) {
-
         User follower = getCurrentUser();
-        User following = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
         if (follower.getId().equals(targetUserId))
             throw new RuntimeException("You cannot follow yourself");
 
-        boolean alreadyFollowing = subscriptionRepository
-                .findByFollower_IdAndFollowing_Id(follower.getId(), targetUserId)
-                .isPresent();
+        // Simple check
+        if (subscriptionRepository.findByFollowerIdAndFollowingId(follower.getId(), targetUserId).isPresent()) {
+            return;
+        }
 
-        if (alreadyFollowing)
-            return; // prevent double follow
+        // Optimization: Use Reference to avoid full User fetch
+        User following = userRepository.getReferenceById(targetUserId);
 
         Subscription sub = new Subscription();
         sub.setFollower(follower);
@@ -47,25 +43,26 @@ public class SubscriptionService {
         subscriptionRepository.save(sub);
     }
 
-    // UNFOLLOW a user
     public void unsubscribe(UUID targetUserId) {
         User follower = getCurrentUser();
-
-        subscriptionRepository.findByFollower_IdAndFollowing_Id(follower.getId(), targetUserId)
+        subscriptionRepository.findByFollowerIdAndFollowingId(follower.getId(), targetUserId)
                 .ifPresent(subscriptionRepository::delete);
     }
 
-    public int countFollowers(UUID userId) {
-        return subscriptionRepository.findByFollowing_Id(userId).size();
+    // OPTIMIZATION: Database count is instant. List size is slow.
+    public long countFollowers(UUID userId) {
+        return subscriptionRepository.countByFollowingId(userId);
     }
 
-    public int countFollowing(UUID userId) {
-        return subscriptionRepository.findByFollower_Id(userId).size();
+    public long countFollowing(UUID userId) {
+        return subscriptionRepository.countByFollowerId(userId);
     }
 
     public boolean isFollowing(UUID currentUserId, UUID profileUserId) {
+        if (currentUserId == null)
+            return false;
         return subscriptionRepository
-                .findByFollower_IdAndFollowing_Id(currentUserId, profileUserId)
+                .findByFollowerIdAndFollowingId(currentUserId, profileUserId)
                 .isPresent();
     }
 }

@@ -1,9 +1,7 @@
 package com.blog._1.dto.post;
 
 import java.util.UUID;
-import java.util.List;
 
-import com.blog._1.dto.comment.CommentResponse;
 import com.blog._1.dto.user.UserPublicProfileDTO;
 import com.blog._1.models.Post;
 
@@ -16,17 +14,20 @@ public class PostResponse {
     private String description;
     private String mediaUrl;
     private String mediaType;
+
+    // Formatting dates as ISO strings is standard
     private String createdAt;
     private String updatedAt;
 
     private UserPublicProfileDTO author;
 
-    private int likeCount;
+    // OPTIMIZATION: Use long/int for counts, do not send Lists
+    private long likeCount;
+    private long commentCount;
 
+    // User interaction flags (set by the Service later)
     private boolean savedByCurrentUser;
     private boolean likedByCurrentUser;
-
-    private List<CommentResponse> comments;
 
     public static PostResponse from(Post post) {
         PostResponse dto = new PostResponse();
@@ -37,45 +38,36 @@ public class PostResponse {
         dto.setMediaUrl(post.getMediaUrl());
         dto.setMediaType(post.getMediaType());
 
-        dto.setCreatedAt(post.getCreatedAt().toString());
-        dto.setUpdatedAt(post.getUpdatedAt() != null ? post.getUpdatedAt().toString() : null);
-
-        // author (minimal)
-        UserPublicProfileDTO authorDto = new UserPublicProfileDTO();
-        authorDto.setId(post.getAuthor().getId());
-        authorDto.setUsername(post.getAuthor().getUsername());
-        authorDto.setFirstname(post.getAuthor().getFirstname());
-        authorDto.setLastname(post.getAuthor().getLastname());
-        authorDto.setAvatarUrl(post.getAuthor().getAvatarUrl());
-        authorDto.setBio(post.getAuthor().getBio());
-        dto.setAuthor(authorDto);
-
-        // like count
-        dto.setLikeCount(post.getLikes() != null ? post.getLikes().size() : 0);
-
-        dto.setLikedByCurrentUser(false);
-
-        // comments (minimal)
-        if (post.getComments() != null) {
-            dto.setComments(
-                    post.getComments().stream()
-                            .map(comment -> {
-                                CommentResponse c = new CommentResponse();
-                                c.setId(comment.getId());
-                                c.setText(comment.getText());
-                                c.setCreatedAt(comment.getCreatedAt());
-
-                                // minimal author info
-                                UserPublicProfileDTO commentAuthor = new UserPublicProfileDTO();
-                                commentAuthor.setId(comment.getAuthor().getId());
-                                commentAuthor.setUsername(comment.getAuthor().getUsername());
-                                commentAuthor.setAvatarUrl(comment.getAuthor().getAvatarUrl());
-                                c.setAuthor(commentAuthor);
-
-                                return c;
-                            })
-                            .toList());
+        // Safe Date Conversion
+        if (post.getCreatedAt() != null) {
+            dto.setCreatedAt(post.getCreatedAt().toString());
         }
+        if (post.getUpdatedAt() != null) {
+            dto.setUpdatedAt(post.getUpdatedAt().toString());
+        }
+
+        // OPTIMIZATION: Map Author (Avoids deep nesting issues)
+        if (post.getAuthor() != null) {
+            UserPublicProfileDTO authorDto = new UserPublicProfileDTO();
+            authorDto.setId(post.getAuthor().getId());
+            authorDto.setUsername(post.getAuthor().getUsername());
+            authorDto.setFirstname(post.getAuthor().getFirstname());
+            authorDto.setLastname(post.getAuthor().getLastname());
+            authorDto.setAvatarUrl(post.getAuthor().getAvatarUrl());
+            // Bio is optional for a small post card, but okay to keep if short
+            authorDto.setBio(post.getAuthor().getBio());
+            dto.setAuthor(authorDto);
+        }
+
+        // OPTIMIZATION: Use the @Formula fields from the Entity
+        // Do NOT use post.getLikes().size() -> Causes query
+        // Do NOT use post.getComments().size() -> Causes query
+        dto.setLikeCount(post.getLikeCount());
+        dto.setCommentCount(post.getCommentCount());
+
+        // Defaults
+        dto.setLikedByCurrentUser(false);
+        dto.setSavedByCurrentUser(false);
 
         return dto;
     }

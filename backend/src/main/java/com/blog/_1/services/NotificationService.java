@@ -7,30 +7,29 @@ import com.blog._1.models.Post;
 import com.blog._1.models.User;
 import com.blog._1.repositories.NotificationRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
-
-    // Thread-safe map to store active user connections
     private final Map<UUID, SseEmitter> emitters = new ConcurrentHashMap<>();
 
-    // 1. Subscribe method (SSE Connection)
     public SseEmitter subscribe(UUID userId) {
-        // Timeout set to 30 mins (adjust as needed)
-        SseEmitter emitter = new SseEmitter(30 * 60 * 1000L);
-
+        SseEmitter emitter = new SseEmitter(30 * 60 * 1000L); // 30 min
         emitters.put(userId, emitter);
 
         emitter.onCompletion(() -> emitters.remove(userId));
@@ -40,48 +39,49 @@ public class NotificationService {
         return emitter;
     }
 
-    // 2. Trigger Notification (Called when a post is published)
     public void notifyFollowers(Post post, List<User> followers) {
-        System.out.println("Processing notifications for post: " + post.getId()); // LOG
+        if (followers.isEmpty())
+            return;
 
+        List<Notification> notificationsToSave = new ArrayList<>();
+        String message = post.getAuthor().getUsername() + " published: " + post.getTitle();
+
+        // 1. Prepare Data
         for (User follower : followers) {
-            // Save to Database
-            Notification notification = new Notification();
-            notification.setReceiver(follower);
-            notification.setPost(post);
-            notification.setMessage(post.getAuthor().getUsername() + " published: " + post.getTitle());
-            notification.setRead(false);
+            Notification n = new Notification();
+            n.setReceiver(follower);
+            n.setPost(post);
+            n.setMessage(message);
+            n.setRead(false);
+            notificationsToSave.add(n);
+        }
 
-            Notification saved = notificationRepository.save(notification);
+        // 2. OPTIMIZATION: Batch Insert (One Transaction)
+        List<Notification> savedNotifications = notificationRepository.saveAll(notificationsToSave);
 
-            // Push to User
-            if (emitters.containsKey(follower.getId())) {
-                System.out.println("Pushing to user: " + follower.getUsername()); // LOG: FOUND
+        // 3. Real-time Push
+        for (Notification n : savedNotifications) {
+            UUID receiverId = n.getReceiver().getId();
+            if (emitters.containsKey(receiverId)) {
                 try {
-                    SseEmitter emitter = emitters.get(follower.getId());
-                    emitter.send(SseEmitter.event()
+                    emitters.get(receiverId).send(SseEmitter.event()
                             .name("notification")
-                            .data(mapToResponse(saved)));
+                            .data(mapToResponse(n)));
                 } catch (IOException e) {
-                    System.out.println("Emitter failed for user, removing."); // LOG: FAILED
-                    emitters.remove(follower.getId());
+                    emitters.remove(receiverId);
                 }
-            } else {
-                System.out.println("User " + follower.getUsername() + " is NOT connected to SSE."); // LOG: NOT
-                                                                                                    // CONNECTED
             }
         }
     }
 
-    // 3. Get All Notifications (History)
-    public List<NotificationResponse> getUserNotifications(UUID userId) {
-        return notificationRepository.findByReceiver_IdOrderByCreatedAtDesc(userId)
+    // OPTIMIZATION: Added Pagination (page 0, 20 items)
+    public List<NotificationResponse> getUserNotifications(UUID userId, int page, int size) {
+        return notificationRepository.findByReceiverIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size))
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
-    // 4. Mark as Read
     public void markAsRead(UUID notificationId) {
         notificationRepository.findById(notificationId).ifPresent(n -> {
             n.setRead(true);
@@ -89,14 +89,16 @@ public class NotificationService {
         });
     }
 
-    // Helper: Map Entity to DTO
+    public long countUnread(UUID userId) {
+        return notificationRepository.countByReceiverIdAndReadFalse(userId);
+    }
+
     private NotificationResponse mapToResponse(Notification n) {
         NotificationResponse dto = new NotificationResponse();
         dto.setId(n.getId());
         dto.setMessage(n.getMessage());
         dto.setRead(n.isRead());
         dto.setCreatedAt(n.getCreatedAt().toString());
-
         if (n.getPost() != null) {
             PostMinimalDTO postDto = new PostMinimalDTO();
             postDto.setId(n.getPost().getId());

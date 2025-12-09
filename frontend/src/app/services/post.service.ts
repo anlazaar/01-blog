@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { PostResponse } from '../models/global.model';
@@ -76,8 +76,11 @@ export class PostService {
     return this.http.get<PostResponse>(this.API_URL + '/' + id);
   }
 
-  getAllPosts(): Observable<PostResponse[]> {
-    return this.http.get<PostResponse[]>(this.API_URL);
+  getAllPosts(page: number = 0, size: number = 4): Observable<PostResponse[]> {
+    // Using HttpParams is cleaner for URL parameters
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+
+    return this.http.get<PostResponse[]>(this.API_URL, { params });
   }
 
   likePost(id: string) {

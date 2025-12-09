@@ -18,7 +18,7 @@
       </div>
     </div>
 
-    <!-- === LOADING STATE: SKELETONS === -->
+    <!-- === LOADING STATE: SKELETONS (Initial Load Only) === -->
     @if (loading) {
     <div class="skeleton-list">
       @for (item of skeletonItems; track $index) {
@@ -39,15 +39,24 @@
       }
     </div>
     }
+
     <!-- === REAL CONTENT === -->
     @else { @if (posts.length > 0) {
     <div class="posts-list">
-      @for (p of posts; track p) {
+      @for (p of posts; track p.id) {
+      <!-- track by ID is efficient for pagination -->
       <article class="post-item">
         <div class="post-meta-header">
           <div class="author-info" [routerLink]="['/profile', p.author.id]">
             <div class="author-avatar-placeholder">
+              @if(p.author.avatarUrl) {
+              <img
+                [src]="'http://localhost:8080' + p.author.avatarUrl"
+                style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover"
+              />
+              } @else {
               {{ p.author.username.charAt(0) | uppercase }}
+              }
             </div>
             <span class="author-name">{{ p.author.username }}</span>
             <span class="separator">·</span>
@@ -81,10 +90,6 @@
           }
         </div>
         <div class="post-actions-footer">
-          <!-- <div class="left-actions">
-            <span class="read-time"></span>
-          </div> -->
-
           <div class="right-actions">
             <!-- SAVE BUTTON -->
             @if (currentUserId) {
@@ -93,7 +98,6 @@
               (click)="toggleSave($event, p)"
               [class.active]="p.savedByCurrentUser"
             >
-              <!-- Bookmark Icon SVG -->
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path
                   d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
@@ -107,12 +111,25 @@
             }
           </div>
         </div>
-
         <div class="post-divider"></div>
       </article>
       }
     </div>
+
+    <!-- LOAD MORE BUTTON -->
+    @if (hasMorePosts) {
+    <div class="load-more-container">
+      <button class="load-more-btn" (click)="loadMore()" [disabled]="loadingMore">
+        @if (loadingMore) {
+        <span>Loading...</span>
+        } @else { Show more stories }
+      </button>
+    </div>
     } @else {
+    <div class="end-of-feed">
+      <p>You're all caught up!</p>
+    </div>
+    } } @else {
     <div class="empty-state">
       <h2>No stories yet.</h2>
     </div>
@@ -122,8 +139,6 @@
   <!-- RIGHT COLUMN: Sidebar -->
   @if (!isAdmin) {
   <aside class="sidebar-container">
-    <!-- You can optionally wrap this in @if(!loading) if you want the sidebar to blink too, 
-         but usually sidebar loads separately or stays persistent -->
     <app-suggested-users></app-suggested-users>
   </aside>
   }
