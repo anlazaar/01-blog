@@ -1,4 +1,4 @@
-import { PostResponse } from '../global.model';
+import { PostResponse } from '../POST/PostResponse';
 
 export interface UserPublicProfileDTO {
   id: string;

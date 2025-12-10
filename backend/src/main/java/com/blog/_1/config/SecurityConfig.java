@@ -63,6 +63,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/posts/**").hasRole("USER")
                         .requestMatchers(HttpMethod.PATCH, "/api/posts/**").hasRole("USER")
                         .requestMatchers(HttpMethod.DELETE, "/api/posts/**").hasRole("USER")
+                        .requestMatchers(HttpMethod.POST, "/api/posts/{id}/save").hasRole("USER")
+                        .requestMatchers(HttpMethod.GET, "/api/posts/saved").hasRole("USER")
 
                         // Other User Routes
                         .requestMatchers("/api/comments/**").hasRole("USER")

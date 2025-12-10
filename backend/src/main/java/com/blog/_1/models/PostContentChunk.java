@@ -21,7 +21,7 @@ public class PostContentChunk {
     private String content;
 
     @Column(nullable = false)
-    private Integer chunkIndex; // 0, 1, 2... to maintain order
+    private Integer chunkIndex; 
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")

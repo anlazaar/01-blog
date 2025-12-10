@@ -4,22 +4,34 @@
       <a routerLink="/" class="back-link">
         <fa-icon [icon]="faArrowLeft"></fa-icon> <span>Back to feed</span>
       </a>
-      <span class="draft-status">Draft in {{ postForm.get('title')?.value || 'Untitled' }}</span>
+      <span class="draft-status">
+        {{ isEditMode ? 'Editing' : 'Drafting' }} {{ postForm.get('title')?.value || 'Untitled' }}
+      </span>
     </div>
 
     <!-- Publish Action Area -->
     <div class="nav-right">
       @if (!isSubmitting) {
+
+      <!-- SAVE DRAFT BUTTON -->
       <button
-        class="publish-btn"
-        (click)="onSubmit()"
+        class="draft-btn"
+        (click)="onSaveDraft()"
         [disabled]="postForm.invalid || editorMediaLoading"
       >
-        Publish
+        Save Draft
+      </button>
+
+      <button
+        class="publish-btn"
+        (click)="onPublish()"
+        [disabled]="postForm.invalid || editorMediaLoading"
+      >
+        {{ isEditMode ? 'Update' : 'Publish' }}
       </button>
       } @if (isSubmitting) {
       <div class="publishing-status">
-        <span class="status-text">Publishing {{ uploadProgress }}%</span>
+        <span class="status-text">Saving {{ uploadProgress }}%</span>
         <div class="progress-track">
           <div class="progress-fill" [style.width.%]="uploadProgress"></div>
         </div>
@@ -30,14 +42,12 @@
 
   <div class="editor-container">
     @if (errorMessage) {
-    <div class="error-banner">
-      {{ errorMessage }}
-    </div>
+    <div class="error-banner">{{ errorMessage }}</div>
     }
 
-    <!-- Disable form while uploading -->
+    <!-- ... (The rest of the form, toolbar, and editor remains exactly the same as your code) ... -->
     <form [formGroup]="postForm" [class.disabled-form]="isSubmitting || editorMediaLoading">
-      <!-- Cover Image -->
+      <!-- Cover Image Area ... -->
       <div class="cover-image-area">
         @if (!coverPreviewUrl) {
         <button type="button" class="add-cover-btn" (click)="triggerFileInput()">
@@ -49,7 +59,6 @@
           <button type="button" class="remove-cover-btn" (click)="removeCover()">×</button>
         </div>
         }
-        <!-- Cover Upload Input -->
         <input
           type="file"
           id="cover-upload"
@@ -59,7 +68,6 @@
         />
       </div>
 
-      <!-- Title -->
       <textarea
         class="title-input"
         placeholder="Title"
@@ -68,7 +76,7 @@
         (input)="autoResize($event)"
       ></textarea>
 
-      <!-- HIDDEN INPUTS FOR EDITOR CONTENT -->
+      <!-- Hidden Inputs for Editor Media -->
       <input
         type="file"
         id="editor-image-upload"
@@ -84,10 +92,10 @@
         (change)="onEditorFileSelected($event, 'video')"
       />
 
-      <!-- TIPTAP TOOLBAR -->
+      <!-- Toolbar ... -->
       @if (editor) {
       <div class="tiptap-toolbar">
-        <!-- Formatting -->
+        <!-- ... (Your existing toolbar buttons) ... -->
         <button
           type="button"
           (click)="editor.chain().focus().toggleBold().run()"
@@ -115,7 +123,6 @@
 
         <div class="separator"></div>
 
-        <!-- Headings & Blocks -->
         <button
           type="button"
           (click)="editor.chain().focus().toggleHeading({ level: 2 }).run()"
@@ -140,17 +147,15 @@
 
         <div class="separator"></div>
 
-        <!-- MEDIA BUTTONS (NEW) -->
-        <button type="button" (click)="triggerEditorImageInput()" title="Insert Image">
+        <button type="button" (click)="triggerEditorImageInput()">
           <fa-icon [icon]="faImage"></fa-icon>
         </button>
-        <button type="button" (click)="triggerEditorVideoInput()" title="Insert Video">
+        <button type="button" (click)="triggerEditorVideoInput()">
           <fa-icon [icon]="faVideo"></fa-icon>
         </button>
 
         <div class="separator"></div>
 
-        <!-- Lists -->
         <button
           type="button"
           (click)="editor.chain().focus().toggleBulletList().run()"
@@ -171,7 +176,6 @@
 
         <div class="separator"></div>
 
-        <!-- History -->
         <button
           type="button"
           (click)="editor.chain().focus().undo().run()"
@@ -189,7 +193,6 @@
       </div>
       }
 
-      <!-- TIPTAP EDITOR -->
       <div class="tiptap-container" [class.loading]="editorMediaLoading">
         <tiptap-editor [editor]="editor"></tiptap-editor>
       </div>

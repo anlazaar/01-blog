@@ -1,12 +1,28 @@
-/* --- Global Layout --- */
+.post-page-layout {
+  display: flex;
+  justify-content: center;
+  gap: 64px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 80px;
+}
+
 .article-container {
   width: 100%;
   max-width: 680px;
   margin: 0 auto;
-  padding: 100px 24px 100px 24px;
+  padding: 80px 24px 40px 24px;
   background-color: var(--background);
-  /* Safety net: ensures nothing inside causes horizontal scroll */
   overflow-wrap: break-word;
+  min-width: 0;
+}
+.sidebar-container {
+  width: 368px;
+  min-width: 368px;
+  display: none; /* Hidden on mobile */
+  border-left: 1px solid var(--border);
+  padding-left: 40px;
+  padding-top: 80px; /* Align with article top */
 }
 
 /* --- Header --- */
@@ -375,4 +391,26 @@ textarea {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   margin-top: 48px;
   margin-bottom: 16px;
+}
+
+@media (min-width: 1080px) {
+  .sidebar-container {
+    display: block;
+  }
+
+  /* When sidebar is visible, align layout to start rather than center */
+  .post-page-layout {
+    justify-content: flex-start;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  /* Reset article margin since flex handles centering */
+  .article-container {
+    margin: 0;
+  }
+}
+
+.article-header {
+  margin-bottom: 32px;
 }

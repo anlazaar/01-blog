@@ -392,3 +392,25 @@
   opacity: 0.7;
   pointer-events: none;
 }
+
+/* Add this to your existing CSS */
+
+.draft-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  margin-right: 16px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.draft-btn:hover {
+  color: var(--text-primary);
+}
+
+.draft-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

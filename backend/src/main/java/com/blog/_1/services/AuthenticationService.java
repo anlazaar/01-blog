@@ -5,7 +5,6 @@ import java.util.Map;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-
 import com.blog._1.models.Role;
 import com.blog._1.models.User;
 import com.blog._1.repositories.UserRepository;
@@ -22,12 +21,11 @@ public class AuthenticationService {
     private final JwtService jwtService;
 
     public Map<String, Object> login(String email, String passwd) {
-
         User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("No such a user with this email"));
+                .orElseThrow(() -> new RuntimeException("Invalid credentials")); 
 
         if (!passwdEnco.matches(passwd, user.getPassword())) {
-            throw new RuntimeException("Password Incorrect");
+            throw new RuntimeException("Invalid credentials");
         }
 
         String token = jwtService.generateToken(user);
@@ -38,8 +36,8 @@ public class AuthenticationService {
     }
 
     public Map<String, Object> register(String name, String email, String password) {
-
-        if (userRepo.findByEmail(email).isPresent()) {
+        // OPTIMIZATION: existsBy is faster than findBy
+        if (userRepo.existsByEmail(email)) {
             throw new RuntimeException("Email already taken");
         }
 
@@ -47,7 +45,7 @@ public class AuthenticationService {
         user.setUsername(name);
         user.setEmail(email);
         user.setPassword(passwdEnco.encode(password));
-        user.setRole(Role.USER); // this will be the default we need to figure out how to change it!
+        user.setRole(Role.USER);
 
         userRepo.save(user);
 

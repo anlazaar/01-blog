@@ -15,18 +15,3 @@ export interface CommentResponse {
   author: UserPublicProfile;
 }
 
-export interface PostResponse {
-  id: string;
-  title: string;
-  description: string;
-  mediaUrl: string;
-  mediaType: string;
-  createdAt: string;
-  updatedAt: string | null;
-
-  author: UserPublicProfile;
-  likedByCurrentUser: boolean;
-  likeCount: number;
-
-  comments: CommentResponse[];
-}

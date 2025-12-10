@@ -15,6 +15,7 @@ import { switchMap } from 'rxjs';
 export class ProfilePage implements OnInit {
   user!: UserPublicProfileDTO;
   isCurrentUser: boolean = false;
+  isAdmin = false;
 
   tokenService = inject(TokenService);
 
@@ -53,6 +54,7 @@ export class ProfilePage implements OnInit {
         switchMap((params) => {
           const id = params.get('id')!;
           this.isCurrentUser = this.tokenService.getUUID() === id;
+          this.isAdmin = this.tokenService.isAdmin();
           return this.userService.getUserPublicProfile(id);
         })
       )
