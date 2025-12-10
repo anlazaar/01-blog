@@ -1,18 +1,21 @@
 <div class="menu-container">
-  <!-- Added aria-label for accessibility -->
   <button class="menu-btn" (click)="toggle()" aria-label="More options">…</button>
 
   @if (isOpen) {
   <div class="menu-dropdown">
     @if (canReport) {
     <div class="menu-item" (click)="report.emit(); isOpen = false">Report user</div>
-    } @if (canEdit) {
-    <div class="menu-item" (click)="update.emit(); isOpen = false">Edit story</div>
+    } @if (canEdit && postId) {
+    <!-- 1. Use RouterLink here -->
+    <div class="menu-item" [routerLink]="['/p', postId, 'edit']" (click)="isOpen = false">
+      Edit story
+    </div>
+
+    <div></div>
     <div class="menu-item destructive" (click)="delete.emit(); isOpen = false">Delete story</div>
     }
   </div>
 
-  <!-- Optional: Transparent backdrop to handle 'click outside' to close -->
   <div class="menu-backdrop" (click)="isOpen = false"></div>
   }
 </div>

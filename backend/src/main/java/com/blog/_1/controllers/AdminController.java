@@ -20,6 +20,7 @@ import com.blog._1.dto.post.PostResponse;
 import com.blog._1.dto.report.ReportResponse;
 import com.blog._1.models.User;
 import com.blog._1.models.Post;
+import com.blog._1.models.Role;
 import com.blog._1.services.PostService;
 import com.blog._1.services.ReportService;
 import com.blog._1.services.UserService;
@@ -126,5 +127,14 @@ public class AdminController {
     public ResponseEntity<String> resolveReport(@PathVariable UUID id) {
         reportService.resolveReport(id);
         return ResponseEntity.ok("Report resolved");
+    }
+
+    @PatchMapping("/users/{id}/role")
+    public ResponseEntity<String> updateUserRole(
+            @PathVariable UUID id,
+            @RequestParam Role role) {
+
+        userService.updateUserRole(id, role);
+        return ResponseEntity.ok("User role updated to " + role);
     }
 }

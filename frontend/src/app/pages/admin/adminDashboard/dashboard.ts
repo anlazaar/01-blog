@@ -18,6 +18,7 @@ import {
   faCheck,
   faExternalLinkAlt,
   faChartLine,
+  faShieldAlt,
 } from '@fortawesome/free-solid-svg-icons';
 import { RouterLink } from '@angular/router';
 import { AdminService, DashboardStats } from '../../../services/admin.service';
@@ -46,6 +47,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   faCheck = faCheck;
   faLink = faExternalLinkAlt;
   faChartLine = faChartLine;
+  faShieldAlt = faShieldAlt;
 
   // State
   activeTab: 'overview' | 'users' | 'posts' | 'reports' = 'overview';
@@ -364,6 +366,26 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         this.loadReports();
       },
       error: (err) => console.error(err),
+    });
+  }
+
+  toggleRole(user: any) {
+    const newRole = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
+    const action = user.role === 'ADMIN' ? 'Demote' : 'Promote';
+
+    if (!confirm(`Are you sure you want to ${action} ${user.username} to ${newRole}?`)) {
+      return;
+    }
+
+    this.adminService.updateUserRole(user.id, newRole).subscribe({
+      next: (msg) => {
+        this.message = msg;
+        user.role = newRole;
+      },
+      error: (err) => {
+        console.error(err);
+        this.message = 'Failed to update role';
+      },
     });
   }
 }

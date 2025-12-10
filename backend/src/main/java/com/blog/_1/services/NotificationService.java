@@ -9,7 +9,9 @@ import com.blog._1.repositories.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
@@ -18,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,14 +40,20 @@ public class NotificationService {
         return emitter;
     }
 
+    // OPTIMIZATION: Added @Async and @Transactional
+    // This runs in a background thread so the user doesn't wait for notifications
+    // to be sent.
+    @Async
+    @Transactional
     public void notifyFollowers(Post post, List<User> followers) {
         if (followers.isEmpty())
             return;
 
+        log.info("Sending notifications to {} followers for post {}", followers.size(), post.getId());
+
         List<Notification> notificationsToSave = new ArrayList<>();
         String message = post.getAuthor().getUsername() + " published: " + post.getTitle();
 
-        // 1. Prepare Data
         for (User follower : followers) {
             Notification n = new Notification();
             n.setReceiver(follower);
@@ -56,14 +63,16 @@ public class NotificationService {
             notificationsToSave.add(n);
         }
 
-        // 2. OPTIMIZATION: Batch Insert (One Transaction)
+        // Batch Insert
         List<Notification> savedNotifications = notificationRepository.saveAll(notificationsToSave);
 
-        // 3. Real-time Push
+        // Real-time Push (SSE)
         for (Notification n : savedNotifications) {
             UUID receiverId = n.getReceiver().getId();
             if (emitters.containsKey(receiverId)) {
                 try {
+                    // mapToResponse is safe here because we just created the objects,
+                    // so we know the data is loaded.
                     emitters.get(receiverId).send(SseEmitter.event()
                             .name("notification")
                             .data(mapToResponse(n)));
@@ -74,15 +83,18 @@ public class NotificationService {
         }
     }
 
-    // OPTIMIZATION: Added Pagination (page 0, 20 items)
+    // OPTIMIZATION: The Repository now eagerly fetches Post+Author,
+    // so mapToResponse won't trigger extra queries.
+    @Transactional(readOnly = true)
     public List<NotificationResponse> getUserNotifications(UUID userId, int page, int size) {
         return notificationRepository.findByReceiverIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size))
                 .stream()
                 .map(this::mapToResponse)
-                .collect(Collectors.toList());
+                .toList(); // .toList() is cleaner than .collect(Collectors.toList()) in newer Java
     }
 
     public void markAsRead(UUID notificationId) {
+        // Optimization: Use ifPresent to avoid null checks
         notificationRepository.findById(notificationId).ifPresent(n -> {
             n.setRead(true);
             notificationRepository.save(n);
@@ -99,10 +111,12 @@ public class NotificationService {
         dto.setMessage(n.getMessage());
         dto.setRead(n.isRead());
         dto.setCreatedAt(n.getCreatedAt().toString());
+
         if (n.getPost() != null) {
             PostMinimalDTO postDto = new PostMinimalDTO();
             postDto.setId(n.getPost().getId());
             postDto.setTitle(n.getPost().getTitle());
+            // This line caused the N+1 problem before. Now it's safe.
             postDto.setAuthorUsername(n.getPost().getAuthor().getUsername());
             dto.setPost(postDto);
         }

@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 // UPDATED IMPORTS
 import { PostResponse, SinglePostResponse } from '../../models/POST/PostResponse';
 import { HttpClient } from '@angular/common/http';
@@ -57,7 +57,7 @@ export class PostPage implements OnInit, OnDestroy {
   newComment: string = '';
 
   // Chunking State
-  private readonly CHUNK_PAGE_SIZE = 2;
+  private readonly CHUNK_PAGE_SIZE = 1;
   fullContentDisplay = '';
   currentPage = 0;
   hasMoreChunks = true;
@@ -66,6 +66,8 @@ export class PostPage implements OnInit, OnDestroy {
   // Services
   postService = inject(PostService);
   tokenService = inject(TokenService);
+
+  private router = inject(Router);
 
   private observer: IntersectionObserver | null = null;
 
@@ -194,18 +196,29 @@ export class PostPage implements OnInit, OnDestroy {
     }
   }
 
-  // --- Other Methods ---
-  onUpdate(post: PostResponse) {}
+  onReport(userId: string) {
+    this.router.navigate(['/report', userId]);
+  }
 
+  // 2. Handle Delete Trigger
   onDelete(p: PostResponse) {
     this.postToDelete = p;
     this.showConfirm = true;
   }
 
+  // 3. Confirm Delete & Redirect
   confirmDelete() {
     if (this.postToDelete) {
-      this.postService.deletePost(this.postToDelete.id).subscribe(() => {
-        this.showConfirm = false;
+      this.postService.deletePost(this.postToDelete.id).subscribe({
+        next: () => {
+          this.showConfirm = false;
+          // Redirect to home after deleting the story you are currently reading
+          this.router.navigate(['/']);
+        },
+        error: (err) => {
+          console.error('Delete failed', err);
+          this.showConfirm = false;
+        },
       });
     }
   }

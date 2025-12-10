@@ -11,6 +11,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.blog._1.security.JwtAuthFilter;
 import com.blog._1.security.JwtService;
+import com.blog._1.security.OAuth2LoginSuccessHandler;
 import com.blog._1.services.UserService;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -23,6 +24,7 @@ public class SecurityConfig {
 
     private final JwtService jwtService;
     private final UserService userService;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -81,6 +83,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/reports/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated())
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2LoginSuccessHandler))
                 .addFilterBefore(new JwtAuthFilter(jwtService, userService),
                         UsernamePasswordAuthenticationFilter.class);
 

@@ -250,6 +250,17 @@ public class UserService {
         return "User updated successfully";
     }
 
+    public void updateUserRole(UUID userId, Role newRole) {
+        User user = getUserById(userId); 
+
+        if (!newRole.equals(Role.USER) && !newRole.equals(Role.ADMIN)) {
+            throw new IllegalArgumentException("Invalid role");
+        }
+
+        user.setRole(newRole);
+        userRepository.save(user);
+    }
+
     private boolean hasText(String s) {
         return s != null && !s.isBlank();
     }

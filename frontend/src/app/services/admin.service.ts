@@ -53,4 +53,12 @@ export class AdminService {
   resolveReport(id: string): Observable<string> {
     return this.http.patch(`${this.apiUrl}/reports/${id}/resolve`, {}, { responseType: 'text' });
   }
+
+  updateUserRole(id: string, role: string) {
+    return this.http.patch(
+      `${this.apiUrl}/users/${id}/role?role=${role}`,
+      {}, 
+      { responseType: 'text' }
+    );
+  }
 }

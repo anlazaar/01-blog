@@ -138,6 +138,14 @@
                 <td class="cell-actions">
                   <div class="action-buttons">
                     <button
+                      (click)="toggleRole(user)"
+                      class="icon-btn"
+                      [class.accent]="user.role === 'ADMIN'"
+                      [title]="user.role === 'ADMIN' ? 'Demote to User' : 'Promote to Admin'"
+                    >
+                      <fa-icon [icon]="faShieldAlt"></fa-icon>
+                    </button>
+                    <button
                       (click)="banUser(user.id)"
                       class="icon-btn"
                       [title]="user.banned ? 'Unban User' : 'Ban User'"

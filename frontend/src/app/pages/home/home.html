@@ -65,6 +65,7 @@
 
           @if (currentUserId) {
           <app-post-options-menu
+            [postId]="p.id"
             [canEdit]="currentUserId == p.author.id || isAdmin"
             [canReport]="currentUserId != p.author.id && !isAdmin"
             (update)="onUpdate(p)"

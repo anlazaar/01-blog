@@ -19,6 +19,7 @@ import { NotFoundComponent } from './pages/not-found/not-found';
 import { UsersPageComponent } from './pages/UsersPage/users-page';
 import { DraftsComponent } from './pages/drafts/drafts';
 import { SavedPostsComponent } from './pages/saved-posts/saved-posts';
+import { AuthCallbackComponent } from './auth/AuthCallbackComponent';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -37,6 +38,7 @@ export const routes: Routes = [
   { path: 'me/drafts', component: DraftsComponent },
   { path: 'me/saved', component: SavedPostsComponent },
 
+  { path: 'auth/callback', component: AuthCallbackComponent },
   { path: 'help', component: HelpComponent },
   { path: 'privacy', component: PrivacyPage },
   { path: '**', component: NotFoundComponent },

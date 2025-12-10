@@ -10,6 +10,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { AuthInterceptor } from './core/auth.interceptor';
 import { provideMarkdown } from 'ngx-markdown';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
+import { provideAnimations } from '@angular/platform-browser/animations';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -19,5 +20,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([AuthInterceptor])),
     provideMarkdown(), // <--- Add this provider
     provideCharts(withDefaultRegisterables()),
+    provideAnimations(),
   ],
 };

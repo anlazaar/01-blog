@@ -28,7 +28,6 @@ export class UserService {
     return this.http.post(
       `http://localhost:8080/api/subscriptions/${id}/follow`,
       {},
-      { withCredentials: true }
     );
   }
 
@@ -36,7 +35,6 @@ export class UserService {
     return this.http.post(
       `http://localhost:8080/api/subscriptions/${id}/unfollow`,
       {},
-      { withCredentials: true }
     );
   }
 

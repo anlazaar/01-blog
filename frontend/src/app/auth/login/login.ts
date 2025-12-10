@@ -43,7 +43,7 @@ export class Login {
 
         // 2. Check if the user is an Admin
         if (this.tokenService.isAdmin()) {
-          this.router.navigate(['/admin']);
+          this.router.navigate(['admin/dashboard']);
           return;
         }
 
@@ -64,5 +64,12 @@ export class Login {
         }
       },
     });
+  }
+  loginWithGithub() {
+    window.location.href = 'http://localhost:8080/oauth2/authorization/github';
+  }
+
+  loginWithGoogle() {
+    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
   }
 }

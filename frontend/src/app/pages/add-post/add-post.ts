@@ -11,6 +11,7 @@ import { Observable, of, from } from 'rxjs';
 import { concatMap, last, switchMap, tap } from 'rxjs/operators';
 import { Markdown } from 'tiptap-markdown';
 import Link from '@tiptap/extension-link';
+import { ToastService } from '../../services/toast.service';
 import Image from '@tiptap/extension-image';
 import {
   faBold,
@@ -44,10 +45,11 @@ export class AddPost implements OnInit, OnDestroy {
   private postService = inject(PostService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private toast = inject(ToastService);
 
   private readonly BACKEND_URL = 'http://localhost:8080';
 
-  // Icons (No changes)
+  // Icons
   faBold = faBold;
   faItalic = faItalic;
   faHeading = faHeading;
@@ -71,10 +73,9 @@ export class AddPost implements OnInit, OnDestroy {
   errorMessage = '';
   editorMediaLoading = false;
 
-  // Edit Mode State
   isEditMode = false;
   postId: string | null = null;
-  existingMediaUrl: string | null = null; // Store the original media URL
+  existingMediaUrl: string | null = null;
 
   postForm = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(3)]],
@@ -120,13 +121,10 @@ export class AddPost implements OnInit, OnDestroy {
             description: '',
             mediaType: post.mediaType,
           });
-
           if (post.mediaUrl) {
-            // Store existing URL so we don't lose it if we don't pick a new file
             this.existingMediaUrl = post.mediaUrl;
             this.coverPreviewUrl = this.BACKEND_URL + post.mediaUrl;
           }
-
           this.loadDraftContent(post.id);
         }
       });
@@ -187,7 +185,7 @@ export class AddPost implements OnInit, OnDestroy {
       },
       error: () => {
         this.editorMediaLoading = false;
-        alert('Failed to upload media.');
+        this.toast.show('Failed to upload media. Please try a smaller file.', 'error');
       },
     });
   }
@@ -210,7 +208,7 @@ export class AddPost implements OnInit, OnDestroy {
   removeCover() {
     this.selectedFile = null;
     this.coverPreviewUrl = null;
-    this.existingMediaUrl = null; // Important: Clear old media on removal
+    this.existingMediaUrl = null;
   }
 
   autoResize(event: Event) {
@@ -220,18 +218,16 @@ export class AddPost implements OnInit, OnDestroy {
   }
 
   // --- SAVE & PUBLISH LOGIC ---
-
   onPublish() {
     this.handleSave(true);
   }
-
   onSaveDraft() {
     this.handleSave(false);
   }
 
   private handleSave(publish: boolean) {
     if (this.postForm.invalid || this.editor.isEmpty) {
-      this.errorMessage = 'Please write some content.';
+      this.toast.show('Please add a title and some content.', 'error');
       return;
     }
 
@@ -240,7 +236,6 @@ export class AddPost implements OnInit, OnDestroy {
     this.uploadProgress = 0;
 
     const fullContent = this.postForm.get('description')?.value || '';
-    // Create summary (first 150 chars)
     const summary = fullContent.substring(0, 150) + '...';
     const title = this.postForm.get('title')?.value;
 
@@ -248,34 +243,30 @@ export class AddPost implements OnInit, OnDestroy {
 
     if (this.isEditMode && this.postId) {
       // === EDIT MODE ===
-      // 1. We must send JSON to updatePost, not FormData.
-
       const updatePayload = {
         title: title,
         description: summary,
         mediaType: 'IMAGE',
-        mediaUrl: this.existingMediaUrl, // Default to old URL
+        mediaUrl: this.existingMediaUrl, // Use stored URL
       };
 
-      // 2. If user picked a NEW file, upload it first to get a URL
       let preUpdateAction: Observable<any> = of(null);
 
       if (this.selectedFile) {
         preUpdateAction = this.postService.uploadEditorMedia(this.selectedFile).pipe(
           tap((res) => {
-            updatePayload.mediaUrl = res.url; // Update payload with new URL
+            updatePayload.mediaUrl = res.url;
+            this.existingMediaUrl = res.url; // <--- FIX 1: Update local state
           })
         );
       }
 
-      // 3. Chain: Upload Image (if any) -> Update Metadata (JSON) -> Clear Content
       saveObservable = preUpdateAction.pipe(
         concatMap(() => this.postService.updatePost(this.postId!, updatePayload)),
         concatMap(() => this.postService.clearPostContent(this.postId!))
       );
     } else {
       // === CREATE MODE ===
-      // Here we use FormData because initPost expects it
       const formData = new FormData();
       formData.append('title', title || '');
       formData.append('description', summary);
@@ -284,17 +275,21 @@ export class AddPost implements OnInit, OnDestroy {
         formData.append('media', this.selectedFile);
       }
 
-      saveObservable = this.postService
-        .initPost(formData)
-        .pipe(tap((res: any) => (this.postId = res.id)));
+      saveObservable = this.postService.initPost(formData).pipe(
+        tap((res: any) => {
+          this.postId = res.id;
+          // <--- FIX 2: Capture new URL immediately so next save doesn't delete it
+          if (res.mediaUrl) {
+            this.existingMediaUrl = res.mediaUrl;
+          }
+        })
+      );
     }
 
     // === EXECUTE ===
     saveObservable
       .pipe(
-        // Upload Chunks
         concatMap(() => this.uploadChunksSequentially(this.postId!, fullContent)),
-        // Finalize (Publish only if requested)
         concatMap(() => {
           if (publish) {
             const totalChunks = Math.ceil(fullContent.length / 4000);
@@ -307,15 +302,17 @@ export class AddPost implements OnInit, OnDestroy {
         next: () => {
           this.isSubmitting = false;
           if (publish) {
+            this.toast.show('Story published successfully!', 'success');
             this.router.navigate(['/']);
           } else {
             this.isEditMode = true;
-            alert('Draft saved successfully');
+            this.selectedFile = null; // Clear file input after successful upload
+            this.toast.show('Draft saved successfully', 'success');
           }
         },
         error: (err) => {
           console.error(err);
-          this.errorMessage = 'Failed to save story';
+          this.toast.show('Could not save story.', 'error');
           this.isSubmitting = false;
         },
       });
@@ -325,15 +322,12 @@ export class AddPost implements OnInit, OnDestroy {
     const CHUNK_SIZE = 4000;
     const totalChunks = Math.ceil(content.length / CHUNK_SIZE);
     const chunks: { index: number; content: string }[] = [];
-
     for (let i = 0; i < totalChunks; i++) {
       const start = i * CHUNK_SIZE;
       const end = Math.min(start + CHUNK_SIZE, content.length);
       chunks.push({ index: i, content: content.substring(start, end) });
     }
-
     if (chunks.length === 0) return of(null);
-
     return from(chunks).pipe(
       concatMap((chunk, i) => {
         this.uploadProgress = Math.round(((i + 1) / totalChunks) * 100);

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PostService } from '../../services/post.service';
 import { PostResponse } from '../../models/POST/PostResponse'; 
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-drafts',
@@ -15,6 +16,7 @@ export class DraftsComponent implements OnInit {
   drafts: PostResponse[] = [];
   loading = true;
   postService = inject(PostService);
+  private toast = inject(ToastService);
 
   ngOnInit() {
     this.loadDrafts();
@@ -34,6 +36,7 @@ export class DraftsComponent implements OnInit {
     if (confirm('Are you sure you want to delete this draft?')) {
       this.postService.deletePost(id).subscribe(() => {
         this.drafts = this.drafts.filter((d) => d.id !== id);
+        this.toast.show("Draft deleted seccessfully", "success")
       });
     }
   }

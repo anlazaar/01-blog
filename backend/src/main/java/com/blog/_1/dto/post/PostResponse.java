@@ -60,8 +60,6 @@ public class PostResponse {
         }
 
         // OPTIMIZATION: Use the @Formula fields from the Entity
-        // Do NOT use post.getLikes().size() -> Causes query
-        // Do NOT use post.getComments().size() -> Causes query
         dto.setLikeCount(post.getLikeCount());
         dto.setCommentCount(post.getCommentCount());
 

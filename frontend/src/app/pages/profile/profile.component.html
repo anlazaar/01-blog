@@ -24,7 +24,7 @@
           <div class="action-buttons">
             @if (isCurrentUser) {
             <a [routerLink]="['/profile/update', user.id]" class="text-btn">Edit profile</a>
-            <a routerLink="new-story" class="write-btn">Write</a>
+            <a routerLink="/new-story" class="write-btn">Write</a>
             } @else if (isAdmin){
             <a [routerLink]="['/profile/update', user.id]" class="text-btn">Edit profile</a>
             }@else {

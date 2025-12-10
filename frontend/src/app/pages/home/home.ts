@@ -6,9 +6,9 @@ import { TokenService } from '../../services/token.service';
 import { PostResponse } from '../../models/POST/PostResponse';
 import { PostOptionsMenuComponent } from '../../share/PostOptionsMenu/post-options-menu';
 import { ConfirmDialogComponent } from '../../share/ConfirmDialogComponent/confirm-dialog';
-import { UserService } from '../../services/UserService';
 import { SuggestedUsersComponent } from '../../share/SuggestedAccounts/suggested-users';
 import { Page } from '../../models/Page';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-home',
@@ -46,7 +46,7 @@ export class Home implements OnInit {
   private postService = inject(PostService);
   private tokenService = inject(TokenService);
   private router = inject(Router);
-  private userService = inject(UserService);
+  // private userService = inject(UserService);
 
   ngOnInit(): void {
     this.token = this.tokenService.getToken();

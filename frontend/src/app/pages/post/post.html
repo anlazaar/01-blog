@@ -40,10 +40,11 @@
         <!-- Post Menu -->
         @if (currentUserId) {
         <app-post-options-menu
-          [canEdit]="currentUserId == post.author.id"
-          [canReport]="currentUserId != post.author.id"
-          (update)="onUpdate(post)"
+          [postId]="post.id"
+          [canEdit]="currentUserId == post.author.id || isAdmin"
+          [canReport]="currentUserId != post.author.id && !isAdmin"
           (delete)="onDelete(post)"
+          (report)="onReport(post.author.id)"
         ></app-post-options-menu>
         }
       </div>

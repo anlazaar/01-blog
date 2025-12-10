@@ -14,6 +14,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -22,6 +24,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostService {
@@ -43,19 +46,55 @@ public class PostService {
             Path uploadPath = Paths.get(uploadDir);
             if (!Files.exists(uploadPath))
                 Files.createDirectories(uploadPath);
-            String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+
+            // SECURITY: Sanitize filename to prevent ".." attacks
+            String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+            if (originalFilename.contains("..")) {
+                throw new RuntimeException("Invalid filename sequence");
+            }
+
+            // OPTIMIZATION: Shorten filename (UUID + Extension) to save DB space and avoid
+            // filesystem issues
+            String extension = "";
+            int i = originalFilename.lastIndexOf('.');
+            if (i > 0)
+                extension = originalFilename.substring(i);
+
+            String filename = UUID.randomUUID().toString() + extension;
+
             Files.copy(file.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
             return "/uploads/" + filename;
         } catch (IOException e) {
+            log.error("File upload failed", e);
             throw new RuntimeException("Failed to save file");
+        }
+    }
+
+    private void deleteFileFromDisk(String mediaUrl) {
+        if (mediaUrl == null || mediaUrl.isBlank())
+            return;
+
+        try {
+            // Convert URL "/uploads/abc.jpg" to Path "uploads/abc.jpg"
+            String filename = mediaUrl.replace("/uploads/", "");
+            Path filePath = Paths.get(uploadDir).resolve(filename);
+
+            Files.deleteIfExists(filePath);
+            log.info("Deleted orphaned file: {}", filePath);
+        } catch (IOException e) {
+            log.warn("Failed to delete file: {}", mediaUrl);
+            // We log but don't throw exception, so we don't rollback the DB transaction
+            // just because a file was missing
         }
     }
 
     public String uploadPostMedia(MultipartFile file) {
         if (file.isEmpty())
             throw new RuntimeException("File is empty");
+        // Optimization: strict size check
         if (file.getSize() > 20 * 1024 * 1024)
             throw new RuntimeException("File too large > 20MB");
+
         String contentType = file.getContentType();
         if (contentType == null || (!contentType.startsWith("image/") && !contentType.startsWith("video/"))) {
             throw new RuntimeException("Invalid file type");
@@ -159,17 +198,35 @@ public class PostService {
     }
 
     public List<PostResponse> getByUser(UUID userId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        // We moved the sorting logic HERE.
+        // Previously your method name forced "updatedAt", so I kept that.
+        // If you prefer "createdAt", just change the string below.
+        Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
+
+        // Call the new cleaner Repo method
         List<PostResponse> posts = postRepository
-                .findByAuthorIdAndStatusOrderByUpdatedAtDesc(userId, PostStatus.PUBLISHED, pageable)
-                .stream().map(PostResponse::from).collect(Collectors.toList());
+                .findByAuthorIdAndStatus(userId, PostStatus.PUBLISHED, pageable)
+                .stream()
+                .map(PostResponse::from)
+                .collect(Collectors.toList());
+
         enrichWithUserInteraction(posts);
         return posts;
     }
 
+    // Update 2: getDrafts
     public List<PostResponse> getDrafts(UUID userId) {
-        return postRepository.findByAuthorIdAndStatusOrderByUpdatedAtDesc(userId, PostStatus.DRAFT, Pageable.unpaged())
-                .stream().map(PostResponse::from).collect(Collectors.toList());
+        // Since we removed "OrderByUpdatedAtDesc" from the repo, we need to add the
+        // sort here.
+        // Pageable.unpaged() does not sort by default.
+        // We use a large page size (e.g., 100) to simulate "get all" while keeping the
+        // sort.
+        Pageable pageable = PageRequest.of(0, 100, Sort.by("updatedAt").descending());
+
+        return postRepository.findByAuthorIdAndStatus(userId, PostStatus.DRAFT, pageable)
+                .stream()
+                .map(PostResponse::from)
+                .collect(Collectors.toList());
     }
 
     public List<PostResponse> getSavedPosts(UUID userId, int page, int size) {
@@ -294,8 +351,17 @@ public class PostService {
 
     public void delete(UUID postId, UUID userId, boolean isAdmin) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Not found"));
+
         if (!isAdmin && !post.getAuthor().getId().equals(userId))
             throw new RuntimeException("Unauthorized");
+
+        // CLEANUP: Delete the associated image from disk
+        if (post.getMediaUrl() != null) {
+            deleteFileFromDisk(post.getMediaUrl());
+        }
+
+        // JPA will handle cascading deletes for Likes/Comments/Chunks if mapped
+        // correctly
         postRepository.delete(post);
     }
 
@@ -306,10 +372,15 @@ public class PostService {
 
         post.setTitle(request.getTitle());
         post.setDescription(request.getDescription());
-        if (request.getMediaUrl() != null)
-            post.setMediaUrl(request.getMediaUrl());
         if (request.getMediaType() != null)
             post.setMediaType(request.getMediaType());
+
+        if (request.getMediaUrl() != null && !request.getMediaUrl().equals(post.getMediaUrl())) {
+            // Delete the old image to free space
+            deleteFileFromDisk(post.getMediaUrl());
+            // Set the new one
+            post.setMediaUrl(request.getMediaUrl());
+        }
 
         return PostResponse.from(postRepository.save(post));
     }

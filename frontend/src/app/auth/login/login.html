@@ -8,11 +8,11 @@
 
     <!-- Social Login -->
     <div class="social-login">
-      <button class="social-btn google">
+      <button class="social-btn google" type="button" (click)="loginWithGoogle()">
         <fa-icon [icon]="faGoogle"></fa-icon>
         <span>Sign in with Google</span>
       </button>
-      <button class="social-btn github">
+      <button class="social-btn github" type="button" (click)="loginWithGithub()">
         <fa-icon [icon]="faGithub"></fa-icon>
         <span>Sign in with GitHub</span>
       </button>
@@ -28,16 +28,13 @@
 
         <!-- Error Messages -->
         @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
-          <div
-            class="error-msg"
-            >
-            @if (loginForm.get('email')?.errors?.['required']) {
-              <small>Email is required.</small>
-            }
-            @if (loginForm.get('email')?.errors?.['email']) {
-              <small>Invalid email format.</small>
-            }
-          </div>
+        <div class="error-msg">
+          @if (loginForm.get('email')?.errors?.['required']) {
+          <small>Email is required.</small>
+          } @if (loginForm.get('email')?.errors?.['email']) {
+          <small>Invalid email format.</small>
+          }
+        </div>
         }
       </div>
 
@@ -46,30 +43,26 @@
         <input type="password" formControlName="password" placeholder="••••••••" />
 
         @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
-          <div
-            class="error-msg"
-            >
-            @if (loginForm.get('password')?.errors?.['required']) {
-              <small
-                >Password is required.</small
-                >
-              }
-            </div>
+        <div class="error-msg">
+          @if (loginForm.get('password')?.errors?.['required']) {
+          <small>Password is required.</small>
           }
         </div>
-
-        <!-- General Error -->
-        @if (errorMessage) {
-          <div class="global-error">
-            {{ errorMessage }}
-          </div>
         }
+      </div>
 
-        <!-- Submit -->
-        <button class="submit-btn" type="submit" [disabled]="loginForm.invalid">Sign in</button>
+      <!-- General Error -->
+      @if (errorMessage) {
+      <div class="global-error">
+        {{ errorMessage }}
+      </div>
+      }
 
-        <!-- Footer -->
-        <div class="auth-footer">No account? <a routerLink="/auth/register">Create one</a></div>
-      </form>
-    </div>
+      <!-- Submit -->
+      <button class="submit-btn" type="submit" [disabled]="loginForm.invalid">Sign in</button>
+
+      <!-- Footer -->
+      <div class="auth-footer">No account? <a routerLink="/auth/register">Create one</a></div>
+    </form>
   </div>
+</div>

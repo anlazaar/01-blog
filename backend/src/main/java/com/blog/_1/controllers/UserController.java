@@ -18,7 +18,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.Page;
 
 @RestController
@@ -28,23 +27,55 @@ public class UserController {
 
     private final UserService userService;
 
+    // --- 1. Full Data (Protected) ---
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserFullData(@PathVariable UUID id) {
-        return ResponseEntity.ok(userService.getFullUserData(userService.getUserById(id)));
+    public ResponseEntity<UserResponse> getUserFullData(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal User currentUser) {
+
+        // SECURITY: Only allow Self or Admin to see full private data (email, etc.)
+        if (!currentUser.getId().equals(id) && currentUser.getRole() != Role.ADMIN) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // OPTIMIZATION: If I'm requesting my own data, reuse the object from the JWT
+        // Filter.
+        // Don't hit the DB again.
+        User targetUser = currentUser.getId().equals(id) ? currentUser : userService.getUserById(id);
+
+        return ResponseEntity.ok(userService.getFullUserData(targetUser));
     }
 
-    @GetMapping("/{id}/block")
-    public ResponseEntity<UserPublicProfileDTO> getUserBlock(@PathVariable UUID id) {
-        return ResponseEntity.ok(userService.getPublicProfile(userService.getUserById(id)));
+    // --- 2. Public Profile (Public) ---
+    @GetMapping("/{id}/block") // Maybe rename to /profile in future?
+    public ResponseEntity<UserPublicProfileDTO> getUserBlock(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal User currentUser) {
+
+        // OPTIMIZATION: Reuse currentUser if viewing own profile
+        User targetUser = (currentUser != null && currentUser.getId().equals(id))
+                ? currentUser
+                : userService.getUserById(id);
+
+        return ResponseEntity.ok(userService.getPublicProfile(targetUser));
     }
 
+    // --- 3. Full Update (Admin or Self) ---
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateFullUserInfo(@PathVariable UUID id, @Valid @RequestBody User newUserInfo) {
-        // Warning: Role update should be protected in Service, keeping here as
-        // requested
+    public ResponseEntity<User> updateFullUserInfo(
+            @PathVariable UUID id,
+            @Valid @RequestBody User newUserInfo,
+            @AuthenticationPrincipal User currentUser) {
+
+        // SECURITY CHECK
+        if (!currentUser.getId().equals(id) && currentUser.getRole() != Role.ADMIN) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         return ResponseEntity.ok(userService.updateUser(id, newUserInfo));
     }
 
+    // --- 4. Profile Patch (Avatar/Bio) ---
     @PatchMapping("/profile/update/{id}")
     public ResponseEntity<Map<String, String>> updateProfileWithAvatar(
             @PathVariable UUID id,
@@ -58,19 +89,22 @@ public class UserController {
             @RequestParam(required = false) String bio,
             @RequestParam(required = false) MultipartFile avatar) throws IOException {
 
+        // Use @AuthenticationPrincipal to check null, cleaner than manual check
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
+        // SECURITY CHECK
         if (!id.equals(currentUser.getId()) && currentUser.getRole() != Role.ADMIN) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        
+
         String result = userService.patchUser(id, firstname, lastname, bio, avatar, email, password, oldpassword,
                 username);
         return ResponseEntity.ok(Map.of("res", result));
     }
 
+    // --- 5. Discovery ---
     @GetMapping("/suggested")
     public ResponseEntity<List<UserPublicProfileDTO>> getSuggestedUsers(@AuthenticationPrincipal User currentUser) {
         UUID currentUserId = (currentUser != null) ? currentUser.getId() : null;
@@ -84,19 +118,6 @@ public class UserController {
             @RequestParam(defaultValue = "10") int size) {
 
         UUID currentUserId = (currentUser != null) ? currentUser.getId() : null;
-
         return ResponseEntity.ok(userService.getAllPublicUsers(currentUserId, PageRequest.of(page, size)));
-    }
-
-    // Helper to safely get ID or null (for guest view)
-    private UUID getSafeCurrentUserId() {
-        try {
-            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (principal instanceof User) {
-                return ((User) principal).getId();
-            }
-        } catch (Exception ignored) {
-        }
-        return null;
     }
 }
