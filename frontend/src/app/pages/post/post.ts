@@ -233,11 +233,10 @@ export class PostPage implements OnInit, OnDestroy {
 
     this.postService.createComment(this.post.id, this.newComment).subscribe({
       next: (comment) => {
-        // Now valid because this.post is SinglePostResponse
         if (!this.post!.comments) this.post!.comments = [];
 
         this.post!.comments.push(comment);
-        this.post!.commentCount++; // Keep UI sync
+        this.post!.commentCount++; 
 
         this.newComment = '';
       },

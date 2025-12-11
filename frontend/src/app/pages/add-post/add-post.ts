@@ -80,11 +80,16 @@ export class AddPost implements OnInit, OnDestroy {
   postForm = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(3)]],
     description: ['', [Validators.required, Validators.minLength(10)]],
-    mediaType: ['IMAGE'],
+    mediaType: ['IMAGE'], // Defaults to IMAGE, changes to VIDEO if video file selected
   });
 
   selectedFile: File | null = null;
   coverPreviewUrl: string | null = null;
+
+  // Helper to check if current media is video for the UI
+  get isVideoType(): boolean {
+    return this.postForm.get('mediaType')?.value === 'VIDEO';
+  }
 
   ngOnInit(): void {
     this.editor = new Editor({
@@ -141,9 +146,13 @@ export class AddPost implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.editor.destroy();
+    // Cleanup memory if we created a video URL
+    if (this.coverPreviewUrl && this.coverPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(this.coverPreviewUrl);
+    }
   }
 
-  // --- Toolbar & Media Logic ---
+  // --- Toolbar & Editor Image Logic ---
   setLink() {
     const previousUrl = this.editor.getAttributes('link')['href'];
     const url = window.prompt('URL', previousUrl);
@@ -158,57 +167,64 @@ export class AddPost implements OnInit, OnDestroy {
   triggerEditorImageInput() {
     document.getElementById('editor-image-upload')?.click();
   }
-  triggerEditorVideoInput() {
-    document.getElementById('editor-video-upload')?.click();
-  }
 
-  onEditorFileSelected(event: Event, type: 'image' | 'video') {
+  onEditorFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
-      this.uploadEditorMedia(input.files[0], type);
+      this.uploadEditorMedia(input.files[0]);
       input.value = '';
     }
   }
 
-  uploadEditorMedia(file: File, type: 'image' | 'video') {
+  uploadEditorMedia(file: File) {
     this.editorMediaLoading = true;
     this.postService.uploadEditorMedia(file).subscribe({
       next: (res) => {
         this.editorMediaLoading = false;
         const fullUrl = `${this.BACKEND_URL}${res.url}`;
-        if (type === 'image') {
-          this.editor.chain().focus().setImage({ src: fullUrl }).run();
-        } else {
-          const videoHtml = `<video src="${fullUrl}" controls style="width: 100%; border-radius: 4px; margin: 20px 0;"></video><p></p>`;
-          this.editor.chain().focus().insertContent(videoHtml).run();
-        }
+        this.editor.chain().focus().setImage({ src: fullUrl }).run();
       },
       error: () => {
         this.editorMediaLoading = false;
-        this.toast.show('Failed to upload media. Please try a smaller file.', 'error');
+        this.toast.show('Failed to upload image.', 'error');
       },
     });
   }
 
-  // --- Cover Image Logic ---
+  // --- Cover Media Logic (Image OR Video) ---
+  triggerFileInput() {
+    document.getElementById('cover-upload')?.click();
+  }
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       this.selectedFile = input.files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => (this.coverPreviewUrl = e.target?.result as string);
-      reader.readAsDataURL(this.selectedFile);
-    }
-  }
+      const fileType = this.selectedFile.type;
 
-  triggerFileInput() {
-    document.getElementById('cover-upload')?.click();
+      if (fileType.startsWith('video/')) {
+        // Switch mode to VIDEO
+        this.postForm.patchValue({ mediaType: 'VIDEO' });
+        // Use ObjectURL for fast video preview
+        this.coverPreviewUrl = URL.createObjectURL(this.selectedFile);
+      } else {
+        // Switch mode to IMAGE
+        this.postForm.patchValue({ mediaType: 'IMAGE' });
+        // Use FileReader for image preview
+        const reader = new FileReader();
+        reader.onload = (e) => (this.coverPreviewUrl = e.target?.result as string);
+        reader.readAsDataURL(this.selectedFile);
+      }
+    }
   }
 
   removeCover() {
     this.selectedFile = null;
     this.coverPreviewUrl = null;
     this.existingMediaUrl = null;
+    this.postForm.patchValue({ mediaType: 'IMAGE' }); // Reset to default
+    const input = document.getElementById('cover-upload') as HTMLInputElement;
+    if (input) input.value = '';
   }
 
   autoResize(event: Event) {
@@ -238,6 +254,7 @@ export class AddPost implements OnInit, OnDestroy {
     const fullContent = this.postForm.get('description')?.value || '';
     const summary = fullContent.substring(0, 150) + '...';
     const title = this.postForm.get('title')?.value;
+    const currentMediaType = this.postForm.get('mediaType')?.value; // Get IMAGE or VIDEO
 
     let saveObservable: Observable<any>;
 
@@ -246,8 +263,8 @@ export class AddPost implements OnInit, OnDestroy {
       const updatePayload = {
         title: title,
         description: summary,
-        mediaType: 'IMAGE',
-        mediaUrl: this.existingMediaUrl, // Use stored URL
+        mediaType: currentMediaType,
+        mediaUrl: this.existingMediaUrl,
       };
 
       let preUpdateAction: Observable<any> = of(null);
@@ -256,7 +273,7 @@ export class AddPost implements OnInit, OnDestroy {
         preUpdateAction = this.postService.uploadEditorMedia(this.selectedFile).pipe(
           tap((res) => {
             updatePayload.mediaUrl = res.url;
-            this.existingMediaUrl = res.url; // <--- FIX 1: Update local state
+            this.existingMediaUrl = res.url;
           })
         );
       }
@@ -270,7 +287,8 @@ export class AddPost implements OnInit, OnDestroy {
       const formData = new FormData();
       formData.append('title', title || '');
       formData.append('description', summary);
-      formData.append('mediaType', 'IMAGE');
+      formData.append('mediaType', currentMediaType || 'IMAGE');
+
       if (this.selectedFile) {
         formData.append('media', this.selectedFile);
       }
@@ -278,7 +296,6 @@ export class AddPost implements OnInit, OnDestroy {
       saveObservable = this.postService.initPost(formData).pipe(
         tap((res: any) => {
           this.postId = res.id;
-          // <--- FIX 2: Capture new URL immediately so next save doesn't delete it
           if (res.mediaUrl) {
             this.existingMediaUrl = res.mediaUrl;
           }
@@ -306,7 +323,7 @@ export class AddPost implements OnInit, OnDestroy {
             this.router.navigate(['/']);
           } else {
             this.isEditMode = true;
-            this.selectedFile = null; // Clear file input after successful upload
+            this.selectedFile = null;
             this.toast.show('Draft saved successfully', 'success');
           }
         },

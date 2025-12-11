@@ -2,11 +2,9 @@
 .overlay {
   position: fixed;
   inset: 0;
-  /* Medium uses a very white/clean overlay or a subtle dim */
-  background: rgba(255, 255, 255, 0.95);
   /* If in dark mode, this might need a dark semi-transparent bg, 
      but based on the variables provided, we use a glass effect */
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(15px);
   display: flex;
   justify-content: center;
   align-items: center;

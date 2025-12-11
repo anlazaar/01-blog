@@ -12,8 +12,6 @@
     <!-- Publish Action Area -->
     <div class="nav-right">
       @if (!isSubmitting) {
-
-      <!-- SAVE DRAFT BUTTON -->
       <button
         class="draft-btn"
         (click)="onSaveDraft()"
@@ -45,26 +43,30 @@
     <div class="error-banner">{{ errorMessage }}</div>
     }
 
-    <!-- ... (The rest of the form, toolbar, and editor remains exactly the same as your code) ... -->
     <form [formGroup]="postForm" [class.disabled-form]="isSubmitting || editorMediaLoading">
-      <!-- Cover Image Area ... -->
+      <!-- COVER MEDIA AREA (Supports Image OR Video) -->
       <div class="cover-image-area">
         @if (!coverPreviewUrl) {
         <button type="button" class="add-cover-btn" (click)="triggerFileInput()">
-          <fa-icon [icon]="faImage"></fa-icon> Add a cover image
+          <fa-icon [icon]="faImage"></fa-icon> Add cover image or video
         </button>
         } @else {
         <div class="cover-preview">
-          <img [src]="coverPreviewUrl" alt="Cover" />
+          @if (isVideoType) {
+          <video [src]="coverPreviewUrl" controls class="cover-media"></video>
+          } @else {
+          <img [src]="coverPreviewUrl" alt="Cover" class="cover-media" />
+          }
           <button type="button" class="remove-cover-btn" (click)="removeCover()">×</button>
         </div>
         }
+        <!-- Accepts both types -->
         <input
           type="file"
           id="cover-upload"
           hidden
           (change)="onFileSelected($event)"
-          accept="image/*"
+          accept="image/*, video/*"
         />
       </div>
 
@@ -76,26 +78,18 @@
         (input)="autoResize($event)"
       ></textarea>
 
-      <!-- Hidden Inputs for Editor Media -->
+      <!-- Hidden Input for Editor Images Only -->
       <input
         type="file"
         id="editor-image-upload"
         hidden
         accept="image/*"
-        (change)="onEditorFileSelected($event, 'image')"
-      />
-      <input
-        type="file"
-        id="editor-video-upload"
-        hidden
-        accept="video/*"
-        (change)="onEditorFileSelected($event, 'video')"
+        (change)="onEditorFileSelected($event)"
       />
 
-      <!-- Toolbar ... -->
+      <!-- Toolbar (Text & Images Only) -->
       @if (editor) {
       <div class="tiptap-toolbar">
-        <!-- ... (Your existing toolbar buttons) ... -->
         <button
           type="button"
           (click)="editor.chain().focus().toggleBold().run()"
@@ -150,9 +144,8 @@
         <button type="button" (click)="triggerEditorImageInput()">
           <fa-icon [icon]="faImage"></fa-icon>
         </button>
-        <button type="button" (click)="triggerEditorVideoInput()">
-          <fa-icon [icon]="faVideo"></fa-icon>
-        </button>
+
+        <!-- Video Button Removed -->
 
         <div class="separator"></div>
 
