@@ -4,7 +4,7 @@ import {
   provideZoneChangeDetection,
   SecurityContext, // Import this
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withViewTransitions } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { AuthInterceptor } from './core/auth.interceptor';
@@ -21,5 +21,6 @@ export const appConfig: ApplicationConfig = {
     provideMarkdown(),
     provideCharts(withDefaultRegisterables()),
     provideAnimations(),
+    provideRouter(routes, withViewTransitions())
   ],
 };

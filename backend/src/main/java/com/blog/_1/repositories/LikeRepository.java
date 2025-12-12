@@ -21,4 +21,6 @@ public interface LikeRepository extends JpaRepository<PostLike, UUID> {
 
     @Query("SELECT l.post.id FROM PostLike l WHERE l.user.id = :userId AND l.post.id IN :postIds")
     Set<UUID> findPostIdsByUserIdAndPostIdIn(@Param("userId") UUID userId, @Param("postIds") List<UUID> postIds);
+
+    void deleteByPostIdAndUserId(UUID postId, UUID userId);
 }

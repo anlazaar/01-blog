@@ -33,4 +33,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     // OPTIMIZATION: Added Pageable.
     @EntityGraph(attributePaths = { "author" })
     List<Post> findByAuthorIdAndStatus(UUID authorId, PostStatus status, Pageable pageable);
+
+    @Query("SELECT p.createdAt FROM Post p WHERE p.createdAt > :date")
+    List<LocalDateTime> findAllCreatedDatesAfter(LocalDateTime date);
 }

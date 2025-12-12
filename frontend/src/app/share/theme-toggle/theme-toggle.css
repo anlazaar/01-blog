@@ -1,23 +1,20 @@
+/* Override the default Material Button colors to match your theme */
 .theme-toggle-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary); /* Grey/Muted default */
-  border-radius: 50%; /* Circle hover effect */
-  transition: color 0.2s ease, background-color 0.2s ease;
+  color: var(--text-secondary) !important;
+  transition: color 0.2s ease, background-color 0.2s ease !important;
 }
 
 .theme-toggle-btn:hover {
-  color: var(--text-primary); /* High contrast on hover */
-  background-color: var(--secondary); /* Very light grey circle on hover */
+  color: var(--text-primary) !important;
+  /* Material adds a hover background automatically, 
+     but we enforce your variable to be safe */
+  background-color: var(--secondary) !important;
 }
 
-/* Adjust icon size */
-fa-icon {
+/* Ensure icon fits perfectly */
+.mat-icon {
   font-size: 20px;
-  display: block; /* Fixes alignment issues */
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
 }

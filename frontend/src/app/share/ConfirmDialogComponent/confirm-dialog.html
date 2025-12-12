@@ -1,15 +1,19 @@
-@if (show) {
-  <div class="overlay">
-    <div class="dialog">
-      <!-- Message Content -->
-      <div class="dialog-content">
-        <p>{{ message }}</p>
-      </div>
-      <!-- Actions -->
-      <div class="buttons">
-        <button class="cancel" (click)="onCancel()">Cancel</button>
-        <button class="confirm" (click)="onConfirm()">Yes</button>
-      </div>
-    </div>
+<!-- The main container that mimics your original .dialog class -->
+<div class="custom-dialog-content">
+  
+  <!-- Message Content -->
+  <p class="dialog-message">{{ data.message }}</p>
+
+  <!-- Actions -->
+  <div class="dialog-actions">
+    <!-- Cancel Button -->
+    <button mat-flat-button class="btn-cancel" (click)="onCancel()">
+      Cancel
+    </button>
+    
+    <!-- Confirm Button -->
+    <button mat-flat-button class="btn-confirm" (click)="onConfirm()">
+      Yes
+    </button>
   </div>
-}
+</div>

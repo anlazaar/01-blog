@@ -6,61 +6,73 @@ import {
   ViewChildren,
   QueryList,
   AfterViewInit,
+  HostListener,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import {
-  faUsers,
-  faNewspaper,
-  faFlag,
-  faBan,
-  faTrash,
-  faCheck,
-  faExternalLinkAlt,
-  faChartLine,
-  faShieldAlt,
-} from '@fortawesome/free-solid-svg-icons';
+import { CommonModule, TitleCasePipe, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AdminService, DashboardStats } from '../../../services/admin.service';
-import { ChartConfiguration, ChartOptions, Chart } from 'chart.js';
+import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
+
+// Angular Material Imports
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule, RouterLink, BaseChartDirective],
+  imports: [
+    CommonModule,
+    RouterLink,
+    BaseChartDirective,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    MatTooltipModule,
+    MatProgressSpinnerModule,
+    TitleCasePipe,
+    DatePipe,
+  ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
 })
 export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private adminService = inject(AdminService);
 
-  // Access the charts to force updates
   @ViewChildren(BaseChartDirective) charts!: QueryList<BaseChartDirective>;
-
-  // Icons
-  faUsers = faUsers;
-  faNewspaper = faNewspaper;
-  faFlag = faFlag;
-  faBan = faBan;
-  faTrash = faTrash;
-  faCheck = faCheck;
-  faLink = faExternalLinkAlt;
-  faChartLine = faChartLine;
-  faShieldAlt = faShieldAlt;
 
   // State
   activeTab: 'overview' | 'users' | 'posts' | 'reports' = 'overview';
+
+  // Data Sources
   users: any[] = [];
   posts: any[] = [];
   reports: any[] = [];
   stats: DashboardStats | null = null;
+
+  // Global loading (for initial stats/setup)
   isLoading = false;
   message = '';
 
+  // === PAGINATION STATE ===
+  // Tracks the current page, size, and loading status for each tab independently
+  pagination = {
+    users: { page: 0, size: 20, loading: false, finished: false },
+    posts: { page: 0, size: 20, loading: false, finished: false },
+    reports: { page: 0, size: 20, loading: false, finished: false },
+  };
+
+  // Material Table Column Definitions
+  userColumns: string[] = ['user', 'role', 'status', 'actions'];
+  postColumns: string[] = ['title', 'author', 'date', 'actions'];
+  reportColumns: string[] = ['details', 'status', 'actions'];
+
   private themeObserver: MutationObserver | null = null;
 
-  // --- CHART CONFIGURATION ---
+  // --- CHART CONFIGURATION (Kept exactly as provided) ---
   public lineChartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [],
@@ -71,24 +83,11 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
-      tooltip: {
-        backgroundColor: '#242424',
-        titleColor: '#ffffff',
-        bodyColor: '#ffffff',
-        padding: 10,
-        cornerRadius: 4,
-        displayColors: false,
-      },
+      tooltip: { padding: 10, cornerRadius: 4, displayColors: false },
     },
     scales: {
-      x: {
-        grid: { display: false },
-        ticks: { color: '#6b6b6b' }, // Default grey
-      },
-      y: {
-        grid: { color: '#e5e5e5' }, // Default light border
-        ticks: { color: '#6b6b6b' },
-      },
+      x: { grid: { display: false } },
+      y: { grid: { display: true } },
     },
   };
 
@@ -100,18 +99,10 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   public barChartOptions: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-    },
+    plugins: { legend: { display: false } },
     scales: {
-      x: {
-        grid: { display: false },
-        ticks: { color: '#6b6b6b' },
-      },
-      y: {
-        grid: { color: '#e5e5e5' },
-        ticks: { color: '#6b6b6b' },
-      },
+      x: { grid: { display: false } },
+      y: { grid: { display: true } },
     },
   };
 
@@ -120,17 +111,13 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   ngAfterViewInit() {
-    // Watch for class changes on <body> to detect Dark Mode toggle
     this.themeObserver = new MutationObserver(() => {
       this.updateChartTheme();
     });
-
     this.themeObserver.observe(document.body, {
       attributes: true,
       attributeFilter: ['class'],
     });
-
-    // Initial apply
     this.updateChartTheme();
   }
 
@@ -140,83 +127,70 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     }
   }
 
-  /**
-   * Reads CSS variables and applies them to ChartJS options
-   */
+  // === SCROLL LISTENER ===
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    if (this.activeTab === 'overview') return;
+
+    // Calculate scroll position
+    const pos =
+      (document.documentElement.scrollTop || document.body.scrollTop) + window.innerHeight;
+    const max = document.documentElement.scrollHeight || document.body.scrollHeight;
+
+    // If we are within 100px of the bottom
+    if (pos > max - 100) {
+      if (this.activeTab === 'users') this.loadUsers();
+      if (this.activeTab === 'posts') this.loadPosts();
+      if (this.activeTab === 'reports') this.loadReports();
+    }
+  }
+
   updateChartTheme() {
     if (!this.charts) return;
-
-    // 1. Get computed styles from CSS variables
     const styles = getComputedStyle(document.body);
     const textPrimary = styles.getPropertyValue('--text-primary').trim();
     const textSecondary = styles.getPropertyValue('--text-secondary').trim();
     const borderColor = styles.getPropertyValue('--border').trim();
     const cardBg = styles.getPropertyValue('--card').trim();
 
-    // 2. Define Shared Styles
     const scaleOptions = {
-      x: {
-        grid: { display: false, color: borderColor },
-        ticks: { color: textSecondary },
-      },
-      y: {
-        grid: { color: borderColor },
-        ticks: { color: textSecondary },
-      },
+      x: { grid: { display: false, color: borderColor }, ticks: { color: textSecondary } },
+      y: { grid: { color: borderColor }, ticks: { color: textSecondary } },
     };
 
     const pluginOptions = {
       legend: { display: false },
-      tooltip: {
-        backgroundColor: textPrimary, // Invert bg for contrast
-        titleColor: cardBg,
-        bodyColor: cardBg,
-      },
+      tooltip: { backgroundColor: textPrimary, titleColor: cardBg, bodyColor: cardBg },
     };
 
-    // 3. Update Options Objects
     this.lineChartOptions = {
       ...this.lineChartOptions,
       scales: scaleOptions,
       plugins: pluginOptions,
     };
-
     this.barChartOptions = {
       ...this.barChartOptions,
       scales: scaleOptions,
       plugins: pluginOptions,
     };
 
-    // 4. Force Update on all Chart Instances
     this.charts.forEach((chart) => {
-      if (chart.chart) {
-        chart.chart.options.scales!['x']!.ticks!.color = textSecondary;
-        chart.chart.options.scales!['y']!.ticks!.color = textSecondary;
-        chart.chart.options.scales!['y']!.grid!.color = borderColor;
-
-        // Update Tooltips if needed
-        if (chart.chart.options.plugins?.tooltip) {
-          chart.chart.options.plugins.tooltip.backgroundColor = textPrimary;
-          chart.chart.options.plugins.tooltip.titleColor = cardBg;
-          chart.chart.options.plugins.tooltip.bodyColor = cardBg;
-        }
-
-        chart.chart.update();
-      }
+      if (chart.chart) chart.chart.update();
     });
   }
 
   switchTab(tab: 'overview' | 'users' | 'posts' | 'reports') {
     this.activeTab = tab;
     this.message = '';
+
     if (tab === 'overview') {
       this.loadStats();
-      // Small timeout to allow ViewChild to init before theming
       setTimeout(() => this.updateChartTheme(), 100);
     }
-    if (tab === 'users') this.loadUsers();
-    if (tab === 'posts') this.loadPosts();
-    if (tab === 'reports') this.loadReports();
+    // Only load if empty to prevent resetting scroll position or re-fetching
+    if (tab === 'users' && this.users.length === 0) this.loadUsers();
+    if (tab === 'posts' && this.posts.length === 0) this.loadPosts();
+    if (tab === 'reports' && this.reports.length === 0) this.loadReports();
   }
 
   // === LOAD DATA ===
@@ -227,7 +201,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         this.stats = res;
         this.setupCharts(res);
         this.isLoading = false;
-        // Apply theme after data load
         setTimeout(() => this.updateChartTheme(), 0);
       },
       error: (err) => {
@@ -241,12 +214,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     const userLabels = stats.userGrowth.map((d) => d.label);
     const userValues = stats.userGrowth.map((d) => d.value);
 
-    // Get brand color or use hardcoded green
-    const styles = getComputedStyle(document.body);
-    // Note: OKLCH colors might crash ChartJS older versions,
-    // better to keep hex for data colors or convert them.
-    // For now we use the hex brand color you used: #1a8917
-
     this.lineChartData = {
       labels: userLabels,
       datasets: [
@@ -255,7 +222,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
           label: 'Users',
           fill: true,
           tension: 0.4,
-          borderColor: '#1a8917', // Medium Green
+          borderColor: '#1a8917',
           backgroundColor: 'rgba(26, 137, 23, 0.1)',
           pointBackgroundColor: '#1a8917',
           pointBorderColor: '#ffffff',
@@ -272,9 +239,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         {
           data: postValues,
           label: 'Stories',
-          // In Dark mode, bars should be lighter. In light mode, dark.
-          // We will handle this dynamically in updateChartTheme if we wanted,
-          // but a solid color usually works for both.
           backgroundColor: '#3b82f6',
           borderRadius: 4,
         },
@@ -282,38 +246,44 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     };
   }
 
-  // ... [Keep loadUsers, loadPosts, loadReports, banUser, etc.] ...
+  // === PAGINATED LOADERS ===
+
   loadUsers() {
-    this.isLoading = true;
-    this.adminService.getAllUsers().subscribe({
+    const state = this.pagination.users;
+    if (state.loading || state.finished) return;
+
+    state.loading = true;
+    this.adminService.getAllUsers(state.page, state.size).subscribe({
       next: (res) => {
-        this.users = res;
-        this.isLoading = false;
+        // Append new data
+        this.users = [...this.users, ...res.content];
+
+        // Update pagination tracking
+        state.page++;
+        state.finished = res.page.number >= res.page.totalPages - 1;
+        state.loading = false;
       },
-      error: (err) => {
-        this.isLoading = false;
+      error: () => {
+        state.loading = false;
       },
     });
   }
 
   loadPosts() {
-    this.isLoading = true;
-    // Use 'any' or 'Page<PostResponse>' type to access properties safely
-    this.adminService.getAllPosts().subscribe({
-      next: (res: any) => {
-        if (res.content && Array.isArray(res.content)) {
-          this.posts = res.content;
-        } else if (Array.isArray(res)) {
-          this.posts = res;
-        } else {
-          this.posts = []; // Fallback
-        }
+    const state = this.pagination.posts;
+    if (state.loading || state.finished) return;
 
-        this.isLoading = false;
+    state.loading = true;
+    this.adminService.getAllPosts(state.page, state.size).subscribe({
+      next: (res) => {
+        this.posts = [...this.posts, ...res.content];
+
+        state.page++;
+        state.finished = res.page.number >= res.page.totalPages - 1;
+        state.loading = false;
       },
-      error: (err) => {
-        this.isLoading = false;
-        console.error(err);
+      error: () => {
+        state.loading = false;
       },
     });
   }
@@ -322,27 +292,24 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     this.isLoading = true;
     this.adminService.getAllReports().subscribe({
       next: (res: any) => {
-        if (res.content && Array.isArray(res.content)) {
-          this.reports = res.content;
-        } else if (Array.isArray(res)) {
-          this.reports = res;
-        } else {
-          this.reports = [];
-        }
+        this.reports =
+          res.content && Array.isArray(res.content) ? res.content : Array.isArray(res) ? res : [];
         this.isLoading = false;
       },
-      error: (err) => {
-        this.isLoading = false;
-      },
+      error: () => (this.isLoading = false),
     });
   }
+
+  // === ACTIONS ===
 
   banUser(id: string) {
     if (!confirm('Are you sure?')) return;
     this.adminService.banUser(id).subscribe({
       next: (msg) => {
         this.message = msg;
-        this.loadUsers();
+        // Update local array directly instead of reloading to keep scroll position
+        const user = this.users.find((u) => u.id === id);
+        if (user) user.banned = !user.banned;
       },
       error: (err) => console.error(err),
     });
@@ -353,7 +320,8 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     this.adminService.deleteUser(id).subscribe({
       next: (msg) => {
         this.message = msg;
-        this.loadUsers();
+        // Filter out locally
+        this.users = this.users.filter((u) => u.id !== id);
       },
       error: (err) => console.error(err),
     });
@@ -363,7 +331,9 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     this.adminService.resolveReport(id).subscribe({
       next: (msg) => {
         this.message = msg;
-        this.loadReports();
+        // Update local status
+        const report = this.reports.find((r) => r.id === id);
+        if (report) report.resolved = true;
       },
       error: (err) => console.error(err),
     });
@@ -372,20 +342,14 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   toggleRole(user: any) {
     const newRole = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
     const action = user.role === 'ADMIN' ? 'Demote' : 'Promote';
-
-    if (!confirm(`Are you sure you want to ${action} ${user.username} to ${newRole}?`)) {
-      return;
-    }
+    if (!confirm(`Are you sure you want to ${action} ${user.username} to ${newRole}?`)) return;
 
     this.adminService.updateUserRole(user.id, newRole).subscribe({
       next: (msg) => {
         this.message = msg;
         user.role = newRole;
       },
-      error: (err) => {
-        console.error(err);
-        this.message = 'Failed to update role';
-      },
+      error: () => (this.message = 'Failed to update role'),
     });
   }
 }

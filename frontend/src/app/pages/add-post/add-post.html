@@ -1,18 +1,20 @@
 <div class="editor-layout">
+  <!-- Navbar -->
   <nav class="editor-nav">
     <div class="nav-left">
-      <a routerLink="/" class="back-link">
-        <fa-icon [icon]="faArrowLeft"></fa-icon> <span>Back to feed</span>
+      <a mat-button routerLink="/" class="back-link">
+        <mat-icon>arrow_back</mat-icon> Back to feed
       </a>
       <span class="draft-status">
         {{ isEditMode ? 'Editing' : 'Drafting' }} {{ postForm.get('title')?.value || 'Untitled' }}
       </span>
     </div>
 
-    <!-- Publish Action Area -->
+    <!-- Actions -->
     <div class="nav-right">
       @if (!isSubmitting) {
       <button
+        mat-button
         class="draft-btn"
         (click)="onSaveDraft()"
         [disabled]="postForm.invalid || editorMediaLoading"
@@ -21,6 +23,8 @@
       </button>
 
       <button
+        mat-flat-button
+        color="primary"
         class="publish-btn"
         (click)="onPublish()"
         [disabled]="postForm.invalid || editorMediaLoading"
@@ -30,9 +34,7 @@
       } @if (isSubmitting) {
       <div class="publishing-status">
         <span class="status-text">Saving {{ uploadProgress }}%</span>
-        <div class="progress-track">
-          <div class="progress-fill" [style.width.%]="uploadProgress"></div>
-        </div>
+        <mat-progress-bar mode="determinate" [value]="uploadProgress"></mat-progress-bar>
       </div>
       }
     </div>
@@ -44,11 +46,11 @@
     }
 
     <form [formGroup]="postForm" [class.disabled-form]="isSubmitting || editorMediaLoading">
-      <!-- COVER MEDIA AREA (Supports Image OR Video) -->
+      <!-- COVER IMAGE AREA -->
       <div class="cover-image-area">
         @if (!coverPreviewUrl) {
-        <button type="button" class="add-cover-btn" (click)="triggerFileInput()">
-          <fa-icon [icon]="faImage"></fa-icon> Add cover image or video
+        <button type="button" mat-button class="add-cover-btn" (click)="triggerFileInput()">
+          <mat-icon>add_photo_alternate</mat-icon> Add cover image or video
         </button>
         } @else {
         <div class="cover-preview">
@@ -57,10 +59,11 @@
           } @else {
           <img [src]="coverPreviewUrl" alt="Cover" class="cover-media" />
           }
-          <button type="button" class="remove-cover-btn" (click)="removeCover()">×</button>
+          <button mat-icon-button class="remove-cover-btn" (click)="removeCover()">
+            <mat-icon>close</mat-icon>
+          </button>
         </div>
         }
-        <!-- Accepts both types -->
         <input
           type="file"
           id="cover-upload"
@@ -70,6 +73,7 @@
         />
       </div>
 
+      <!-- TITLE -->
       <textarea
         class="title-input"
         placeholder="Title"
@@ -78,7 +82,7 @@
         (input)="autoResize($event)"
       ></textarea>
 
-      <!-- Hidden Input for Editor Images Only -->
+      <!-- HIDDEN EDITOR UPLOAD -->
       <input
         type="file"
         id="editor-image-upload"
@@ -87,101 +91,118 @@
         (change)="onEditorFileSelected($event)"
       />
 
-      <!-- Toolbar (Text & Images Only) -->
+      <!-- TOOLBAR (Material Icons) -->
       @if (editor) {
       <div class="tiptap-toolbar">
         <button
           type="button"
+          mat-icon-button
           (click)="editor.chain().focus().toggleBold().run()"
           [class.is-active]="editor.isActive('bold')"
         >
-          <fa-icon [icon]="faBold"></fa-icon>
+          <mat-icon>format_bold</mat-icon>
         </button>
         <button
           type="button"
+          mat-icon-button
           (click)="editor.chain().focus().toggleItalic().run()"
           [class.is-active]="editor.isActive('italic')"
         >
-          <fa-icon [icon]="faItalic"></fa-icon>
+          <mat-icon>format_italic</mat-icon>
         </button>
         <button
           type="button"
+          mat-icon-button
           (click)="editor.chain().focus().toggleStrike().run()"
           [class.is-active]="editor.isActive('strike')"
         >
-          <fa-icon [icon]="faStrike"></fa-icon>
+          <mat-icon>strikethrough_s</mat-icon>
         </button>
-        <button type="button" (click)="setLink()" [class.is-active]="editor.isActive('link')">
-          <fa-icon [icon]="faLink"></fa-icon>
+        <button
+          type="button"
+          mat-icon-button
+          (click)="setLink()"
+          [class.is-active]="editor.isActive('link')"
+        >
+          <mat-icon>link</mat-icon>
         </button>
 
         <div class="separator"></div>
 
         <button
           type="button"
+          mat-icon-button
           (click)="editor.chain().focus().toggleHeading({ level: 2 }).run()"
           [class.is-active]="editor.isActive('heading', { level: 2 })"
         >
-          <fa-icon [icon]="faHeading"></fa-icon>
+          <mat-icon>title</mat-icon>
         </button>
         <button
           type="button"
+          mat-icon-button
           (click)="editor.chain().focus().toggleBlockquote().run()"
           [class.is-active]="editor.isActive('blockquote')"
         >
-          <fa-icon [icon]="faQuote"></fa-icon>
+          <mat-icon>format_quote</mat-icon>
         </button>
         <button
           type="button"
+          mat-icon-button
           (click)="editor.chain().focus().toggleCodeBlock().run()"
           [class.is-active]="editor.isActive('codeBlock')"
         >
-          <fa-icon [icon]="faCode"></fa-icon>
+          <mat-icon>code</mat-icon>
         </button>
 
         <div class="separator"></div>
 
-        <button type="button" (click)="triggerEditorImageInput()">
-          <fa-icon [icon]="faImage"></fa-icon>
+        <button type="button" mat-icon-button (click)="triggerEditorImageInput()">
+          <mat-icon>image</mat-icon>
         </button>
-
-        <!-- Video Button Removed -->
 
         <div class="separator"></div>
 
         <button
           type="button"
+          mat-icon-button
           (click)="editor.chain().focus().toggleBulletList().run()"
           [class.is-active]="editor.isActive('bulletList')"
         >
-          <fa-icon [icon]="faListUl"></fa-icon>
+          <mat-icon>format_list_bulleted</mat-icon>
         </button>
         <button
           type="button"
+          mat-icon-button
           (click)="editor.chain().focus().toggleOrderedList().run()"
           [class.is-active]="editor.isActive('orderedList')"
         >
-          <fa-icon [icon]="faListOl"></fa-icon>
+          <mat-icon>format_list_numbered</mat-icon>
         </button>
-        <button type="button" (click)="editor.chain().focus().setHorizontalRule().run()">
-          <fa-icon [icon]="faMinus"></fa-icon>
+        <button
+          type="button"
+          mat-icon-button
+          (click)="editor.chain().focus().setHorizontalRule().run()"
+        >
+          <mat-icon>horizontal_rule</mat-icon>
         </button>
 
         <div class="separator"></div>
 
         <button
           type="button"
+          mat-icon-button
           (click)="editor.chain().focus().undo().run()"
           [disabled]="!editor.can().undo()"
         >
-          <fa-icon [icon]="faUndo"></fa-icon>
+          <mat-icon>undo</mat-icon>
         </button>
         <button
           type="button"
+          mat-icon-button
           (click)="editor.chain().focus().redo().run()"
           [disabled]="!editor.can().redo()"
         >
-          <fa-icon [icon]="faRedo"></fa-icon>
+          <mat-icon>redo</mat-icon>
         </button>
       </div>
       }

@@ -1,3 +1,12 @@
+/* =========================================================
+   1. ANGULAR MATERIAL CORE THEME
+   (Required because we are not using a standard theme file)
+   ========================================================= */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+/* =========================================================
+   2. YOUR CUSTOM VARIABLES & STYLES
+   ========================================================= */
 :root {
   /* --- Medium-like Color Palette --- */
 
@@ -34,8 +43,6 @@
   --radius: 0.25rem; /* Small radius for inputs, rounded-full for buttons */
 
   /* --- Mapped Custom Variables --- */
-  /* These map the old Sketchpad vars to the new Minimal theme */
-
   --secondary-elevated: #ffffff;
   --secondary-sunken: #f9f9f9;
 
@@ -59,7 +66,7 @@
 }
 
 .dark {
-  /* Dark Mode - Medium Style (Dark Grey, not pitch black) */
+  /* Dark Mode - Medium Style */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.145 0 0);
@@ -85,12 +92,15 @@
   --text-inverse: #121212;
 }
 
+/* Base Layer - Converted from Tailwind @apply to Standard CSS */
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
+    outline-color: rgba(0, 0, 0, 0.5); /* fallback for ring/50 */
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--background);
+    color: var(--foreground);
   }
 }
 
@@ -148,16 +158,14 @@ h1 {
 .login-container {
   width: 100%;
   max-width: 400px; /* Slimmer container */
-  /* Remove thick borders and offset shadows */
   border: none;
-  padding: 0; /* Minimal padding, let it breathe */
+  padding: 0;
   background-color: transparent;
   box-shadow: none;
   position: relative;
-  text-align: center; /* Center align for modern login */
+  text-align: center;
 }
 
-/* Remove the pseudo-element offset border */
 .login-container::before {
   display: none;
 }
@@ -166,7 +174,7 @@ h1 {
   text-align: center;
   font-size: 32px;
   margin-bottom: 40px;
-  font-family: 'Charter', serif; /* Serif for the main title looks elegant */
+  font-family: 'Charter', serif;
 }
 
 /* --- Form Elements --- */
@@ -182,13 +190,13 @@ label {
   font-weight: 500;
   color: var(--text-primary);
   font-size: 13px;
-  text-transform: none; /* Remove uppercase */
+  text-transform: none;
   letter-spacing: normal;
 }
 
 input {
   width: 100%;
-  padding: 12px 0; /* Underline style only */
+  padding: 12px 0;
   border: none;
   border-bottom: 1px solid var(--border);
   background-color: transparent;
@@ -229,7 +237,7 @@ input:focus-visible {
   font-size: 14px;
   font-weight: 500;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  text-transform: none; /* Remove Uppercase */
+  text-transform: none;
   letter-spacing: normal;
   cursor: pointer;
   margin-top: 20px;
@@ -272,7 +280,7 @@ input:focus-visible {
 /* --- Social Login --- */
 .social-login {
   display: flex;
-  flex-direction: column; /* Stack vertically for cleaner look */
+  flex-direction: column;
   gap: 12px;
 }
 
@@ -280,7 +288,7 @@ input:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--text-primary); /* Thin border */
+  border: 1px solid var(--text-primary);
   background-color: transparent;
   color: var(--text-primary);
   padding: 10px 20px;
@@ -300,8 +308,6 @@ input:focus-visible {
   transform: none;
 }
 
-/* Neutralize specific colors for a uniform minimalist look, 
-   or keep them subtle */
 .social-btn.google,
 .social-btn.github {
   border-color: var(--border);
@@ -340,13 +346,12 @@ input:focus-visible {
 }
 
 /* --- Blog Grid --- */
-/* Medium layout is often a single column or a grid with plenty of white space */
 .blogs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 48px; /* Larger gaps */
+  gap: 48px;
   width: 100%;
-  max-width: 1000px; /* Controlled width for reading */
+  max-width: 1000px;
   margin: 40px auto;
   padding: 0 20px;
 }
@@ -354,8 +359,8 @@ input:focus-visible {
 /* --- Blog Card --- */
 .blog-card {
   background-color: transparent;
-  border: none; /* No borders */
-  box-shadow: none; /* No shadows */
+  border: none;
+  box-shadow: none;
   cursor: pointer;
   transition: opacity 0.2s ease;
   display: flex;
@@ -368,7 +373,6 @@ input:focus-visible {
   opacity: 0.9;
 }
 
-/* Card Image - clean and simple */
 .blog-image {
   width: 100%;
   height: 200px;
@@ -376,15 +380,13 @@ input:focus-visible {
   border-radius: 4px;
   border: none;
   margin-bottom: 16px;
-  order: -1; /* Image on top */
+  order: -1;
 }
 
-/* Card Info Section */
 .blog-info {
-  padding: 0; /* Remove internal padding */
+  padding: 0;
 }
 
-/* Meta Text */
 .meta {
   font-size: 13px;
   font-family: sans-serif;
@@ -395,7 +397,6 @@ input:focus-visible {
   gap: 8px;
 }
 
-/* Title */
 .blog-title {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 22px;
@@ -405,7 +406,6 @@ input:focus-visible {
   line-height: 1.2;
 }
 
-/* Description */
 .blog-desc {
   font-family: 'Charter', 'Georgia', serif;
   font-size: 16px;
@@ -417,9 +417,9 @@ input:focus-visible {
   overflow: hidden;
 }
 
-/* --- Post Header (Inside a blog post) --- */
+/* --- Post Header --- */
 .post-header {
-  max-width: 680px; /* Standard Medium reading width */
+  max-width: 680px;
   margin: 0 auto 30px auto;
 }
 
@@ -452,7 +452,7 @@ input:focus-visible {
 .success {
   color: #1a8917;
   font-family: sans-serif;
-} /* Medium Green */
+}
 
 input.has-error {
   border-bottom-color: var(--destructive);
@@ -539,4 +539,76 @@ input.has-success {
 
 ::ng-deep .post-body a:hover {
   color: var(--text-secondary);
+}
+
+/* =========================================================
+   3. ANGULAR MATERIAL UI OVERRIDES
+   Force Material Components to match the Pure CSS look
+   ========================================================= */
+
+/* A. Typography Override */
+.mat-typography {
+  font-family: 'Charter', 'Georgia', 'Times New Roman', serif !important;
+}
+
+/* B. Buttons (mat-flat-button)
+   Force them to look like your .main-btn (Pill shape, Black) */
+.mat-mdc-flat-button.mat-primary {
+  --mdc-filled-button-container-color: var(--primary) !important;
+  --mdc-filled-button-label-text-color: var(--background) !important;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+  border-radius: 9999px !important; /* Pill shape */
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  letter-spacing: normal !important;
+  height: 48px !important; /* Matches standard padding */
+}
+
+/* C. Form Fields (mat-form-field)
+   Strip the gray box, make it look like an underline only */
+
+/* 1. Remove the gray background/fill */
+.mat-mdc-form-field.mat-form-field-appearance-fill .mat-mdc-text-field-wrapper {
+  background-color: transparent !important;
+}
+
+/* 2. Remove the focus ripple/overlay */
+.mat-mdc-form-field-focus-overlay {
+  background-color: transparent !important;
+  opacity: 0 !important;
+}
+
+/* 3. Style the Bottom Border/Underline */
+/* Resting state */
+.mat-mdc-form-field-bottom-align::before {
+  background-color: var(--border) !important;
+  height: 1px !important;
+}
+
+/* Focused state (Black) */
+.mat-mdc-form-field.mat-focused .mat-mdc-form-field-bottom-align::after {
+  background-color: var(--text-primary) !important;
+  height: 1px !important;
+}
+
+/* 4. Input Text Color */
+.mat-mdc-input-element {
+  caret-color: var(--text-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* 5. Label Styling */
+.mat-mdc-form-field-label {
+  color: var(--text-muted) !important;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 13px !important;
+}
+.mat-mdc-form-field.mat-focused .mat-mdc-form-field-label {
+  color: var(--text-primary) !important;
+}
+
+/* 6. Spacing cleanup */
+.mat-mdc-form-field-subscript-wrapper {
+  height: auto !important;
+  padding-bottom: 0 !important;
 }

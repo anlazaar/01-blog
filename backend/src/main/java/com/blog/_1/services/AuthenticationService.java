@@ -4,7 +4,10 @@ import java.util.Map;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.blog._1.dto.user.UserLoginRequest;
+import com.blog._1.dto.user.UserRegisterRequest;
 import com.blog._1.models.Role;
 import com.blog._1.models.User;
 import com.blog._1.repositories.UserRepository;
@@ -20,11 +23,15 @@ public class AuthenticationService {
     private final PasswordEncoder passwdEnco;
     private final JwtService jwtService;
 
-    public Map<String, Object> login(String email, String passwd) {
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Invalid credentials")); 
+    public Map<String, Object> login(UserLoginRequest request) {
+        // OPTIMIZATION: Check for Email OR Username in a single query.
+        // Assumes the input field in DTO is named 'email' but handles both.
+        String loginIdentifier = request.getEmail();
 
-        if (!passwdEnco.matches(passwd, user.getPassword())) {
+        User user = userRepo.findByEmailOrUsername(loginIdentifier, loginIdentifier)
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+
+        if (!passwdEnco.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
 
@@ -35,20 +42,26 @@ public class AuthenticationService {
                 "token", token);
     }
 
-    public Map<String, Object> register(String name, String email, String password) {
-        // OPTIMIZATION: existsBy is faster than findBy
-        if (userRepo.existsByEmail(email)) {
+    @Transactional // Ensures user is saved only if everything succeeds
+    public Map<String, Object> register(UserRegisterRequest request) {
+        // OPTIMIZATION: Fail fast if data exists
+        if (userRepo.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already taken");
+        }
+        if (userRepo.existsByUsername(request.getUsername())) {
+            throw new RuntimeException("Username already taken");
         }
 
         User user = new User();
-        user.setUsername(name);
-        user.setEmail(email);
-        user.setPassword(passwdEnco.encode(password));
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwdEnco.encode(request.getPassword()));
         user.setRole(Role.USER);
 
         userRepo.save(user);
 
-        return Map.of("token", jwtService.generateToken(user), "isCompleted", user.isCompletedAccount());
+        return Map.of(
+                "token", jwtService.generateToken(user),
+                "isCompleted", user.isCompletedAccount());
     }
 }

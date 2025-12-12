@@ -3,40 +3,50 @@
     <h1>Report Post</h1>
     <p class="subtitle">Help us understand what's happening with this post.</p>
 
-    <!-- Reason Select -->
+    <!-- Reason Select (Material) -->
     <div class="input-group">
-      <label>What is the issue?</label>
-      <div class="select-wrapper">
-        <select [(ngModel)]="reason">
-          <option value="" disabled selected>Select a reason</option>
-          <option value="spam">It's spam</option>
-          <option value="harassment">Harassment or bullying</option>
-          <option value="hate-speech">Hate speech</option>
-          <option value="nsfw">Nudity or sexual activity</option>
-          <option value="violence">Violence or dangerous organizations</option>
-          <option value="other">Something else</option>
-        </select>
-        <!-- Custom arrow icon for better styling -->
-        <span class="arrow-down">▼</span>
-      </div>
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>What is the issue?</mat-label>
+        <mat-select [(ngModel)]="reason" required>
+          <mat-option value="spam">It's spam</mat-option>
+          <mat-option value="harassment">Harassment or bullying</mat-option>
+          <mat-option value="hate-speech">Hate speech</mat-option>
+          <mat-option value="nsfw">Nudity or sexual activity</mat-option>
+          <mat-option value="violence">Violence or dangerous organizations</mat-option>
+          <mat-option value="other">Something else</mat-option>
+        </mat-select>
+        <!-- Material handles the arrow automatically -->
+      </mat-form-field>
     </div>
 
-    <!-- Description Textarea -->
+    <!-- Description Textarea (Material) -->
     <div class="input-group">
-      <label>Additional details (Optional)</label>
-      <textarea
-        placeholder="Please provide any specific details..."
-        [(ngModel)]="description"
-        rows="4"
-      ></textarea>
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Additional details (Optional)</mat-label>
+        <textarea
+          matInput
+          placeholder="Please provide any specific details..."
+          [(ngModel)]="description"
+          rows="5"
+        ></textarea>
+      </mat-form-field>
     </div>
 
     <!-- Actions -->
     <div class="actions">
-      <button class="main-btn" (click)="submitReport()" [disabled]="!reason">Submit Report</button>
+      <!-- Submit: Primary Flat Button (Pill Shape) -->
+      <button
+        mat-flat-button
+        color="primary"
+        class="submit-btn"
+        (click)="submitReport()"
+        [disabled]="!reason"
+      >
+        Submit Report
+      </button>
 
-      <!-- Optional: Add a cancel/back button if this is a page -->
-      <a routerLink="/" class="cancel-link">Cancel</a>
+      <!-- Cancel: Text Button -->
+      <a mat-button routerLink="/" class="cancel-btn">Cancel</a>
     </div>
   </div>
 </div>

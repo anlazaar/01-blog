@@ -4,8 +4,7 @@
 .onboarding-page .login-container {
   margin-top: 80px;
   max-width: 600px;
-  text-align: left; /* Align form content to left */
-  /* Remove default borders/shadows if any remain from global for a cleaner look */
+  text-align: left;
   border: none;
   box-shadow: none;
   background: transparent;
@@ -20,6 +19,7 @@
   font-family: 'Charter', serif;
   font-size: 32px;
   margin-bottom: 8px;
+  color: var(--text-primary); /* Ensures White in Dark Mode */
 }
 
 .title p {
@@ -33,20 +33,27 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
   gap: 12px;
+}
+
+.avatar-wrapper {
+  position: relative;
+  cursor: pointer;
 }
 
 .avatar-circle {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background-color: var(--secondary); /* Light grey bg */
+  background-color: var(--secondary); /* Grey background */
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  transition: opacity 0.2s;
+  border: 2px solid var(--border); /* Subtle border for visibility */
 }
 
 .avatar-circle img {
@@ -57,22 +64,37 @@
 
 .placeholder {
   font-size: 40px;
-  color: var(--text-secondary);
+  color: var(--text-primary); /* Visible text */
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 500;
 }
 
-.upload-trigger label {
-  color: #1a8917; /* Medium Green */
-  font-size: 14px;
-  cursor: pointer;
-  font-weight: 500;
-  margin: 0;
+/* Hover Overlay */
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.upload-trigger label:hover {
-  text-decoration: underline;
-  color: #156d12;
+.avatar-overlay mat-icon {
+  color: white;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
+}
+
+/* Upload Trigger Button */
+.upload-trigger button {
+  color: #1a8917 !important; /* Green text for "Add Photo" */
 }
 
 .error-msg {
@@ -83,108 +105,112 @@
   text-align: center;
 }
 
-/* --- Form Fields --- */
+/* --- Form Layout --- */
 .form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 24px;
-  margin-bottom: 12px;
-}
-
-.input-group {
-  margin-bottom: 32px;
-}
-
-.input-group label {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-secondary);
-  font-weight: 600;
   margin-bottom: 8px;
 }
 
-/* Clean Input Style (Underline only) */
-input,
-textarea {
+.single-col {
+  flex-direction: column;
+  gap: 0;
+}
+
+.half-width {
+  flex: 1;
+}
+
+.full-width {
   width: 100%;
-  border: none;
-  border-bottom: 1px solid var(--border);
-  background: transparent;
-  padding: 8px 0;
-  font-size: 16px;
-  color: var(--text-primary);
-  outline: none;
-  border-radius: 0;
-  transition: border-color 0.2s;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Make Bio feel like writing */
-textarea {
-  font-family: 'Charter', serif;
-  resize: none;
-  line-height: 1.5;
+/* =========================================================
+   MATERIAL FORM FIELD OVERRIDES (The Visibility Fix)
+   ========================================================= */
+
+/* 1. Input Text Color */
+::ng-deep .mat-mdc-input-element {
+  color: var(--text-primary) !important; /* Black in Light, White in Dark */
+  caret-color: var(--text-primary) !important;
 }
 
-input:focus,
-textarea:focus {
-  border-bottom-color: var(--text-primary);
+/* 2. Placeholder/Label Color */
+::ng-deep .mat-mdc-form-field .mat-mdc-floating-label.mdc-floating-label {
+  color: var(--text-secondary) !important; /* Grey by default */
 }
 
-input::placeholder,
-textarea::placeholder {
-  color: var(--text-muted);
+/* 3. Label Color When Focused (Active) */
+::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-floating-label.mdc-floating-label {
+  color: var(--text-primary) !important; /* High contrast when typing */
 }
 
-/* --- Actions --- */
+/* 4. Underline Color */
+::ng-deep .mat-mdc-form-field-bottom-align::before {
+  background-color: var(--border) !important; /* Subtle grey line */
+}
+
+::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-form-field-bottom-align::after {
+  background-color: var(--text-primary) !important; /* Bold line when focused */
+}
+
+/* 5. Error Message Color */
+::ng-deep .mat-mdc-form-field-error {
+  color: var(--destructive) !important;
+}
+
+/* 6. Hint Color */
+::ng-deep .mat-mdc-form-field-hint {
+  color: var(--text-muted) !important;
+}
+
+/* =========================================================
+   ACTIONS & BUTTONS
+   ========================================================= */
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 32px;
 }
 
-/* Continue Button */
-.main-btn {
+/* Continue Button - Normal State */
+.action-btn {
   width: 100%;
-  border-radius: 99px;
-  background-color: var(--text-primary); /* Black */
-  color: var(--background);
-  font-size: 15px;
-  padding: 12px;
-  border: none;
-  cursor: pointer;
-  transition: opacity 0.2s;
+  height: 48px !important;
+  font-size: 15px !important;
+  letter-spacing: normal !important;
+  border-radius: 99px !important;
+
+  /* Use Theme Variables explicitly */
+  background-color: var(--text-primary) !important; /* Black in Light, White in Dark */
+  color: var(--background) !important; /* White in Light, Black in Dark */
 }
 
-.main-btn:hover {
-  opacity: 0.85;
+/* Continue Button - Disabled State (The Invisible Button Fix) */
+.action-btn:disabled {
+  /* Visible grey in dark mode */
+  background-color: var(--border) !important;
+  color: var(--text-muted) !important;
+  opacity: 0.5;
 }
 
-.main-btn:disabled {
-  background-color: var(--border);
-  cursor: not-allowed;
-}
-
-/* Skip Button - Subtle Text Link */
+/* Skip Button */
 .skip-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 8px;
+  color: var(--text-secondary) !important;
+  font-weight: 400 !important;
   align-self: center;
 }
 
 .skip-btn:hover {
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
+  background: transparent !important;
 }
 
-/* Error Banner */
-.error-banner {
-  color: var(--destructive);
-  font-size: 12px;
-  margin-top: 6px;
+/* Responsive */
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
 }

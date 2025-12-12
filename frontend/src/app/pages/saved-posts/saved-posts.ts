@@ -3,41 +3,66 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PostService } from '../../services/post.service';
 import { PostResponse } from '../../models/POST/PostResponse';
+
+// Angular Material Imports
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
 @Component({
   selector: 'app-saved-posts',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [
+    CommonModule,
+    RouterLink,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    MatProgressSpinnerModule,
+  ],
   template: `
     <div class="page-container">
-      <h1>Your Library</h1>
+      <header class="library-header">
+        <h1>Your Library</h1>
+      </header>
 
       @if (loading) {
-      <p>Loading...</p>
+      <div class="loading-state">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
       } @else { @if (posts.length === 0) {
       <div class="empty-state">
+        <mat-icon class="empty-icon">bookmark_border</mat-icon>
         <p>You haven't saved any stories yet.</p>
-        <a routerLink="/" class="go-home">Read stories</a>
+        <a mat-button color="primary" routerLink="/" class="go-home">Read stories</a>
       </div>
       } @else {
-      <!-- Reuse your post card HTML here or extract it to a component -->
       <div class="posts-list">
         @for (p of posts; track p.id) {
         <article class="saved-item">
           <div class="saved-content">
-            <a [routerLink]="['/posts', p.id]"
-              ><h3>{{ p.title }}</h3></a
-            >
-            <p>{{ p.description }}</p>
+            <a [routerLink]="['/posts', p.id]" class="post-link">
+              <h3>{{ p.title }}</h3>
+              <p class="desc">{{ p.description }}</p>
+            </a>
+
             <div class="saved-meta">
-              <span>{{ p.author.username }}</span> ·
-              <span>{{ p.createdAt | date : 'MMM d' }}</span>
+              <span class="author">{{ p.author.username }}</span>
+              <span class="separator">·</span>
+              <span class="date">{{ p.createdAt | date : 'MMM d' }}</span>
             </div>
           </div>
-          <!-- Unsave Button -->
-          <button (click)="unsave(p.id)" class="unsave-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-            </svg>
+
+          <!-- Unsave Button (Material Icon) -->
+          <button
+            mat-icon-button
+            (click)="unsave(p.id)"
+            matTooltip="Remove from library"
+            class="unsave-btn"
+          >
+            <!-- Filled bookmark indicates it is saved -->
+            <mat-icon>bookmark</mat-icon>
           </button>
         </article>
         }
@@ -47,52 +72,126 @@ import { PostResponse } from '../../models/POST/PostResponse';
   `,
   styles: [
     `
+      /* --- Layout --- */
       .page-container {
         max-width: 680px;
-        margin: 100px auto;
-        padding: 0 24px;
+        margin: 0 auto;
+        padding: 100px 24px 60px 24px;
       }
+
+      /* --- Header --- */
+      .library-header {
+        margin-bottom: 48px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 24px;
+      }
+
       h1 {
         font-size: 42px;
-        margin-bottom: 40px;
-        font-family: -apple-system, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
       }
+
+      /* --- List Items --- */
       .saved-item {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         padding: 24px 0;
         border-bottom: 1px solid var(--border);
+        gap: 24px;
       }
-      .saved-content h3 {
+
+      .saved-content {
+        flex: 1;
+        min-width: 0; /* Prevents flex overflow */
+      }
+
+      .post-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .post-link:hover h3 {
+        text-decoration: underline;
+      }
+
+      h3 {
         font-size: 20px;
         font-weight: 700;
         margin-bottom: 8px;
         color: var(--text-primary);
+        line-height: 1.2;
       }
-      .saved-content p {
+
+      .desc {
         color: var(--text-secondary);
-        font-family: 'Charter', serif;
-        margin-bottom: 8px;
+        font-family: 'Charter', 'Georgia', serif;
+        font-size: 16px;
+        line-height: 1.5;
+        margin-bottom: 12px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
       }
+
       .saved-meta {
         font-size: 13px;
-        color: var(--text-muted);
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 4px;
       }
+
+      .separator {
+        font-weight: bold;
+      }
+
+      /* --- Action Button --- */
       .unsave-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: var(--text-primary);
+        color: var(--text-primary) !important; /* Filled Black/White */
+        opacity: 0.8;
+        transition: opacity 0.2s;
       }
+
+      .unsave-btn:hover {
+        opacity: 1;
+        background-color: var(--secondary) !important;
+      }
+
+      /* --- States --- */
+      .loading-state {
+        display: flex;
+        justify-content: center;
+        padding: 60px 0;
+      }
+
       .empty-state {
         text-align: center;
-        margin-top: 60px;
+        margin-top: 80px;
         color: var(--text-secondary);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
       }
+
+      .empty-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+      }
+
       .go-home {
-        color: var(--text-primary);
-        text-decoration: underline;
+        color: #1a8917 !important; /* Green */
+        font-weight: 400;
       }
     `,
   ],
@@ -113,9 +212,14 @@ export class SavedPostsComponent implements OnInit {
   }
 
   unsave(id: string) {
-    this.postService.toggleSavePost(id).subscribe(() => {
-      // Remove from list immediately
-      this.posts = this.posts.filter((p) => p.id !== id);
+    // Optimistic UI update: remove immediately
+    this.posts = this.posts.filter((p) => p.id !== id);
+
+    this.postService.toggleSavePost(id).subscribe({
+      error: () => {
+        // Re-fetch or show error if failed (Optional)
+        console.error('Failed to unsave');
+      },
     });
   }
 }

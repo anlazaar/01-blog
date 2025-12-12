@@ -16,13 +16,14 @@
   overflow-wrap: break-word;
   min-width: 0;
 }
+
 .sidebar-container {
   width: 368px;
   min-width: 368px;
-  display: none; /* Hidden on mobile */
+  display: none;
   border-left: 1px solid var(--border);
   padding-left: 40px;
-  padding-top: 80px; /* Align with article top */
+  padding-top: 80px;
 }
 
 /* --- Header --- */
@@ -66,10 +67,6 @@
   height: 100%;
   object-fit: cover;
 }
-.avatar-fallback {
-  font-weight: 600;
-  color: var(--text-primary);
-}
 .meta-text {
   display: flex;
   flex-direction: column;
@@ -102,15 +99,12 @@
   border-radius: 2px;
 }
 
-/* --- Content Body (The Important Part) --- */
+/* --- Content Body --- */
 .article-content {
   margin-bottom: 48px;
 }
 
-/* 
-   We use ::ng-deep because [innerHTML] content is not affected by 
-   standard component styles. This styles the Bold/Italic/Heading tags.
-*/
+/* Typography Overrides for Markdown */
 ::ng-deep .post-body {
   font-family: 'Charter', 'Georgia', serif;
   font-size: 20px;
@@ -118,12 +112,10 @@
   color: var(--text-primary);
   word-break: break-word;
 }
-
 ::ng-deep .post-body p {
   margin-bottom: 24px;
   font-weight: 400;
 }
-
 ::ng-deep .post-body h2 {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 30px;
@@ -131,9 +123,7 @@
   margin-top: 56px;
   margin-bottom: 14px;
   line-height: 1.2;
-  letter-spacing: -0.015em;
 }
-
 ::ng-deep .post-body h3 {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 24px;
@@ -141,7 +131,6 @@
   margin-top: 36px;
   margin-bottom: 12px;
 }
-
 ::ng-deep .post-body blockquote {
   border-left: 3px solid var(--text-primary);
   padding-left: 20px;
@@ -150,15 +139,10 @@
   font-size: 21px;
   color: var(--text-secondary);
 }
-
 ::ng-deep .post-body strong {
   font-weight: 700;
   color: var(--text-primary);
 }
-::ng-deep .post-body em {
-  font-style: italic;
-}
-
 ::ng-deep .post-body pre {
   background: var(--secondary);
   padding: 24px;
@@ -166,63 +150,47 @@
   overflow-x: auto;
   margin: 32px 0;
 }
-::ng-deep .post-body code {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 16px;
-  background-color: rgba(0, 0, 0, 0.05);
-  padding: 2px 4px;
-  border-radius: 2px;
-}
-::ng-deep .post-body pre code {
-  background-color: transparent;
-  padding: 0;
-}
-
-::ng-deep .post-body ul,
-::ng-deep .post-body ol {
-  margin-bottom: 24px;
-  padding-left: 32px;
-}
-::ng-deep .post-body li {
-  margin-bottom: 8px;
-}
-
-::ng-deep .post-body a {
-  text-decoration: underline;
-  color: var(--text-primary);
-  cursor: pointer;
+::ng-deep .post-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 32px 0;
+  display: block;
 }
 
 /* --- Engagement Bar --- */
 .engagement-bar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16px 0;
+  padding: 12px 0;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   margin-bottom: 40px;
 }
 .engagement-left {
   display: flex;
-  gap: 24px;
-}
-.action-btn {
-  background: none;
-  border: none;
-  display: flex;
   align-items: center;
-  gap: 8px;
-  color: var(--text-secondary);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 4px;
+  gap: 8px; /* Gap between icon groups */
+}
+
+/* Action Buttons (Material Icon Button overrides) */
+.action-btn {
+  color: var(--text-secondary) !important;
 }
 .action-btn:hover {
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
 }
-.action-btn.like-btn.active {
-  color: #ff3c3c;
+
+/* Like Active State */
+.like-btn.active {
+  color: #ff3c3c !important; /* Red heart */
+}
+
+.count-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-right: 16px; /* Spacing after the number */
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* --- Responses --- */
@@ -243,6 +211,7 @@
   display: flex;
   gap: 12px;
 }
+
 .user-avatar-small {
   width: 32px;
   height: 32px;
@@ -256,11 +225,13 @@
   font-size: 14px;
   flex-shrink: 0;
 }
+
 .input-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
+
 textarea {
   width: 100%;
   border: none;
@@ -272,27 +243,25 @@ textarea {
   min-height: 24px;
   color: var(--text-primary);
 }
+
 .input-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   margin-top: 12px;
 }
+
+/* Cancel Button */
 .cancel-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text-secondary) !important;
+  font-weight: 400 !important;
 }
+
+/* Submit Button (Pill shape) */
 .submit-btn {
-  background-color: #1a8917;
-  color: white;
-  padding: 6px 16px;
-  border: none;
-  border-radius: 99px;
-  font-weight: 500;
-  cursor: pointer;
+  border-radius: 9999px !important;
+  font-weight: 500 !important;
+  /* Color handled by MatButton primary */
 }
 
 .response-item {
@@ -332,36 +301,41 @@ textarea {
   font-family: 'Georgia', serif;
 }
 
+/* --- Utilities --- */
 .loading-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding-top: 150px;
-  color: var(--text-secondary);
   gap: 16px;
 }
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--border);
-  border-top-color: var(--text-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+
+.chunk-loading-indicator {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
 }
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+
 .not-found {
   text-align: center;
   padding-top: 150px;
 }
-.home-link {
-  color: #1a8917;
-  text-decoration: none;
+
+@media (min-width: 1080px) {
+  .sidebar-container {
+    display: block;
+  }
+  .post-page-layout {
+    justify-content: flex-start;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .article-container {
+    margin: 0;
+  }
 }
+
 @media (max-width: 600px) {
   .article-title {
     font-size: 32px;
@@ -370,47 +344,4 @@ textarea {
     padding-left: 20px;
     padding-right: 20px;
   }
-  ::ng-deep .post-body {
-    font-size: 18px;
-  }
-}
-/* Ensure images inside markdown scale correctly */
-::ng-deep .post-body img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 4px;
-  margin: 32px 0;
-  display: block;
-}
-
-/* Ensure headings inside markdown look right (already in your code, just verifying) */
-::ng-deep .post-body h1,
-::ng-deep .post-body h2,
-::ng-deep .post-body h3 {
-  color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  margin-top: 48px;
-  margin-bottom: 16px;
-}
-
-@media (min-width: 1080px) {
-  .sidebar-container {
-    display: block;
-  }
-
-  /* When sidebar is visible, align layout to start rather than center */
-  .post-page-layout {
-    justify-content: flex-start;
-    padding-left: 24px;
-    padding-right: 24px;
-  }
-
-  /* Reset article margin since flex handles centering */
-  .article-container {
-    margin: 0;
-  }
-}
-
-.article-header {
-  margin-bottom: 32px;
 }

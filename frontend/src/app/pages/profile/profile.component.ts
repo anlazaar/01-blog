@@ -1,14 +1,30 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { UserService } from '../../services/UserService';
-import { UserPublicProfileDTO } from '../../models/USER/UserPublicProfileDTO';
 import { CommonModule } from '@angular/common';
-import { TokenService } from '../../services/token.service';
 import { switchMap } from 'rxjs';
+
+// Models & Services
+import { UserService } from '../../services/UserService';
+import { TokenService } from '../../services/token.service';
+import { UserPublicProfileDTO } from '../../models/USER/UserPublicProfileDTO';
+
+// Angular Material Imports
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-product-page',
-  imports: [CommonModule, RouterLink],
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterLink,
+    MatButtonModule,
+    MatIconModule,
+    MatTabsModule,
+    MatProgressSpinnerModule,
+  ],
   templateUrl: './profile.component.html',
   styleUrls: ['profile.component.css'],
 })
@@ -64,7 +80,7 @@ export class ProfilePage implements OnInit {
           console.log('USER', this.user);
           this.user.avatarUrl = this.user.avatarUrl
             ? 'http://localhost:8080' + this.user.avatarUrl
-            : '/default.jpg';
+            : '/default-avatar.jpg'; // Use local fallback
         },
         error: (err) => console.log(err),
       });

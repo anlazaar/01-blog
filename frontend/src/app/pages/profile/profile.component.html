@@ -6,9 +6,10 @@
       <div class="info-group">
         <h1 class="profile-name">{{ user.lastname }} {{ user.firstname }}</h1>
         <p class="profile-username">@{{ user.username }}</p>
+
         @if (user.bio) {
         <p class="profile-bio">{{ user.bio }}</p>
-        } @if (!user.bio) {
+        } @else {
         <p class="profile-bio empty">Writer on Blog.</p>
         }
 
@@ -23,15 +24,47 @@
           <!-- Edit / Follow Actions -->
           <div class="action-buttons">
             @if (isCurrentUser) {
-            <a [routerLink]="['/profile/update', user.id]" class="text-btn">Edit profile</a>
-            <a routerLink="/new-story" class="write-btn">Write</a>
+            <!-- Edit Profile: Simple Text Link Button -->
+            <a
+              mat-button
+              color="accent"
+              [routerLink]="['/profile/update', user.id]"
+              class="text-btn"
+            >
+              Edit profile
+            </a>
+
+            <!-- Write: Primary Pill Button (Override CSS) -->
+            <a mat-flat-button color="primary" routerLink="/new-story" class="write-btn">Write</a>
+
             } @else if (isAdmin){
-            <a [routerLink]="['/profile/update', user.id]" class="text-btn">Edit profile</a>
-            }@else {
-            <button class="pill-btn" [class.outline]="user.following" (click)="toggleFollow()">
-              {{ user.following ? 'Following' : 'Follow' }}
+            <a
+              mat-button
+              color="accent"
+              [routerLink]="['/profile/update', user.id]"
+              class="text-btn"
+            >
+              Edit profile
+            </a>
+
+            } @else {
+            <!-- Follow Button Logic -->
+            @if (user.following) {
+            <!-- Already Following: Stroked Button (Green Text) -->
+            <button
+              mat-stroked-button
+              color="primary"
+              class="follow-btn active"
+              (click)="toggleFollow()"
+            >
+              Following
             </button>
-            }
+            } @else {
+            <!-- Not Following: Flat Button (Green Bg) -->
+            <button mat-flat-button color="primary" class="follow-btn" (click)="toggleFollow()">
+              Follow
+            </button>
+            } }
           </div>
         </div>
       </div>
@@ -39,9 +72,10 @@
       <!-- Avatar on Right (Desktop) or Top (Mobile) -->
       <div class="avatar-group">
         <img
-          [src]="user.avatarUrl ? user.avatarUrl : 'assets/default-avatar.png'"
+          [src]="user.avatarUrl ? user.avatarUrl : '/default-avatar.jpg'"
           alt="Avatar"
           class="profile-avatar"
+          onerror="this.src='/default-avatar.jpg'"
         />
       </div>
     </div>
@@ -90,5 +124,8 @@
   </section>
 </div>
 } @else {
-<div class="loading-state">Loading profile...</div>
+<div class="loading-state">
+  <mat-spinner diameter="40"></mat-spinner>
+  <p>Loading profile...</p>
+</div>
 }

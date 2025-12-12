@@ -2,6 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { TokenService } from './token.service';
+import { environment } from '../../environments/environment';
 
 export interface Notification {
   id: string;
@@ -19,7 +20,7 @@ export interface Notification {
   providedIn: 'root',
 })
 export class NotificationService {
-  private baseUrl = 'http://localhost:8080/api/notifications';
+  private baseUrl = `${environment.apiUrl}/notifications`;
 
   constructor(
     private http: HttpClient,
@@ -27,31 +28,22 @@ export class NotificationService {
     private tokenService: TokenService
   ) {}
 
-  // Get historical notifications
   getNotifications(): Observable<Notification[]> {
     return this.http.get<Notification[]>(this.baseUrl);
   }
 
-  // Mark specific notification as read
   markAsRead(id: string): Observable<void> {
     return this.http.patch<void>(`${this.baseUrl}/${id}/read`, {});
   }
 
-  // Connect to SSE
   getServerSentEvent(): Observable<Notification> {
     return new Observable((observer) => {
-      // Pass token in query param because EventSource doesn't support headers
       const token = this.tokenService.getToken();
       const eventSource = new EventSource(`${this.baseUrl}/subscribe?token=${token}`);
 
-      // Debug: Confirm connection
       eventSource.onopen = () => console.log('SSE Connection Opened');
 
-      // === FIX IS HERE ===
-      // Your backend uses .name("notification"), so we MUST use addEventListener
       eventSource.addEventListener('notification', (event: any) => {
-        console.log('Real-time event received:', event.data); // Log raw data
-
         this._zone.run(() => {
           try {
             const data = JSON.parse(event.data);
@@ -62,9 +54,7 @@ export class NotificationService {
         });
       });
 
-      // Handle errors gracefully
       eventSource.onerror = (error) => {
-        // If the connection was closed normally (e.g. page refresh), ignore the error
         if (eventSource.readyState === EventSource.CLOSED) {
           console.log('SSE Connection closed');
         } else {
@@ -75,7 +65,6 @@ export class NotificationService {
         }
       };
 
-      // Return cleanup function
       return () => {
         console.log('Closing SSE Connection');
         eventSource.close();

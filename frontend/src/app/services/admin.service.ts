@@ -1,6 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { Page } from '../models/Page';
 
 export interface ChartDataPoint {
   label: string;
@@ -20,7 +22,8 @@ export interface DashboardStats {
 })
 export class AdminService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/admin';
+  // Use the global URL + specific endpoint
+  private apiUrl = `${environment.apiUrl}/admin`;
 
   // === STATS ===
   getDashboardStats(): Observable<DashboardStats> {
@@ -28,8 +31,9 @@ export class AdminService {
   }
 
   // === USERS ===
-  getAllUsers(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/users`);
+  getAllUsers(page: number, size: number): Observable<Page<any>> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<Page<any>>(`${this.apiUrl}/users`, { params });
   }
 
   banUser(id: string): Observable<string> {
@@ -41,8 +45,9 @@ export class AdminService {
   }
 
   // === POSTS ===
-  getAllPosts(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/posts`);
+  getAllPosts(page: number, size: number): Observable<Page<any>> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<Page<any>>(`${this.apiUrl}/posts`, { params });
   }
 
   // === REPORTS ===
@@ -57,7 +62,7 @@ export class AdminService {
   updateUserRole(id: string, role: string) {
     return this.http.patch(
       `${this.apiUrl}/users/${id}/role?role=${role}`,
-      {}, 
+      {},
       { responseType: 'text' }
     );
   }

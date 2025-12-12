@@ -32,21 +32,30 @@
         <div class="card-header">
           <img
             [src]="
-              user.avatarUrl
-                ? 'http://localhost:8080' + user.avatarUrl
-                : 'assets/default-avatar.png'
+              user.avatarUrl ? 'http://localhost:8080' + user.avatarUrl : '/default-avatar.jpg'
             "
             class="card-avatar"
             [routerLink]="['/profile', user.id]"
-            onerror="this.src='assets/default-avatar.png'"
+            onerror="this.src='/default-avatar.jpg'"
           />
+
+          <!-- FOLLOW BUTTON LOGIC -->
+          @if (user.following) {
+          <!-- Already Following: Stroked Button (Green Text via CSS override) -->
           <button
-            class="follow-btn"
-            [class.following]="user.following"
+            mat-stroked-button
+            color="primary"
+            class="follow-btn active"
             (click)="toggleFollow(user)"
           >
-            {{ user.following ? 'Following' : 'Follow' }}
+            Following
           </button>
+          } @else {
+          <!-- Not Following: Flat Button (Green Bg via CSS override) -->
+          <button mat-flat-button color="primary" class="follow-btn" (click)="toggleFollow(user)">
+            Follow
+          </button>
+          }
         </div>
 
         <div class="card-body">
@@ -60,7 +69,12 @@
     <!-- PAGINATION / LOAD MORE -->
     @if (!isLastPage) {
     <div class="load-more-container">
-      <button class="load-more-btn" (click)="loadMore()" [disabled]="loadingMore">
+      <button
+        mat-stroked-button
+        class="load-more-btn"
+        (click)="loadMore()"
+        [disabled]="loadingMore"
+      >
         @if (loadingMore) {
         <span>Loading...</span>
         } @else { Load More }

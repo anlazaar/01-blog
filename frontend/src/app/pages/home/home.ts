@@ -1,25 +1,37 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+
+// Services & Models
 import { PostService } from '../../services/post.service';
 import { TokenService } from '../../services/token.service';
 import { PostResponse } from '../../models/POST/PostResponse';
+import { Page } from '../../models/Page';
+
+// Components
 import { PostOptionsMenuComponent } from '../../share/PostOptionsMenu/post-options-menu';
 import { ConfirmDialogComponent } from '../../share/ConfirmDialogComponent/confirm-dialog';
 import { SuggestedUsersComponent } from '../../share/SuggestedAccounts/suggested-users';
-import { Page } from '../../models/Page';
-import { ToastService } from '../../services/toast.service';
+
+// Angular Material Imports
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  // Removed AddPost from here
   imports: [
     CommonModule,
-    PostOptionsMenuComponent,
-    ConfirmDialogComponent,
     RouterLink,
+    PostOptionsMenuComponent,
     SuggestedUsersComponent,
+    // Material Modules
+    MatDialogModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
   ],
   templateUrl: './home.html',
   styleUrl: './home.css',
@@ -30,23 +42,19 @@ export class Home implements OnInit {
   isAdmin = false;
   token: string | null = '';
   currentUserId: string | null = '';
-  suggestedUsers: any[] = []; // New Array
   skeletonItems = new Array(5);
 
   // Pagination State
-  loadingMore = false; // Loading subsequent pages
+  loadingMore = false;
   currentPage = 0;
   pageSize = 4;
-  hasMorePosts = true; // To hide 'Load More' button when done
-
-  showConfirm = false;
-  postToDelete: PostResponse | null = null;
+  hasMorePosts = true;
 
   // Dependency Injection
   private postService = inject(PostService);
   private tokenService = inject(TokenService);
   private router = inject(Router);
-  // private userService = inject(UserService);
+  private dialog = inject(MatDialog); // Inject Material Dialog
 
   ngOnInit(): void {
     this.token = this.tokenService.getToken();
@@ -63,15 +71,9 @@ export class Home implements OnInit {
     this.loading = true;
     this.postService.getAllPosts(this.currentPage, this.pageSize).subscribe({
       next: (data: Page<PostResponse>) => {
-        // 1. Get the list from .content
         this.posts = data.content;
         this.loading = false;
-
-        // 2. Check if there are more pages using the DTO metadata
-        // If current page index is less than (total pages - 1), we have more.
         this.hasMorePosts = data.page.number < data.page.totalPages - 1;
-
-        // Edge case: if totalPages is 0 (no posts at all)
         if (data.page.totalPages === 0) this.hasMorePosts = false;
       },
       error: (err) => {
@@ -89,25 +91,20 @@ export class Home implements OnInit {
 
     this.postService.getAllPosts(this.currentPage, this.pageSize).subscribe({
       next: (data: Page<PostResponse>) => {
-        // 1. Append the new content
         this.posts = [...this.posts, ...data.content];
         this.loadingMore = false;
-
-        // 2. Re-evaluate if we have more
         this.hasMorePosts = data.page.number < data.page.totalPages - 1;
       },
       error: (err) => {
         console.error('Failed to load more posts', err);
         this.loadingMore = false;
-        this.currentPage--; // Revert page on error
+        this.currentPage--;
       },
     });
   }
 
   toggleSave(event: Event, post: PostResponse) {
     event.stopPropagation();
-
-    // Optimistic UI Update
     const originalState = post.savedByCurrentUser;
     post.savedByCurrentUser = !post.savedByCurrentUser;
 
@@ -116,7 +113,6 @@ export class Home implements OnInit {
         post.savedByCurrentUser = res.isSaved;
       },
       error: () => {
-        // Revert on error
         post.savedByCurrentUser = originalState;
       },
     });
@@ -127,33 +123,33 @@ export class Home implements OnInit {
   }
 
   onUpdate(post: PostResponse) {
-    console.log('Update Post', post.id);
+    // Navigate to edit page or open modal
+    this.router.navigate(['/p', post.id, 'edit']);
   }
 
+  // --- DELETE LOGIC WITH MAT DIALOG ---
   onDelete(p: PostResponse) {
-    this.postToDelete = p;
-    this.showConfirm = true;
-  }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '380px',
+      data: { message: 'Delete this story forever?' },
+      // These classes must be defined in global styles or ConfirmDialog encapsulation: None
+      panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-backdrop-blur',
+    });
 
-  confirmDelete() {
-    if (!this.postToDelete) return;
-
-    this.postService.deletePost(this.postToDelete.id).subscribe({
-      next: () => {
-        this.posts = this.posts.filter((x) => x.id !== this.postToDelete?.id);
-        this.showConfirm = false;
-        this.postToDelete = null;
-      },
-      error: (err) => {
-        console.error('Delete failed:', err);
-        this.showConfirm = false;
-        this.postToDelete = null;
-      },
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result === true) {
+        this.confirmDelete(p.id);
+      }
     });
   }
 
-  cancelDelete() {
-    this.showConfirm = false;
-    this.postToDelete = null;
+  confirmDelete(postId: string) {
+    this.postService.deletePost(postId).subscribe({
+      next: () => {
+        this.posts = this.posts.filter((x) => x.id !== postId);
+      },
+      error: (err) => console.error('Delete failed:', err),
+    });
   }
 }

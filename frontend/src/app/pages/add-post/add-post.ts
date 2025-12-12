@@ -1,41 +1,43 @@
 import { Component, inject, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { PostService } from '../../services/post.service';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { CommonModule } from '@angular/common';
+import { Observable, of, from } from 'rxjs';
+import { concatMap, last, switchMap, tap } from 'rxjs/operators';
+
+// TipTap Imports
 import { TiptapEditorDirective } from 'ngx-tiptap';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Observable, of, from } from 'rxjs';
-import { concatMap, last, switchMap, tap } from 'rxjs/operators';
 import { Markdown } from 'tiptap-markdown';
 import Link from '@tiptap/extension-link';
-import { ToastService } from '../../services/toast.service';
 import Image from '@tiptap/extension-image';
-import {
-  faBold,
-  faItalic,
-  faHeading,
-  faQuoteLeft,
-  faListUl,
-  faListOl,
-  faImage,
-  faVideo,
-  faArrowLeft,
-  faCode,
-  faStrikethrough,
-  faLink,
-  faUnlink,
-  faMinus,
-  faUndo,
-  faRedo,
-} from '@fortawesome/free-solid-svg-icons';
+
+// Services
+import { PostService } from '../../services/post.service';
+import { ToastService } from '../../services/toast.service';
+
+// Angular Material Imports
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 @Component({
   selector: 'app-add-post',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, FontAwesomeModule, TiptapEditorDirective],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    CommonModule,
+    TiptapEditorDirective,
+    // Material Modules
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    MatProgressBarModule,
+  ],
   templateUrl: './add-post.html',
   styleUrls: ['./add-post.css'],
   encapsulation: ViewEncapsulation.None,
@@ -48,24 +50,6 @@ export class AddPost implements OnInit, OnDestroy {
   private toast = inject(ToastService);
 
   private readonly BACKEND_URL = 'http://localhost:8080';
-
-  // Icons
-  faBold = faBold;
-  faItalic = faItalic;
-  faHeading = faHeading;
-  faQuote = faQuoteLeft;
-  faListUl = faListUl;
-  faListOl = faListOl;
-  faImage = faImage;
-  faVideo = faVideo;
-  faArrowLeft = faArrowLeft;
-  faCode = faCode;
-  faStrike = faStrikethrough;
-  faLink = faLink;
-  faUnlink = faUnlink;
-  faMinus = faMinus;
-  faUndo = faUndo;
-  faRedo = faRedo;
 
   editor!: Editor;
   isSubmitting = false;
@@ -80,13 +64,12 @@ export class AddPost implements OnInit, OnDestroy {
   postForm = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(3)]],
     description: ['', [Validators.required, Validators.minLength(10)]],
-    mediaType: ['IMAGE'], // Defaults to IMAGE, changes to VIDEO if video file selected
+    mediaType: ['IMAGE'],
   });
 
   selectedFile: File | null = null;
   coverPreviewUrl: string | null = null;
 
-  // Helper to check if current media is video for the UI
   get isVideoType(): boolean {
     return this.postForm.get('mediaType')?.value === 'VIDEO';
   }
@@ -146,13 +129,12 @@ export class AddPost implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.editor.destroy();
-    // Cleanup memory if we created a video URL
     if (this.coverPreviewUrl && this.coverPreviewUrl.startsWith('blob:')) {
       URL.revokeObjectURL(this.coverPreviewUrl);
     }
   }
 
-  // --- Toolbar & Editor Image Logic ---
+  // --- Toolbar Logic ---
   setLink() {
     const previousUrl = this.editor.getAttributes('link')['href'];
     const url = window.prompt('URL', previousUrl);
@@ -191,7 +173,7 @@ export class AddPost implements OnInit, OnDestroy {
     });
   }
 
-  // --- Cover Media Logic (Image OR Video) ---
+  // --- Cover Logic ---
   triggerFileInput() {
     document.getElementById('cover-upload')?.click();
   }
@@ -203,14 +185,10 @@ export class AddPost implements OnInit, OnDestroy {
       const fileType = this.selectedFile.type;
 
       if (fileType.startsWith('video/')) {
-        // Switch mode to VIDEO
         this.postForm.patchValue({ mediaType: 'VIDEO' });
-        // Use ObjectURL for fast video preview
         this.coverPreviewUrl = URL.createObjectURL(this.selectedFile);
       } else {
-        // Switch mode to IMAGE
         this.postForm.patchValue({ mediaType: 'IMAGE' });
-        // Use FileReader for image preview
         const reader = new FileReader();
         reader.onload = (e) => (this.coverPreviewUrl = e.target?.result as string);
         reader.readAsDataURL(this.selectedFile);
@@ -222,7 +200,7 @@ export class AddPost implements OnInit, OnDestroy {
     this.selectedFile = null;
     this.coverPreviewUrl = null;
     this.existingMediaUrl = null;
-    this.postForm.patchValue({ mediaType: 'IMAGE' }); // Reset to default
+    this.postForm.patchValue({ mediaType: 'IMAGE' });
     const input = document.getElementById('cover-upload') as HTMLInputElement;
     if (input) input.value = '';
   }
@@ -233,7 +211,7 @@ export class AddPost implements OnInit, OnDestroy {
     el.style.height = el.scrollHeight + 'px';
   }
 
-  // --- SAVE & PUBLISH LOGIC ---
+  // --- Save Logic ---
   onPublish() {
     this.handleSave(true);
   }
@@ -254,12 +232,11 @@ export class AddPost implements OnInit, OnDestroy {
     const fullContent = this.postForm.get('description')?.value || '';
     const summary = fullContent.substring(0, 150) + '...';
     const title = this.postForm.get('title')?.value;
-    const currentMediaType = this.postForm.get('mediaType')?.value; // Get IMAGE or VIDEO
+    const currentMediaType = this.postForm.get('mediaType')?.value;
 
     let saveObservable: Observable<any>;
 
     if (this.isEditMode && this.postId) {
-      // === EDIT MODE ===
       const updatePayload = {
         title: title,
         description: summary,
@@ -283,7 +260,6 @@ export class AddPost implements OnInit, OnDestroy {
         concatMap(() => this.postService.clearPostContent(this.postId!))
       );
     } else {
-      // === CREATE MODE ===
       const formData = new FormData();
       formData.append('title', title || '');
       formData.append('description', summary);
@@ -303,7 +279,6 @@ export class AddPost implements OnInit, OnDestroy {
       );
     }
 
-    // === EXECUTE ===
     saveObservable
       .pipe(
         concatMap(() => this.uploadChunksSequentially(this.postId!, fullContent)),

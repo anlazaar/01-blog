@@ -2,7 +2,7 @@
 .report-layout {
   display: flex;
   justify-content: center;
-  padding-top: 80px; /* Space from top nav */
+  padding-top: 80px;
   padding-bottom: 80px;
 }
 
@@ -10,7 +10,7 @@
   width: 100%;
   max-width: 500px;
   padding: 0 24px;
-  text-align: center; /* Center headings */
+  text-align: center;
 }
 
 /* --- Typography --- */
@@ -31,121 +31,119 @@ h1 {
 
 /* --- Input Groups --- */
 .input-group {
-  margin-bottom: 32px;
-  text-align: left; /* Realign inputs to left */
+  margin-bottom: 16px;
+  text-align: left;
 }
 
-label {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-/* --- Form Elements (Underline Style) --- */
-select,
-textarea {
+.full-width {
   width: 100%;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--border);
-  border-radius: 0;
-  padding: 12px 0;
-  font-size: 16px;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  color: var(--text-primary);
-  outline: none;
-  transition: border-color 0.2s ease;
-  resize: none;
 }
 
-select option {
-  background-color: var(--background);
-  color: var(--text-primary);
+/* =========================================================
+   MATERIAL FORM FIELD OVERRIDES (Dark Mode Fix)
+   ========================================================= */
+
+/* 1. Force the Select Value (The text inside the box) to be visible */
+::ng-deep .mat-mdc-select-value-text {
+  color: var(--text-primary) !important; /* White in Dark Mode */
 }
 
-select:focus,
-textarea:focus {
-  border-bottom-color: var(--text-primary);
+/* 2. Force the Placeholder/Label to be visible */
+::ng-deep .mat-mdc-form-field .mat-mdc-floating-label.mdc-floating-label {
+  color: var(--text-secondary) !important;
 }
 
-textarea {
-  min-height: 100px;
-  line-height: 1.5;
+/* 3. Force Label color when Focused/Active */
+::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-floating-label.mdc-floating-label {
+  color: var(--text-primary) !important;
 }
 
-/* --- Select Styling --- */
-.select-wrapper {
-  position: relative;
+/* 4. Dropdown Arrow Color */
+::ng-deep .mat-mdc-select-arrow {
+  color: var(--text-secondary) !important;
 }
 
-select {
-  appearance: none; /* Remove default arrow */
-  -webkit-appearance: none;
-  cursor: pointer;
-  padding-right: 24px; /* Space for arrow */
+/* 5. Input Text Color (For the Textarea) */
+::ng-deep .mat-mdc-input-element {
+  color: var(--text-primary) !important;
+  caret-color: var(--text-primary) !important;
 }
 
-.arrow-down {
-  position: absolute;
-  right: 0;
-  top: 14px;
-  font-size: 10px;
-  color: var(--text-secondary);
-  pointer-events: none;
+/* 6. Underline Colors */
+::ng-deep .mat-mdc-form-field-bottom-align::before {
+  background-color: var(--border) !important;
+}
+::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-form-field-bottom-align::after {
+  background-color: var(--text-primary) !important;
 }
 
-/* Placeholder styling */
-textarea::placeholder,
-select:invalid {
-  color: var(--text-muted);
-}
-
-/* --- Buttons --- */
+/* =========================================================
+   ACTIONS & BUTTONS
+   ========================================================= */
 .actions {
   margin-top: 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
-.main-btn {
+/* 
+   Submit Button Fix: 
+   Remove default purple, force Black/White theme color 
+*/
+.submit-btn {
   width: 100%;
-  max-width: 200px; /* Limit width for elegance */
-  padding: 12px 24px;
-  background-color: var(--text-primary); /* Solid Black */
-  color: var(--background);
-  border: none;
-  border-radius: 9999px; /* Pill Shape */
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
+  max-width: 200px;
+  height: 44px !important;
+  border-radius: 9999px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: normal !important;
+
+  /* Force Theme Colors */
+  background-color: var(--text-primary) !important; /* White in Dark, Black in Light */
+  color: var(--background) !important; /* Black in Dark, White in Light */
 }
 
-.main-btn:hover {
-  opacity: 0.8;
-  transform: none;
-  box-shadow: none;
+.submit-btn:disabled {
+  background-color: var(--border) !important;
+  color: var(--text-muted) !important;
+  opacity: 0.5;
 }
 
-.main-btn:disabled {
-  background-color: var(--border);
-  color: var(--text-muted);
-  cursor: not-allowed;
+/* Cancel Button */
+.cancel-btn {
+  color: var(--text-secondary) !important;
+  font-weight: 400 !important;
 }
 
-.cancel-link {
-  color: var(--text-secondary);
-  font-size: 14px;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.cancel-link:hover {
-  color: var(--text-primary);
+.cancel-btn:hover {
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
   text-decoration: underline;
+}
+
+/* =========================================================
+   DROPDOWN MENU POPUP (The options list)
+   ========================================================= */
+::ng-deep .mat-mdc-select-panel {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg) !important;
+}
+
+::ng-deep .mat-mdc-option {
+  color: var(--text-primary) !important;
+}
+
+::ng-deep .mat-mdc-option:hover,
+::ng-deep .mat-mdc-option.mat-mdc-option-active {
+  background-color: var(--secondary) !important;
+}
+
+::ng-deep .mat-mdc-option.mdc-list-item--selected {
+  background-color: var(--secondary) !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
 }

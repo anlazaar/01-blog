@@ -1,7 +1,6 @@
 @if (loading) {
 <div class="loading-state">
-  <div class="spinner"></div>
-  <p>Loading story...</p>
+  <mat-spinner diameter="40"></mat-spinner>
 </div>
 } @else if (post) {
 
@@ -21,10 +20,10 @@
               [src]="
                 post.author.avatarUrl
                   ? 'http://localhost:8080' + post.author.avatarUrl
-                  : 'assets/default-avatar.png'
+                  : '/default-avatar.jpg'
               "
               alt="{{ post.author.username }}"
-              onerror="this.src='assets/default-avatar.png'"
+              onerror="this.src='/default-avatar.jpg'"
             />
           </div>
           <div class="meta-text">
@@ -37,7 +36,7 @@
           </div>
         </div>
 
-        <!-- Post Menu -->
+        <!-- Post Menu (Materialized in previous steps) -->
         @if (currentUserId) {
         <app-post-options-menu
           [postId]="post.id"
@@ -69,7 +68,7 @@
 
       @if (isLoadingChunks) {
       <div class="chunk-loading-indicator">
-        <span>Loading...</span>
+        <mat-spinner diameter="30"></mat-spinner>
       </div>
       }
       <div #scrollAnchor style="height: 20px; width: 100%"></div>
@@ -81,18 +80,21 @@
       <div class="engagement-left">
         @if (currentUserId ) {
         <button
+          mat-icon-button
           class="action-btn like-btn"
           [class.active]="post.likedByCurrentUser"
           (click)="toggleLike(post)"
+          [matTooltip]="post.likedByCurrentUser ? 'Unlike' : 'Like'"
         >
-          <fa-icon [icon]="post.likedByCurrentUser ? faHeartSolid : faHeartRegular"></fa-icon>
-          <span>{{ post.likeCount }}</span>
+          <mat-icon>{{ post.likedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
         </button>
+        <span class="count-label">{{ post.likeCount }}</span>
         }
-        <button class="action-btn comment-trigger">
-          <fa-icon [icon]="faCommentRegular"></fa-icon>
-          <span>{{ post.comments.length }}</span>
+
+        <button mat-icon-button class="action-btn comment-trigger" matTooltip="Responses">
+          <mat-icon>chat_bubble_outline</mat-icon>
         </button>
+        <span class="count-label">{{ post.comments.length }}</span>
       </div>
     </section>
     }
@@ -116,8 +118,8 @@
           ></textarea>
           @if (newComment) {
           <div class="input-actions">
-            <button class="cancel-btn" (click)="newComment = ''">Cancel</button>
-            <button class="submit-btn" (click)="sendComment()">Respond</button>
+            <button mat-button class="cancel-btn" (click)="newComment = ''">Cancel</button>
+            <button mat-flat-button class="submit-btn" (click)="sendComment()">Respond</button>
           </div>
           }
         </div>
@@ -135,9 +137,9 @@
                 [src]="
                   c.author.avatarUrl
                     ? 'http://localhost:8080' + c.author.avatarUrl
-                    : 'assets/default-avatar.png'
+                    : '/default-avatar.jpg'
                 "
-                onerror="this.src='assets/default-avatar.png'"
+                onerror="this.src='/default-avatar.jpg'"
               />
               <span class="response-name">{{ c.author.username }}</span>
               <span class="response-date">{{ c.createdAt | date : 'MMM d' }}</span>
@@ -152,8 +154,7 @@
     </section>
   </main>
 
-  <!-- RIGHT COLUMN: Sidebar (Suggested Users) -->
-  <!-- Hidden for Admins just like Home Page -->
+  <!-- RIGHT COLUMN: Sidebar -->
   @if (!isAdmin) {
   <aside class="sidebar-container">
     <app-suggested-users></app-suggested-users>
@@ -163,14 +164,6 @@
 } @else {
 <div class="not-found">
   <h1>Post not found</h1>
-  <a routerLink="/" class="home-link">Back to home</a>
+  <a mat-button color="primary" routerLink="/">Back to home</a>
 </div>
 }
-
-<app-confirm-dialog
-  [show]="showConfirm"
-  message="Delete this story?"
-  (confirm)="confirmDelete()"
-  (cancel)="cancelDelete()"
->
-</app-confirm-dialog>

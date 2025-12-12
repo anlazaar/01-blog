@@ -28,4 +28,5 @@ public interface SavedPostRepository extends JpaRepository<SavedPost, UUID> {
 
     @Query("SELECT s.post.id FROM SavedPost s WHERE s.user.id = :userId AND s.post.id IN :postIds")
     Set<UUID> findPostIdsByUserIdAndPostIdIn(@Param("userId") UUID userId, @Param("postIds") List<UUID> postIds);
+
 }

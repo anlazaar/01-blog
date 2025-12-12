@@ -1,36 +1,35 @@
 <div class="login-page settings-page">
   <div class="login-container">
     <form [formGroup]="publicInfoForm" (ngSubmit)="onSubmit()">
+      <!-- Header -->
       <div class="title">
         <h1>Profile Information</h1>
         <p>Update your photo and personal details.</p>
       </div>
 
-      <!-- Profile Image Section (Moved to Top) -->
+      <!-- Profile Image Section -->
       <div class="profile-upload-section">
         <div class="avatar-wrapper">
           @if (avatarPreview) {
           <img [src]="avatarPreview" alt="Avatar Preview" />
           } @else {
           <div class="avatar-placeholder">
-            {{ user?.username?.charAt(0) | uppercase }}
+            {{ user?.username?.charAt(0) || '?' | uppercase }}
           </div>
           }
         </div>
 
         <div class="upload-actions">
-          <label for="fileInput" class="upload-btn">Update photo</label>
-          <input
-            id="fileInput"
-            type="file"
-            (change)="onFileSelected($event)"
-            accept="image/*"
-            hidden
-          />
+          <button type="button" mat-stroked-button color="primary" (click)="fileInput.click()">
+            Update photo
+          </button>
+
+          <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden />
+
           <span class="upload-hint">Recommended: Square JPG, PNG.</span>
 
           @if (fileError) {
-          <div class="error">
+          <div class="error-msg">
             <small>{{ fileError }}</small>
           </div>
           }
@@ -39,52 +38,57 @@
 
       <!-- Split Inputs -->
       <div class="form-row">
-        <div class="input-group">
-          <label>First name</label>
-          <input type="text" formControlName="firstname" [placeholder]="user?.firstname || ''" />
-        </div>
-        <div class="input-group">
-          <label>Last name</label>
-          <input type="text" formControlName="lastname" [placeholder]="user?.lastname || ''" />
-        </div>
+        <mat-form-field appearance="fill" class="half-width">
+          <mat-label>First name</mat-label>
+          <input matInput formControlName="firstname" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="half-width">
+          <mat-label>Last name</mat-label>
+          <input matInput formControlName="lastname" />
+        </mat-form-field>
       </div>
 
-      <div class="input-group">
-        <label>Email</label>
-        <input type="email" formControlName="email" [placeholder]="user?.email" />
+      <div class="form-row single-col">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Username</mat-label>
+          <input matInput formControlName="username" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Short Bio</mat-label>
+          <textarea
+            matInput
+            formControlName="bio"
+            rows="3"
+            placeholder="Tell your story..."
+          ></textarea>
+          @if (publicInfoForm.get('bio')?.invalid) {
+          <mat-error>Bio is required.</mat-error>
+          }
+        </mat-form-field>
       </div>
 
-      <div class="input-group">
-        <label>Username</label>
-        <input type="text" formControlName="username" [placeholder]="user?.username" />
-      </div>
-
-      <div class="input-group">
-        <label>Short Bio</label>
-        <textarea
-          formControlName="bio"
-          [placeholder]="user?.bio || 'Tell your story...'"
-          rows="3"
-        ></textarea>
-
-        @if (publicInfoForm.get('bio')?.touched && publicInfoForm.get('bio')?.invalid) {
-        <div class="error"><small>Bio is required.</small></div>
-        }
-      </div>
-
-      <!-- Password Section Divider -->
+      <!-- Section Divider -->
       <div class="section-divider">
         <span>Security</span>
       </div>
 
-      <div class="input-group">
-        <label>Old Password</label>
-        <input type="password" formControlName="oldpassword" placeholder="••••••••" />
-      </div>
+      <div class="form-row single-col">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Old Password</mat-label>
+          <input matInput type="password" formControlName="oldpassword" />
+        </mat-form-field>
 
-      <div class="input-group">
-        <label>New Password</label>
-        <input type="password" formControlName="password" placeholder="••••••••" />
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>New Password</mat-label>
+          <input matInput type="password" formControlName="password" />
+        </mat-form-field>
       </div>
 
       @if (errorMessage) {
@@ -94,9 +98,11 @@
       }
 
       <div class="actions">
-        <!-- Save Button (Green style specific to Medium 'Publish/Save' actions, or Black based on your Global) -->
+        <!-- Save Button (Green) -->
         <button
-          class="main-btn save-btn"
+          mat-flat-button
+          color="primary"
+          class="save-btn"
           type="submit"
           [disabled]="publicInfoForm.invalid || publicInfoForm.pristine"
         >

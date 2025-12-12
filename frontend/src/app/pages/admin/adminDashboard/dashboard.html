@@ -7,53 +7,50 @@
   <div class="dashboard-layout">
     <!-- Sidebar Navigation -->
     <nav class="admin-nav">
-      <!-- NEW: Overview Tab -->
       <button
-        class="nav-item"
-        [class.active]="activeTab === 'overview'"
+        [attr.class]="activeTab === 'overview' ? 'nav-item active' : 'nav-item'"
+        mat-button
         (click)="switchTab('overview')"
       >
-        <fa-icon [icon]="faChartLine" class="nav-icon"></fa-icon>
-        <span>Overview</span>
+        <mat-icon>trending_up</mat-icon> <span>Overview</span>
       </button>
-
-      <button class="nav-item" [class.active]="activeTab === 'users'" (click)="switchTab('users')">
-        <fa-icon [icon]="faUsers" class="nav-icon"></fa-icon>
-        <span>People</span>
-      </button>
-
-      <button class="nav-item" [class.active]="activeTab === 'posts'" (click)="switchTab('posts')">
-        <fa-icon [icon]="faNewspaper" class="nav-icon"></fa-icon>
-        <span>Stories</span>
-      </button>
-
       <button
-        class="nav-item"
-        [class.active]="activeTab === 'reports'"
+        [attr.class]="activeTab === 'users' ? 'nav-item active' : 'nav-item'"
+        mat-button
+        (click)="switchTab('users')"
+      >
+        <mat-icon>group</mat-icon> <span>People</span>
+      </button>
+      <button
+        [attr.class]="activeTab === 'posts' ? 'nav-item active' : 'nav-item'"
+        mat-button
+        (click)="switchTab('posts')"
+      >
+        <mat-icon>article</mat-icon> <span>Stories</span>
+      </button>
+      <button
+        [attr.class]="activeTab === 'reports' ? 'nav-item active' : 'nav-item'"
+        mat-button
         (click)="switchTab('reports')"
       >
-        <fa-icon [icon]="faFlag" class="nav-icon"></fa-icon>
-        <span>Reports</span>
+        <mat-icon>flag</mat-icon> <span>Reports</span>
       </button>
     </nav>
 
     <!-- Main Content -->
     <main class="dashboard-content">
-      <!-- Feedback Message -->
       @if (message) {
-      <div class="toast-message">
-        {{ message }}
-      </div>
-      } @if (isLoading) {
-      <div class="loading-state">
-        <div class="spinner"></div>
-      </div>
+      <div class="toast-message">{{ message }}</div>
       }
 
-      <!-- 1. OVERVIEW TAB (Analytics) -->
+      <!-- Global Loading (Initial) -->
+      @if (isLoading) {
+      <div class="loading-state"><mat-spinner diameter="40"></mat-spinner></div>
+      }
+
+      <!-- 1. OVERVIEW TAB -->
       @if (activeTab === 'overview' && !isLoading && stats) {
       <section class="overview-section">
-        <!-- Summary Cards -->
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-value">{{ stats.totalUsers }}</div>
@@ -69,22 +66,27 @@
           </div>
         </div>
 
-        <!-- Charts Row -->
-        <!-- Charts Row -->
         <div class="charts-grid">
           <div class="chart-container">
             <h3>User Growth (Last 7 Days)</h3>
             <div class="canvas-wrapper">
-              <canvas baseChart [data]="lineChartData" [options]="lineChartOptions" [type]="'line'">
-              </canvas>
+              <canvas
+                baseChart
+                [data]="lineChartData"
+                [options]="lineChartOptions"
+                [type]="'line'"
+              ></canvas>
             </div>
           </div>
           <div class="chart-container">
             <h3>Stories Created (Last 7 Days)</h3>
             <div class="canvas-wrapper">
-              <!-- FIX: Use [options]="barChartOptions" here -->
-              <canvas baseChart [data]="postChartData" [options]="barChartOptions" [type]="'bar'">
-              </canvas>
+              <canvas
+                baseChart
+                [data]="postChartData"
+                [options]="barChartOptions"
+                [type]="'bar'"
+              ></canvas>
             </div>
           </div>
         </div>
@@ -94,78 +96,92 @@
       <!-- 2. USERS TAB -->
       @if (activeTab === 'users' && !isLoading) {
       <section class="data-section">
-        <div class="table-container">
-          <table class="clean-table">
-            <thead>
-              <tr>
-                <th class="col-user">User</th>
-                <th class="col-role">Role</th>
-                <th class="col-status">Status</th>
-                <th class="col-actions"></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (user of users; track user) {
-              <tr [class.row-banned]="user.banned">
-                <td>
-                  <div class="user-info-cell">
-                    <img
-                      [src]="
-                        'http://localhost:8080' + user.avatarUrl || 'assets/default-avatar.png'
-                      "
-                      class="cell-avatar"
-                      onerror="this.src='assets/default-avatar.png'"
-                    />
-                    <div class="text-stack">
-                      <a [routerLink]="['/profile', user.id]" class="cell-name">{{
-                        user.username
-                      }}</a>
-                      <span class="cell-email">{{ user.email }}</span>
-                    </div>
+        <div class="table-container mat-elevation-z0">
+          <table mat-table [dataSource]="users" class="custom-mat-table">
+            <ng-container matColumnDef="user">
+              <th mat-header-cell *matHeaderCellDef>User</th>
+              <td mat-cell *matCellDef="let user">
+                <div class="user-info-cell">
+                  <img
+                    [src]="'http://localhost:8080' + user.avatarUrl || '/default-avatar.jpg'"
+                    class="cell-avatar"
+                    onerror="this.src='/default-avatar.jpg'"
+                  />
+                  <div class="text-stack">
+                    <a [routerLink]="['/profile', user.id]" class="cell-name">{{
+                      user.username
+                    }}</a>
+                    <span class="cell-email">{{ user.email }}</span>
                   </div>
-                </td>
-                <td>
-                  <span class="role-badge">{{ user.role | titlecase }}</span>
-                </td>
-                <td>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="role">
+              <th mat-header-cell *matHeaderCellDef>Role</th>
+              <td mat-cell *matCellDef="let user">
+                <span class="role-badge">{{ user.role | titlecase }}</span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let user">
+                <div style="display: flex; align-items: center">
                   <span
                     class="status-dot"
                     [class.active]="!user.banned"
                     [class.banned]="user.banned"
                   ></span>
                   <span class="status-text">{{ user.banned ? 'Suspended' : 'Active' }}</span>
-                </td>
-                <td class="cell-actions">
-                  <div class="action-buttons">
-                    <button
-                      (click)="toggleRole(user)"
-                      class="icon-btn"
-                      [class.accent]="user.role === 'ADMIN'"
-                      [title]="user.role === 'ADMIN' ? 'Demote to User' : 'Promote to Admin'"
-                    >
-                      <fa-icon [icon]="faShieldAlt"></fa-icon>
-                    </button>
-                    <button
-                      (click)="banUser(user.id)"
-                      class="icon-btn"
-                      [title]="user.banned ? 'Unban User' : 'Ban User'"
-                      [class.destructive]="!user.banned"
-                    >
-                      <fa-icon [icon]="user.banned ? faCheck : faBan"></fa-icon>
-                    </button>
-                    <button
-                      (click)="deleteUser(user.id)"
-                      class="icon-btn destructive"
-                      title="Delete User"
-                    >
-                      <fa-icon [icon]="faTrash"></fa-icon>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              }
-            </tbody>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let user" class="cell-actions">
+                <div class="action-buttons">
+                  <button
+                    mat-icon-button
+                    (click)="toggleRole(user)"
+                    [matTooltip]="user.role === 'ADMIN' ? 'Demote' : 'Promote'"
+                    [class.accent-icon]="user.role === 'ADMIN'"
+                  >
+                    <mat-icon>security</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    (click)="banUser(user.id)"
+                    [matTooltip]="user.banned ? 'Unban' : 'Ban'"
+                    [class.warn-icon]="!user.banned"
+                  >
+                    <mat-icon>{{ user.banned ? 'check_circle' : 'block' }}</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    (click)="deleteUser(user.id)"
+                    matTooltip="Delete"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="userColumns"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: userColumns"
+              [class.row-banned]="row.banned"
+            ></tr>
           </table>
+
+          <!-- INFINITE SCROLL SPINNER -->
+          @if (pagination.users.loading) {
+          <div class="scroll-loader"><mat-spinner diameter="30"></mat-spinner></div>
+          }
         </div>
       </section>
       }
@@ -173,37 +189,48 @@
       <!-- 3. POSTS TAB -->
       @if (activeTab === 'posts' && !isLoading) {
       <section class="data-section">
-        <div class="table-container">
-          <table class="clean-table">
-            <thead>
-              <tr>
-                <th class="col-wide">Title</th>
-                <th>Author</th>
-                <th>Date</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (post of posts; track post) {
-              <tr>
-                <td>
-                  <span class="post-title-cell" title="{{ post.title }}">{{ post.title }}</span>
-                </td>
-                <td>
-                  <a [routerLink]="['/profile', post.author?.id]" class="cell-link">
-                    {{ post.author?.username }}
-                  </a>
-                </td>
-                <td class="cell-meta">{{ post.createdAt | date : 'MMM d' }}</td>
-                <td class="cell-actions">
-                  <a [routerLink]="['/posts', post.id]" class="icon-btn" title="View Story">
-                    <fa-icon [icon]="faLink"></fa-icon>
-                  </a>
-                </td>
-              </tr>
-              }
-            </tbody>
+        <div class="table-container mat-elevation-z0">
+          <table mat-table [dataSource]="posts" class="custom-mat-table">
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef>Title</th>
+              <td mat-cell *matCellDef="let post">
+                <span class="post-title-cell" title="{{ post.title }}">{{ post.title }}</span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="author">
+              <th mat-header-cell *matHeaderCellDef>Author</th>
+              <td mat-cell *matCellDef="let post">
+                <a [routerLink]="['/profile', post.author?.id]" class="cell-link">{{
+                  post.author?.username
+                }}</a>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef>Date</th>
+              <td mat-cell *matCellDef="let post" class="cell-meta">
+                {{ post.createdAt | date : 'MMM d' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let post" class="cell-actions">
+                <a mat-icon-button [routerLink]="['/posts', post.id]" matTooltip="View Story"
+                  ><mat-icon>open_in_new</mat-icon></a
+                >
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="postColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: postColumns"></tr>
           </table>
+
+          <!-- INFINITE SCROLL SPINNER -->
+          @if (pagination.posts.loading) {
+          <div class="scroll-loader"><mat-spinner diameter="30"></mat-spinner></div>
+          }
         </div>
       </section>
       }
@@ -211,53 +238,60 @@
       <!-- 4. REPORTS TAB -->
       @if (activeTab === 'reports' && !isLoading) {
       <section class="data-section">
-        <div class="table-container">
-          <table class="clean-table">
-            <thead>
-              <tr>
-                <th>Report Details</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (report of reports; track report) {
-              <tr>
-                <td>
-                  <div class="report-cell">
-                    <span class="report-reason">{{ report.reason }}</span>
-                    <div class="report-meta">
-                      Reported by <strong>{{ report.reporter?.username }}</strong> against
-                      <a [routerLink]="['/profile', report.reportedUser?.id]">
-                        @{{ report.reportedUser?.username }}
-                      </a>
-                    </div>
+        <div class="table-container mat-elevation-z0">
+          <table mat-table [dataSource]="reports" class="custom-mat-table">
+            <ng-container matColumnDef="details">
+              <th mat-header-cell *matHeaderCellDef>Report Details</th>
+              <td mat-cell *matCellDef="let report">
+                <div class="report-cell">
+                  <span class="report-reason">{{ report.reason }}</span>
+                  <div class="report-meta">
+                    Reported by <strong>{{ report.reporter?.username }}</strong> against
+                    <a [routerLink]="['/profile', report.reportedUser?.id]"
+                      >@{{ report.reportedUser?.username }}</a
+                    >
                   </div>
-                </td>
-                <td>
-                  <span
-                    class="status-badge"
-                    [class.pending]="!report.resolved"
-                    [class.resolved]="report.resolved"
-                  >
-                    {{ report.resolved ? 'Resolved' : 'Review Needed' }}
-                  </span>
-                </td>
-                <td class="cell-actions">
-                  @if (!report.resolved) {
-                  <button
-                    (click)="resolveReport(report.id)"
-                    class="icon-btn success"
-                    title="Mark Resolved"
-                  >
-                    <fa-icon [icon]="faCheck"></fa-icon>
-                  </button>
-                  }
-                </td>
-              </tr>
-              }
-            </tbody>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let report">
+                <span
+                  class="status-badge"
+                  [class.pending]="!report.resolved"
+                  [class.resolved]="report.resolved"
+                >
+                  {{ report.resolved ? 'Resolved' : 'Review Needed' }}
+                </span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let report" class="cell-actions">
+                @if (!report.resolved) {
+                <button
+                  mat-icon-button
+                  class="success-icon"
+                  (click)="resolveReport(report.id)"
+                  matTooltip="Mark Resolved"
+                >
+                  <mat-icon>check_circle</mat-icon>
+                </button>
+                }
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="reportColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: reportColumns"></tr>
           </table>
+
+          <!-- INFINITE SCROLL SPINNER -->
+          @if (pagination.reports.loading) {
+          <div class="scroll-loader"><mat-spinner diameter="30"></mat-spinner></div>
+          }
         </div>
       </section>
       }

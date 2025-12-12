@@ -1,25 +1,28 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-
+import { Component, Inject, ViewEncapsulation } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-confirm-dialog',
   standalone: true,
-  imports: [],
+  imports: [MatDialogModule, MatButtonModule],
   templateUrl: './confirm-dialog.html',
   styleUrls: ['./confirm-dialog.css'],
+  // We need None to style the backdrop and the panel wrapper globally
+  encapsulation: ViewEncapsulation.None 
 })
 export class ConfirmDialogComponent {
-  @Input() message: string = 'Are you sure?';
-  @Input() show = false;
+  
+  constructor(
+    public dialogRef: MatDialogRef<ConfirmDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { message: string }
+  ) {}
 
-  @Output() confirm = new EventEmitter<void>();
-  @Output() cancel = new EventEmitter<void>();
-
-  onConfirm() {
-    this.confirm.emit();
+  onConfirm(): void {
+    this.dialogRef.close(true); // Return 'true' when confirmed
   }
 
-  onCancel() {
-    this.cancel.emit();
+  onCancel(): void {
+    this.dialogRef.close(false); // Return 'false' when cancelled
   }
 }

@@ -1,26 +1,47 @@
 <div class="drafts-layout">
   <div class="drafts-container">
-    <h1>Your Drafts</h1>
+    <header class="drafts-header">
+      <h1>Your Drafts</h1>
+    </header>
 
     @if(loading) {
-    <div class="loading">Loading...</div>
+    <div class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
     } @else if (drafts.length === 0) {
     <div class="empty-state">
       <p>You have no drafts.</p>
-      <a routerLink="/new-story" class="write-btn">Write a story</a>
+      <a mat-flat-button color="primary" routerLink="/new-story" class="write-btn">Write a story</a>
     </div>
     } @else {
     <div class="draft-list">
       @for(post of drafts; track post.id) {
-      <div class="draft-item">
-        <div class="draft-info" [routerLink]="['/p', post.id, 'edit']">
+      <div class="draft-item" [routerLink]="['/p', post.id, 'edit']">
+        <div class="draft-info">
           <h3>{{ post.title || 'Untitled Story' }}</h3>
-          <p class="draft-desc">{{ post.description }}</p>
-          <span class="draft-date">Last edited: {{ post.updatedAt | date : 'medium' }}</span>
+          <p class="draft-desc">{{ post.description || 'No preview available...' }}</p>
+          <span class="draft-date">Last edited {{ post.updatedAt | date : 'mediumDate' }}</span>
         </div>
+
         <div class="draft-actions">
-          <button class="btn-edit" [routerLink]="['/p', post.id, 'edit']">Edit</button>
-          <button class="btn-delete" (click)="deleteDraft(post.id)">Delete</button>
+          <!-- Edit Button -->
+          <a
+            mat-stroked-button
+            [routerLink]="['/p', post.id, 'edit']"
+            (click)="$event.stopPropagation()"
+          >
+            Edit
+          </a>
+
+          <!-- Delete Button -->
+          <button
+            mat-icon-button
+            color="warn"
+            (click)="deleteDraft(post.id, $event)"
+            matTooltip="Delete Draft"
+          >
+            <mat-icon>delete_outline</mat-icon>
+          </button>
         </div>
       </div>
       }

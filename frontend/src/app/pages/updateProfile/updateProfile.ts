@@ -1,20 +1,34 @@
-import { Component, inject } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, OnInit } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { CommonModule } from '@angular/common';
 import { UserService } from '../../services/UserService';
 import { UserResponse } from '../../models/USER/UserResponse';
-import { CommonModule } from '@angular/common';
+
+// Angular Material Imports
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-updateprofile',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule, FontAwesomeModule, CommonModule],
+  imports: [
+    ReactiveFormsModule,
+    RouterModule,
+    CommonModule,
+    // Material Modules
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+  ],
   providers: [UserService],
   templateUrl: './updateProfile.html',
   styleUrl: './updateProfile.css',
 })
-export class UpdateProfile {
+export class UpdateProfile implements OnInit {
   private userService = inject(UserService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
@@ -27,6 +41,16 @@ export class UpdateProfile {
   public userId: string = '';
   public errorMessage: string | null = null;
 
+  publicInfoForm = this.fb.group({
+    bio: ['', []],
+    firstname: ['', []],
+    lastname: ['', []],
+    oldpassword: ['', []],
+    password: ['', []],
+    username: ['', []],
+    email: ['', []],
+  });
+
   ngOnInit(): void {
     this.userId = this.route.snapshot.paramMap.get('id') || '';
     if (!this.userId) {
@@ -37,7 +61,14 @@ export class UpdateProfile {
     this.userService.getUserFullData(this.userId).subscribe({
       next: (data) => {
         this.user = data;
-        console.log('USER', this.user);
+        // Pre-fill form
+        this.publicInfoForm.patchValue({
+          firstname: data.firstname,
+          lastname: data.lastname,
+          username: data.username,
+          email: data.email,
+          bio: data.bio,
+        });
       },
       error: (err) => console.log(err),
     });
@@ -54,15 +85,13 @@ export class UpdateProfile {
       return;
     }
     if (file.size > 20 * 1024 * 1024) {
-      // 20 MB limit
-      this.fileError = 'File is too large. Max 5MB.';
+      this.fileError = 'File is too large. Max 20MB.';
       return;
     }
 
     this.fileError = null;
     this.selectedFile = file;
 
-    // Preview image
     const reader = new FileReader();
     reader.onload = () => {
       this.avatarPreview = reader.result;
@@ -70,27 +99,22 @@ export class UpdateProfile {
     reader.readAsDataURL(file);
   }
 
-  publicInfoForm = this.fb.group({
-    bio: ['', []],
-    firstname: ['', []],
-    lastname: ['', []],
-    oldpassword: ['', []],
-    password: ['', []],
-    username: ['', []],
-    email: ['', []],
-  });
-
   onSubmit() {
     if (this.publicInfoForm.invalid) return;
 
     const formData = new FormData();
-    formData.append('bio', this.publicInfoForm.get('bio')?.value || '');
-    formData.append('firstname', this.publicInfoForm.get('firstname')?.value || '');
-    formData.append('lastname', this.publicInfoForm.get('lastname')?.value || '');
-    formData.append('oldpassword', this.publicInfoForm.get('oldpassword')?.value || '');
-    formData.append('password', this.publicInfoForm.get('password')?.value || '');
-    formData.append('username', this.publicInfoForm.get('username')?.value || '');
-    formData.append('email', this.publicInfoForm.get('email')?.value || '');
+    // Helper to append only if value exists
+    const appendIf = (key: string, val: any) => {
+      if (val) formData.append(key, val);
+    };
+
+    appendIf('bio', this.publicInfoForm.get('bio')?.value);
+    appendIf('firstname', this.publicInfoForm.get('firstname')?.value);
+    appendIf('lastname', this.publicInfoForm.get('lastname')?.value);
+    appendIf('oldpassword', this.publicInfoForm.get('oldpassword')?.value);
+    appendIf('password', this.publicInfoForm.get('password')?.value);
+    appendIf('username', this.publicInfoForm.get('username')?.value);
+    appendIf('email', this.publicInfoForm.get('email')?.value);
 
     if (this.selectedFile) {
       formData.append('avatar', this.selectedFile, this.selectedFile.name);

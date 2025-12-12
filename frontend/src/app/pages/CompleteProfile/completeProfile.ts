@@ -1,14 +1,28 @@
 import { Component, inject } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { UserService } from '../../services/UserService';
 import { CommonModule } from '@angular/common';
+import { UserService } from '../../services/UserService';
+
+// Angular Material Imports
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-completeProfile',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule, FontAwesomeModule, CommonModule],
+  imports: [
+    ReactiveFormsModule,
+    RouterModule,
+    CommonModule,
+    // Material Modules
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+  ],
   providers: [UserService],
   templateUrl: './completeProfile.html',
   styleUrl: './completeProfile.css',
@@ -24,6 +38,12 @@ export class CompleteProfile {
   public fileError: string | null = null;
   private userId: string = '';
 
+  publicInfoForm = this.fb.group({
+    bio: ['', [Validators.minLength(10)]],
+    firstname: ['', [Validators.minLength(2)]],
+    lastname: ['', [Validators.minLength(2)]],
+  });
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
@@ -35,7 +55,6 @@ export class CompleteProfile {
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      // 5 MB limit
       this.fileError = 'File is too large. Max 5MB.';
       return;
     }
@@ -43,19 +62,12 @@ export class CompleteProfile {
     this.fileError = null;
     this.selectedFile = file;
 
-    // Preview image
     const reader = new FileReader();
     reader.onload = () => {
       this.avatarPreview = reader.result;
     };
     reader.readAsDataURL(file);
   }
-
-  publicInfoForm = this.fb.group({
-    bio: ['', [Validators.minLength(10)]],
-    firstname: ['', [Validators.minLength(2)]],
-    lastname: ['', [Validators.minLength(2)]],
-  });
 
   onSubmit() {
     if (this.publicInfoForm.invalid) return;

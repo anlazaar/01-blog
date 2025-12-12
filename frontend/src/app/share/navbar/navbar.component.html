@@ -1,244 +1,169 @@
 <nav class="navbar">
   <div class="navbar-container">
-    <!-- Logo: Editorial Style -->
+    <!-- 1. LOGO -->
     <a routerLink="/" class="navbar-brand" (click)="closeMobileMenu()">
-      <!-- We can keep the spans, but style them to look like one word or a logo -->
       <span class="brand-logo">01</span>
       <span class="brand-name">Blog</span>
     </a>
 
-    <!-- Desktop Menu -->
-    <!-- Desktop Menu -->
+    <!-- 2. DESKTOP ACTIONS -->
     <div class="navbar-desktop">
       <div class="navbar-actions">
-        <!-- Theme Toggle -->
         <app-theme-toggle></app-theme-toggle>
 
-        <!-- Guest View -->
+        <!-- A) GUEST VIEW -->
         @if (!isLoggedIn) {
-        <a routerLink="/auth/login" class="nav-link">Sign in</a>
-        <a routerLink="/auth/register" class="nav-btn primary">Get started</a>
+        <a mat-button routerLink="/auth/login" class="nav-link">Sign in</a>
+        <a mat-flat-button color="primary" routerLink="/auth/register" class="nav-btn-primary"
+          >Get started</a
+        >
         }
 
-        <!-- Logged In View -->
+        <!-- B) LOGGED IN VIEW -->
         @if (isLoggedIn) {
-        <a routerLink="/me/saved" class="nav-link">Library</a>
-        <!-- USER MENU (Non-Admin) -->
+        <!-- LIBRARY LINK (Kept here, removed from dropdown) -->
+        <a routerLink="/me/saved" mat-button class="nav-link text-link">Library</a>
+
+        <!-- USER ACTIONS (Non-Admin) -->
         @if (!isAdmin) {
 
-        <!-- 1. DRAFTS LINK (This was missing) -->
-        <a routerLink="/me/drafts" class="nav-link draft-link">
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+        <!-- Drafts Icon -->
+        <a mat-icon-button routerLink="/me/drafts" matTooltip="Stories" class="action-icon">
+          <mat-icon fontIcon="edit_note"></mat-icon>
+        </a>
+
+        <!-- Write Link -->
+        <a mat-button routerLink="/new-story" class="write-link">
+          <mat-icon fontIcon="edit_square" class="write-icon"></mat-icon>
+          <span>Write</span>
+        </a>
+
+        <!-- NOTIFICATIONS -->
+        <button mat-icon-button [matMenuTriggerFor]="notificationMenu" class="action-icon">
+          <mat-icon
+            [matBadge]="unreadCount > 0 ? (unreadCount > 9 ? '9+' : unreadCount) : null"
+            matBadgeColor="warn"
+            matBadgeSize="small"
           >
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-            <line x1="10" y1="9" x2="8" y2="9"></line>
-          </svg>
-        </a>
-
-        <!-- 2. WRITE BUTTON -->
-        <a routerLink="new-story" class="nav-link write-btn">
-          <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-            <path
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-            ></path>
-            <path
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-            ></path>
-          </svg>
-        </a>
-
-        <!-- 3. NOTIFICATION BELL -->
-        <div class="notification-container">
-          <button class="nav-btn-icon" (click)="toggleNotifications()">
-            <!-- Simple Bell SVG -->
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-
-            @if (unreadCount > 0) {
-            <span class="notification-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
-            }
-          </button>
-
-          <!-- Dropdown -->
-          @if (isNotificationOpen) {
-          <div class="notification-dropdown">
-            <div class="dropdown-header">Notifications</div>
-            <div class="dropdown-list">
-              @if (notifications.length === 0) {
-              <div class="empty-state">No notifications yet.</div>
-              } @for (notif of notifications; track notif.id) {
-              <div
-                class="notif-item"
-                [class.unread]="!notif.read"
-                (click)="markRead(notif)"
-                [routerLink]="['/posts', notif.post.id]"
-              >
-                <p class="notif-msg">{{ notif.message }}</p>
-                <span class="notif-date">{{ notif.createdAt | date : 'short' }}</span>
-              </div>
-              }
-            </div>
-          </div>
-          }
-        </div>
+            notifications_none
+          </mat-icon>
+        </button>
         }
-        <!-- ADMIN DASHBOARD LINK -->
+        <!-- ADMIN DASHBOARD -->
         @else {
-        <a routerLink="/admin/dashboard" class="nav-link">Dashboard</a>
+        <a mat-button routerLink="/admin/dashboard">Dashboard</a>
         }
 
-        <!-- User Avatar -->
-        <div class="user-menu-trigger">
-          <img
-            [src]="avatarUrl"
-            class="nav-avatar"
-            [routerLink]="['/profile', userId]"
-            [alt]="username"
-          />
-        </div>
-        <button (click)="logout()" class="nav-link logout">Sign out</button>
+        <!-- USER PROFILE TRIGGER -->
+        <button class="avatar-btn" [matMenuTriggerFor]="userMenu">
+          <img [src]="avatarUrl || '/default-avatar.jpg'" class="nav-avatar" [alt]="username" />
+        </button>
         }
       </div>
     </div>
 
-    <!-- Mobile Menu Button -->
+    <!-- 3. MOBILE CONTROLS -->
     <div class="navbar-mobile-controls">
       <app-theme-toggle></app-theme-toggle>
 
-      @if (isLoggedIn && !isAdmin) {
-      <div class="notification-container mobile-bell">
-        <a routerLink="/me/drafts" class="nav-link draft-link">
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-            <line x1="10" y1="9" x2="8" y2="9"></line>
-          </svg>
-          <span>Drafts</span>
-        </a>
-        <button class="nav-btn-icon" (click)="toggleNotifications()">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
-
-          @if (unreadCount > 0) {
-          <span class="notification-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
-          }
-        </button>
-
-        <!-- Mobile Dropdown -->
-        @if (isNotificationOpen) {
-        <div class="notification-dropdown mobile-dropdown">
-          <div class="dropdown-header">Notifications</div>
-          <div class="dropdown-list">
-            @if (notifications.length === 0) {
-            <div class="empty-state">No notifications yet.</div>
-            } @for (notif of notifications; track notif.id) {
-            <div
-              class="notif-item"
-              [class.unread]="!notif.read"
-              (click)="markRead(notif)"
-              [routerLink]="['/posts', notif.post.id]"
-            >
-              <p class="notif-msg">{{ notif.message }}</p>
-              <span class="notif-date">{{ notif.createdAt | date : 'short' }}</span>
-            </div>
-            }
-          </div>
-        </div>
-        }
-      </div>
-      }
-      <button
-        class="hamburger"
-        (click)="toggleMobileMenu()"
-        [class.active]="isMobileMenuOpen"
-        aria-label="Toggle menu"
-      >
-        <span class="hamburger-line"></span>
-        <span class="hamburger-line"></span>
-        <span class="hamburger-line"></span>
+      <button mat-icon-button (click)="toggleMobileMenu()">
+        <mat-icon>{{ isMobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
       </button>
     </div>
   </div>
 
-  <!-- Mobile Menu Dropdown -->
+  <!-- 4. MOBILE MENU OVERLAY -->
   <div class="mobile-menu" [class.open]="isMobileMenuOpen">
     <div class="mobile-menu-content">
       @if (!isLoggedIn) {
-      <a routerLink="/auth/login" class="mobile-link" (click)="closeMobileMenu()">Sign in</a>
-      <a routerLink="/auth/register" class="mobile-link primary" (click)="closeMobileMenu()"
+      <a mat-button routerLink="/auth/login" (click)="closeMobileMenu()">Sign in</a>
+      <a mat-flat-button color="primary" routerLink="/auth/register" (click)="closeMobileMenu()"
         >Get started</a
       >
-      } @if (isLoggedIn) {
-
+      } @else {
+      <!-- User Info Mobile -->
       <div
         class="mobile-user-profile"
         [routerLink]="['/profile', userId]"
         (click)="closeMobileMenu()"
       >
-        @if (avatarUrl) {
-        <img [src]="avatarUrl" class="mobile-avatar" [alt]="username" />
-        }
+        <img [src]="avatarUrl || '/default-avatar.jpg'" class="mobile-avatar" />
         <span class="mobile-username">{{ username }}</span>
       </div>
+
       @if (!isAdmin) {
-      <a routerLink="/new-story" class="mobile-link" (click)="closeMobileMenu()">Write a Story</a>
-      <a routerLink="/me/drafts" class="mobile-link" (click)="closeMobileMenu()">My Drafts</a>
+      <a mat-button class="mobile-link" routerLink="/new-story" (click)="closeMobileMenu()">
+        <mat-icon>edit</mat-icon> Write a Story
+      </a>
+      <a mat-button class="mobile-link" routerLink="/me/drafts" (click)="closeMobileMenu()">
+        <mat-icon>description</mat-icon> My Drafts
+      </a>
+      <button mat-button class="mobile-link" [matMenuTriggerFor]="notificationMenu">
+        <mat-icon [matBadge]="unreadCount || null" matBadgeColor="warn">notifications</mat-icon>
+        Notifications
+      </button>
       } @else {
-      <a routerLink="/admin/dashboard" class="mobile-link" (click)="closeMobileMenu()">Dashboard</a>
+      <a mat-button routerLink="/admin/dashboard" (click)="closeMobileMenu()">Dashboard</a>
       }
-      <button (click)="logout()" class="mobile-link logout">Sign out</button>
+
+      <mat-divider class="mobile-divider"></mat-divider>
+      <button mat-button color="warn" (click)="logout()">Sign out</button>
       }
     </div>
   </div>
-</nav>
 
-<!-- Overlay -->
-<div class="mobile-overlay" [class.visible]="isMobileMenuOpen" (click)="closeMobileMenu()"></div>
+  <div class="mobile-overlay" [class.visible]="isMobileMenuOpen" (click)="closeMobileMenu()"></div>
+
+  <!-- ============================================================== -->
+  <!-- SHARED MENUS -->
+  <!-- ============================================================== -->
+
+  <!-- 1. NOTIFICATION MENU -->
+  <mat-menu #notificationMenu="matMenu" class="custom-menu notif-menu" xPosition="before">
+    <div class="menu-header">Notifications</div>
+    <div class="menu-scroll-content">
+      @if (notifications.length === 0) {
+      <div class="empty-state">No notifications yet.</div>
+      } @else { @for (notif of notifications; track notif.id) {
+      <button
+        mat-menu-item
+        class="notif-item"
+        [class.unread]="!notif.read"
+        (click)="markRead(notif)"
+        [routerLink]="['/posts', notif.post.id]"
+      >
+        <div class="notif-content">
+          <p class="notif-msg">{{ notif.message }}</p>
+          <span class="notif-date">{{ notif.createdAt | date : 'short' }}</span>
+        </div>
+      </button>
+      } }
+    </div>
+  </mat-menu>
+
+  <!-- 2. USER MENU (Fixed Duplication) -->
+  <mat-menu #userMenu="matMenu" class="custom-menu user-menu" xPosition="before">
+    <div class="user-info-header">
+      <p class="u-name">{{ username }}</p>
+      <p class="u-handle">@ {{ username }}</p>
+    </div>
+    <mat-divider></mat-divider>
+
+    <button mat-menu-item [routerLink]="['/profile', userId]">
+      <mat-icon>person_outline</mat-icon>
+      <span>Profile</span>
+    </button>
+
+    <!-- REMOVED LIBRARY LINK FROM HERE -->
+
+    <button mat-menu-item routerLink="/settings">
+      <mat-icon>settings</mat-icon>
+      <span>Settings</span>
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="logout()">
+      <mat-icon color="warn">logout</mat-icon>
+      <span>Sign out</span>
+    </button>
+  </mat-menu>
+</nav>

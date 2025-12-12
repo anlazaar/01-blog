@@ -5,6 +5,8 @@
   min-height: 80vh;
   text-align: center;
   padding: 20px;
+  /* Ensure background matches theme */
+  background-color: var(--background);
 }
 
 .error-container {
@@ -19,6 +21,9 @@
   width: 100%;
   max-width: 680px;
   height: auto;
+  margin: 32px 0;
+  /* Optional: Drop opacity slightly in dark mode if image is bright */
+  opacity: 0.9;
 }
 
 .error-code {
@@ -45,7 +50,20 @@
   line-height: 1.6;
 }
 
+/* Button Container */
+.action-wrapper {
+  margin-top: 32px;
+}
+
+/* 
+   Button Override 
+   Note: The global CSS already makes mat-flat-button color="primary" 
+   a Pill Shape with Black/White text. We just enforce width/padding here.
+*/
 .home-btn {
-  display: inline-block;
-  text-decoration: none;
+  padding: 0 32px !important;
+  font-size: 16px !important;
+  height: 48px !important;
+  /* Ensure it looks good on mobile */
+  min-width: 160px;
 }

@@ -1,9 +1,8 @@
 /* --- Container --- */
 .profile-page-container {
   width: 100%;
-  max-width: 680px; /* Medium's width */
+  max-width: 680px;
   margin: 0 auto;
-  /* Add padding-top to account for fixed navbar */
   padding: 100px 24px 60px 24px;
 }
 
@@ -22,7 +21,7 @@
 /* Typography */
 .profile-name {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 32px; /* Large */
+  font-size: 32px;
   font-weight: 700;
   margin-bottom: 4px;
   color: var(--text-primary);
@@ -35,7 +34,7 @@
 }
 
 .profile-bio {
-  font-family: 'Charter', 'Georgia', serif; /* Serif for Bio */
+  font-family: 'Charter', 'Georgia', serif;
   font-size: 16px;
   line-height: 1.5;
   color: var(--text-secondary);
@@ -64,36 +63,41 @@
   font-weight: 600;
 }
 
-/* Actions */
+/* --- Action Buttons Overrides --- */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto; /* Push to right on large screens if desired */
+}
+
+/* Edit Profile Link */
 .text-btn {
-  color: #1a8917; /* Medium Green */
-  font-size: 14px;
-  text-decoration: none;
-  margin-left: auto; /* Push to right if needed, or remove */
+  color: #1a8917 !important; /* Medium Green */
+  font-weight: 400 !important;
 }
 
-.text-btn:hover {
-  text-decoration: underline;
+/* Write Button (Black Pill) */
+.write-btn {
+  border-radius: 9999px !important;
+  font-weight: 400 !important;
+  /* Color defaults to Primary (Black) from global CSS */
 }
 
-.pill-btn {
-  background-color: #1a8917;
-  color: white;
-  border: 1px solid #1a8917;
-  border-radius: 99px;
-  padding: 6px 16px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
+/* Follow Button (Green Pill) */
+/* Override Material Primary to be Green locally for this button */
+.follow-btn {
+  border-radius: 9999px !important;
+  font-weight: 400 !important;
+  background-color: #1a8917 !important; /* Custom Green */
+  color: white !important;
 }
 
-.pill-btn:hover {
-  opacity: 0.9;
-}
-
-.pill-btn.outline {
-  background-color: transparent;
-  color: #1a8917;
+/* Following Button (Green Outline) */
+.follow-btn.active {
+  background-color: transparent !important;
+  color: #1a8917 !important;
+  border: 1px solid #1a8917 !important;
 }
 
 /* Avatar */
@@ -126,7 +130,7 @@
   color: var(--text-primary);
 }
 
-/* Feed Item (List View) */
+/* Feed Item */
 .feed-item {
   margin-bottom: 32px;
   cursor: pointer;
@@ -163,7 +167,6 @@
   color: var(--text-secondary);
   line-height: 1.5;
   margin-bottom: 12px;
-
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -192,7 +195,7 @@
 
 .item-divider {
   height: 1px;
-  background-color: var(--border); /* Very subtle line */
+  background-color: var(--border);
   margin-top: 32px;
   opacity: 0.5;
 }
@@ -201,6 +204,17 @@
   color: var(--text-secondary);
   font-style: italic;
   padding: 20px 0;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  gap: 16px;
+  color: var(--text-secondary);
 }
 
 /* Responsive */
@@ -214,6 +228,11 @@
     height: 72px;
   }
 
+  .action-buttons {
+    margin-left: 0; /* Reset margin on mobile */
+    margin-top: 8px;
+  }
+
   .item-content {
     flex-direction: column-reverse;
   }
@@ -222,15 +241,4 @@
     width: 100%;
     height: 200px;
   }
-}
-
-.write-btn {
-  background-color: #1a8917;
-  color: #ffffff;
-  text-decoration: none;
-  border-radius: 99px;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 400;
-  margin-left: 30px;
 }

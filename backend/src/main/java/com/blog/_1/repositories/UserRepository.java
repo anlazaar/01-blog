@@ -19,6 +19,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     // Standard lookups
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByEmailOrUsername(String email, String username);
+
     Optional<User> findByUsername(String username);
 
     // Existence checks are efficient, keep them.
@@ -60,4 +62,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
                 FROM User u
             """)
     Page<UserPublicProfileDTO> findAllUserSummaries(Pageable pageable);
+
+    @Query("SELECT u.createdAt FROM User u WHERE u.createdAt > :date")
+    List<LocalDateTime> findAllCreatedDatesAfter(LocalDateTime date);
 }

@@ -172,8 +172,8 @@ public class UserService {
     // --- 3. ADMIN METHODS (Restored) ---
 
     // Restored: getAllUsers (Returns Entities for Admin Dashboard)
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public Page<User> getAllUsers(int page, int size) {
+        return userRepository.findAll(PageRequest.of(page, size));
     }
 
     // Restored: banUser
@@ -251,7 +251,7 @@ public class UserService {
     }
 
     public void updateUserRole(UUID userId, Role newRole) {
-        User user = getUserById(userId); 
+        User user = getUserById(userId);
 
         if (!newRole.equals(Role.USER) && !newRole.equals(Role.ADMIN)) {
             throw new IllegalArgumentException("Invalid role");

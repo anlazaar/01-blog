@@ -1,21 +1,31 @@
-<div class="menu-container">
-  <button class="menu-btn" (click)="toggle()" aria-label="More options">…</button>
+<!-- Trigger Button -->
+<button 
+  mat-icon-button 
+  [matMenuTriggerFor]="optionsMenu" 
+  class="options-trigger"
+  aria-label="More options">
+  <mat-icon>more_horiz</mat-icon>
+</button>
 
-  @if (isOpen) {
-  <div class="menu-dropdown">
-    @if (canReport) {
-    <div class="menu-item" (click)="report.emit(); isOpen = false">Report user</div>
-    } @if (canEdit && postId) {
-    <!-- 1. Use RouterLink here -->
-    <div class="menu-item" [routerLink]="['/p', postId, 'edit']" (click)="isOpen = false">
-      Edit story
-    </div>
-
-    <div></div>
-    <div class="menu-item destructive" (click)="delete.emit(); isOpen = false">Delete story</div>
-    }
-  </div>
-
-  <div class="menu-backdrop" (click)="isOpen = false"></div>
+<!-- Menu Definition -->
+<!-- We add the class 'post-options-panel' to target this specific menu in CSS -->
+<mat-menu #optionsMenu="matMenu" xPosition="before" class="post-options-panel">
+  
+  @if (canReport) {
+    <button mat-menu-item (click)="report.emit()">
+      Report user
+    </button>
   }
-</div>
+
+  @if (canEdit && postId) {
+    <!-- RouterLink on a menu item works perfectly -->
+    <a mat-menu-item [routerLink]="['/p', postId, 'edit']">
+      Edit story
+    </a>
+    
+    <!-- Destructive Action -->
+    <button mat-menu-item class="destructive-item" (click)="delete.emit()">
+      Delete story
+    </button>
+  }
+</mat-menu>

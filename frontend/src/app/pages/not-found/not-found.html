@@ -5,7 +5,18 @@
     <p class="error-desc">
       We couldn't find this page. It might have been moved, deleted, or perhaps it never existed.
     </p>
-    <img src="/404-not-found.svg" alt="Page Not Found" class="error-illustration" />
-    <a routerLink="/" class="main-btn home-btn">Go Home</a>
+
+    <!-- Illustration -->
+    <img
+      src="/404-not-found.svg"
+      alt="Page Not Found"
+      class="error-illustration"
+      onerror="this.style.display='none'"
+    />
+
+    <!-- Action Button (Material) -->
+    <div class="action-wrapper">
+      <a mat-flat-button color="primary" routerLink="/" class="home-btn">Go Home</a>
+    </div>
   </div>
 </div>

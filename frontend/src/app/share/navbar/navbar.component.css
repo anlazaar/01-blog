@@ -1,41 +1,42 @@
-/* --- Navbar Base --- */
+/* --- Navbar Container --- */
 .navbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 9999;
+  z-index: 999;
   background-color: var(--background);
-  /* A very subtle border, typical of Medium */
   border-bottom: 1px solid var(--border);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s, border-color 0.2s;
 }
 
 .navbar-container {
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   padding: 0 24px;
-  height: 65px; /* Standard height */
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-/* --- Brand / Logo --- */
+/* --- Branding --- */
 .navbar-brand {
   display: flex;
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  /* Use Serif for the Logo to give it authority/editorial feel */
-  font-family: 'Charter', 'Georgia', 'Times New Roman', serif;
+  font-family: 'Charter', serif;
   font-weight: 700;
   font-size: 24px;
   color: var(--text-primary);
   letter-spacing: -0.05em;
+  cursor: pointer;
 }
 
-/* Designing the "01" part */
 .brand-logo {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 18px;
@@ -46,7 +47,7 @@
   font-weight: 900;
 }
 
-/* --- Desktop Navigation --- */
+/* --- Desktop Actions --- */
 .navbar-desktop {
   display: flex;
   align-items: center;
@@ -55,334 +56,182 @@
 .navbar-actions {
   display: flex;
   align-items: center;
-  gap: 24px; /* More breathing room */
+  gap: 16px;
 }
 
-/* Standard Links (Sign in, Sign out) */
-.nav-link {
+/* --- Material Overrides for Nav Links --- */
+a[mat-button].nav-link {
   color: var(--text-secondary);
-  text-decoration: none;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 400;
   font-size: 14px;
-  cursor: pointer;
+  min-width: unset;
+  padding: 0 12px;
+}
+a[mat-button].nav-link:hover {
+  color: var(--text-primary);
+  background: transparent;
+}
+
+/* Primary CTA Button (Pill Shape) */
+.nav-btn-primary {
+  border-radius: 9999px !important;
+  padding: 0 20px !important;
+  height: 38px !important;
+  font-size: 14px !important;
+}
+
+/* Write Link (Icon + Text) */
+.write-link {
+  color: var(--text-secondary) !important;
+  font-weight: 400 !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.write-link:hover {
+  color: var(--text-primary) !important;
+}
+.write-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Action Icons (Bell, Drafts) */
+.action-icon {
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+.action-icon:hover {
+  color: var(--text-primary);
+  background-color: transparent !important;
+}
+
+/* Avatar Trigger */
+.avatar-btn {
   background: none;
   border: none;
   padding: 0;
-  transition: color 0.2s ease;
-}
-
-.nav-link:hover {
-  color: var(--text-primary);
-}
-
-.nav-link.logout {
-  color: var(--text-muted);
-}
-
-.nav-link.logout:hover {
-  color: var(--destructive);
-}
-
-/* Primary Button (Get Started) - Pill Shape */
-.nav-btn.primary {
-  display: inline-flex;
+  margin-left: 12px;
+  cursor: pointer;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 8px 20px;
-  border-radius: 9999px; /* Pill shape */
-  background-color: var(--text-primary); /* Solid Black */
-  color: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
-  border: 1px solid transparent;
-  transition: opacity 0.2s ease, background-color 0.2s ease;
 }
-
-.nav-btn.primary:hover {
-  opacity: 0.85;
-  background-color: var(--text-primary); /* Keep black, just drop opacity */
-}
-
-/* User Avatar */
 .nav-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  cursor: pointer;
-  background-color: var(--secondary);
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s;
 }
-
 .nav-avatar:hover {
   opacity: 0.8;
 }
 
-/* --- Mobile Controls --- */
-.navbar-mobile-controls {
-  display: none;
-  align-items: center;
-  gap: 16px;
-}
+/* --- Material Menu Customization (THE FIX FOR DARK MODE) --- */
 
-/* Clean Hamburger */
-.hamburger {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-  width: 24px;
-  height: 24px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-}
-
-.hamburger-line {
-  width: 100%;
-  height: 2px;
-  background-color: var(--text-primary);
-  transition: transform 0.2s ease, opacity 0.2s ease;
-  border-radius: 2px;
-}
-
-.hamburger.active .hamburger-line:nth-child(1) {
-  transform: rotate(45deg) translate(4px, 4px);
-}
-
-.hamburger.active .hamburger-line:nth-child(2) {
-  opacity: 0;
-}
-
-.hamburger.active .hamburger-line:nth-child(3) {
-  transform: rotate(-45deg) translate(4px, -4px);
-}
-
-/* --- Mobile Menu --- */
-.mobile-menu {
-  position: absolute;
-  top: 65px;
-  left: 0;
-  right: 0;
-  z-index: 9998;
-  background-color: var(--background);
-  border-bottom: 1px solid var(--border);
-  transform: translateY(-20px);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease-in-out;
-}
-
-.mobile-menu.open {
-  transform: translateY(0);
-  opacity: 1;
-  visibility: visible;
-}
-
-.mobile-menu-content {
-  display: flex;
-  flex-direction: column;
-  padding: 24px;
-  gap: 16px;
-}
-
-.mobile-link {
-  display: block;
-  padding: 10px 0;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 16px;
-  color: var(--text-secondary);
-  text-decoration: none;
-  text-align: left; /* Left align is cleaner */
-  border-bottom: 1px solid var(--border);
-  background: none;
-  border-top: none;
-  border-left: none;
-  border-right: none;
-}
-
-.mobile-link:last-child {
-  border-bottom: none;
-}
-
-.mobile-link:hover {
-  color: var(--text-primary);
-}
-
-.mobile-link.primary {
-  color: var(--accent); /* Use a color for emphasis or keep black */
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.mobile-user-profile {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 8px;
-  cursor: pointer;
-}
-
-.mobile-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.mobile-username {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-.mobile-link.logout {
-  color: var(--destructive);
-  text-align: left;
-}
-
-/* --- Mobile Overlay --- */
-.mobile-overlay {
-  position: fixed;
-  top: 65px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.2s ease;
-  z-index: 999;
-  backdrop-filter: blur(2px);
-}
-
-.dark .mobile-overlay {
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-.mobile-overlay.visible {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* --- Responsive Breakpoints --- */
-@media (max-width: 768px) {
-  .navbar-desktop {
-    display: none;
-  }
-
-  .navbar-mobile-controls {
-    display: flex;
-  }
-
-  .navbar-container {
-    padding: 0 20px;
-  }
-}
-
-.mobile-bell {
-  margin-right: 8px;
-}
-
-/* --- Notifications --- */
-.notification-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.nav-btn-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-secondary);
-  padding: 8px;
-  position: relative;
-  transition: color 0.2s;
-}
-
-.nav-btn-icon:hover {
-  color: var(--text-primary);
-}
-
-.notification-badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background-color: var(--destructive); /* Red color defined in your root */
-  color: white;
-  font-size: 10px;
-  font-weight: bold;
-  height: 16px;
-  min-width: 16px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 4px;
-  border: 1px solid var(--background);
-}
-
-/* Dropdown */
-.notification-dropdown {
-  position: absolute;
-  top: 50px; /* Below navbar */
-  right: -80px; /* Center alignment adjustment */
-  width: 320px;
-  background-color: var(--background);
+/* The Menu Panel (Popup Container) */
+::ng-deep .custom-menu.mat-mdc-menu-panel {
+  background-color: var(--background) !important; /* Black in dark mode */
   border: 1px solid var(--border);
   border-radius: 4px;
-  box-shadow: var(--shadow-lg); /* Using your defined variable */
-  z-index: 10000;
+  box-shadow: var(--shadow-lg);
+  max-width: 320px;
+  min-width: 200px;
+}
+
+/* 1. Force Text Color on the Button Itself */
+::ng-deep .custom-menu .mat-mdc-menu-item {
+  color: var(--text-primary) !important; /* White in dark mode */
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+  min-height: 44px; /* Standardize height */
+}
+
+/* 2. Force Text Color on the Internal Span (Crucial for MDC) */
+::ng-deep .custom-menu .mat-mdc-menu-item .mat-mdc-menu-item-text {
+  color: var(--text-primary) !important;
+}
+
+/* 3. Force Icon Color */
+::ng-deep .custom-menu .mat-mdc-menu-item .mat-icon {
+  color: var(--text-secondary) !important; /* Grey icon default */
+  margin-right: 12px;
+}
+
+/* 4. Hover State (Background & Icon) */
+::ng-deep .custom-menu .mat-mdc-menu-item:hover {
+  background-color: var(--secondary) !important; /* Dark Grey hover */
+}
+
+::ng-deep .custom-menu .mat-mdc-menu-item:hover .mat-icon {
+  color: var(--text-primary) !important; /* White icon on hover */
+}
+
+/* 5. User Info Header (Inside the menu) */
+.user-info-header {
+  padding: 16px;
+  outline: none;
+  cursor: default;
+}
+.u-name {
+  font-weight: 700;
+  color: var(--text-primary); /* White */
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+.u-handle {
+  color: var(--text-secondary); /* Grey */
+  font-size: 13px;
+}
+
+/* 6. Sign Out Button (Optional: Red Text if desired) */
+::ng-deep .custom-menu button[color='warn'] .mat-mdc-menu-item-text,
+::ng-deep .custom-menu button[color='warn'] .mat-icon {
+  color: var(--destructive) !important;
+}
+
+/* Notification Menu Specifics */
+.notif-menu {
+  max-width: 360px !important;
+  width: 360px;
+}
+.menu-header {
+  padding: 16px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  border-bottom: 1px solid var(--border);
+  cursor: default;
+  color: var(--text-primary); /* Fix header color */
+}
+.menu-scroll-content {
   max-height: 400px;
   overflow-y: auto;
 }
-
-.dropdown-header {
-  padding: 16px;
-  font-weight: 600;
-  border-bottom: 1px solid var(--border);
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-.dropdown-list {
-  display: flex;
-  flex-direction: column;
-}
-
 .notif-item {
-  padding: 16px;
+  white-space: normal !important;
+  height: auto !important;
+  padding: 12px 16px !important;
   border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: background-color 0.2s;
+  line-height: 1.4;
+  display: block !important;
 }
-
-.notif-item:hover {
-  background-color: var(--secondary);
-}
-
 .notif-item.unread {
-  background-color: var(--secondary-sunken); /* Slightly distinct background */
-  border-left: 3px solid var(--text-primary);
+  background-color: var(--secondary);
+  border-left: 3px solid var(--primary);
 }
-
 .notif-msg {
   font-size: 14px;
-  color: var(--text-primary);
   margin-bottom: 4px;
-  line-height: 1.4;
+  color: var(--text-primary);
 }
-
 .notif-date {
   font-size: 11px;
   color: var(--text-muted);
 }
-
 .empty-state {
   padding: 24px;
   text-align: center;
@@ -390,45 +239,88 @@
   font-size: 13px;
 }
 
-@media (max-width: 768px) {
-  .notification-dropdown.mobile-dropdown {
-    position: fixed; /* Use fixed to ensure it stays on screen regardless of scroll */
-    top: 65px; /* Height of navbar */
-    right: 10px; /* Stick to the right edge with small padding */
-    left: 10px; /* Stretch across screen if needed */
-    width: auto; /* Auto width to respect left/right */
-    max-width: 400px;
-    margin: 0 auto; /* Center if max-width is hit */
-  }
+/* --- Mobile Menu (Sidebar style) --- */
+.navbar-mobile-controls {
+  display: none;
+  align-items: center;
+  gap: 8px;
 }
 
-.draft-link {
+.mobile-menu {
+  position: fixed;
+  top: 65px;
+  left: 0;
+  right: 0;
+  background-color: var(--background);
+  border-bottom: 1px solid var(--border);
+  transform: translateY(-20px);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease-in-out;
+  z-index: 998;
+}
+.mobile-menu.open {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+.mobile-menu-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mobile-user-profile {
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: var(--text-secondary);
-  transition: color 0.2s;
-  margin-right: 8px;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
 }
-
-.draft-link svg {
-  margin-bottom: 2px; /* Slight optical alignment */
+.mobile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
 }
-
-.draft-link:hover {
+.mobile-username {
+  font-weight: 600;
   color: var(--text-primary);
 }
-
-/* Ensure Write button icon aligns nicely */
-.write-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.mobile-link {
+  justify-content: flex-start !important;
+  font-size: 16px !important;
+  color: var(--text-secondary) !important;
+}
+.mobile-divider {
+  margin: 10px 0;
+}
+.mobile-overlay {
+  position: fixed;
+  top: 65px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s;
+  z-index: 900;
+}
+.mobile-overlay.visible {
+  opacity: 1;
+  visibility: visible;
 }
 
-/* Hide "Drafts" text on smaller tablets if space is tight, keep icon */
-@media (max-width: 900px) {
-  .draft-link span {
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar-desktop {
     display: none;
+  }
+  .navbar-mobile-controls {
+    display: flex;
+  }
+  .navbar-container {
+    padding: 0 16px;
   }
 }

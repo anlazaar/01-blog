@@ -1,33 +1,39 @@
 <div class="login-page onboarding-page">
   <div class="login-container">
     <form [formGroup]="publicInfoForm" (ngSubmit)="onSubmit()">
+      <!-- Header -->
       <div class="title">
         <h1>Complete Your Profile</h1>
         <p>Help readers know who you are.</p>
       </div>
 
-      <!-- 1. Avatar Section (Top) -->
+      <!-- 1. Avatar Section -->
       <div class="avatar-upload-section">
-        <div class="avatar-circle">
-          @if (avatarPreview) {
-          <img [src]="avatarPreview" alt="Preview" />
-          } @else {
-          <div class="placeholder">
-            <!-- Requires CommonModule for uppercase pipe -->
-            {{ publicInfoForm.get('firstname')?.value?.charAt(0) || '?' | uppercase }}
+        <div class="avatar-wrapper" (click)="fileInput.click()">
+          <!-- Preview or Placeholder -->
+          <div class="avatar-circle">
+            @if (avatarPreview) {
+            <img [src]="avatarPreview" alt="Preview" />
+            } @else {
+            <div class="placeholder">
+              {{ publicInfoForm.get('firstname')?.value?.charAt(0) || '?' | uppercase }}
+            </div>
+            }
+
+            <!-- Overlay Icon on Hover -->
+            <div class="avatar-overlay">
+              <mat-icon>photo_camera</mat-icon>
+            </div>
           </div>
-          }
         </div>
 
         <div class="upload-trigger">
-          <label for="fileInput">Add a photo</label>
-          <input
-            id="fileInput"
-            type="file"
-            (change)="onFileSelected($event)"
-            accept="image/*"
-            hidden
-          />
+          <button type="button" mat-button color="primary" (click)="fileInput.click()">
+            Add a photo
+          </button>
+
+          <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden />
+
           @if (fileError) {
           <span class="error-msg">{{ fileError }}</span>
           }
@@ -36,35 +42,58 @@
 
       <!-- 2. Name Fields (Side by Side) -->
       <div class="form-row">
-        <div class="input-group">
-          <label>First Name</label>
-          <input type="text" formControlName="firstname" placeholder="Jane" />
-        </div>
-        <div class="input-group">
-          <label>Last Name</label>
-          <input type="text" formControlName="lastname" placeholder="Doe" />
-        </div>
+        <!-- First Name -->
+        <mat-form-field appearance="fill" class="half-width">
+          <mat-label>First Name</mat-label>
+          <input matInput formControlName="firstname" placeholder="Jane" />
+          @if (publicInfoForm.get('firstname')?.hasError('minlength')) {
+          <mat-error>Name is too short</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Last Name -->
+        <mat-form-field appearance="fill" class="half-width">
+          <mat-label>Last Name</mat-label>
+          <input matInput formControlName="lastname" placeholder="Doe" />
+        </mat-form-field>
       </div>
 
       <!-- 3. Bio -->
-      <div class="input-group">
-        <label>Short Bio</label>
-        <textarea formControlName="bio" placeholder="Tell your story..." rows="3"></textarea>
-
-        @if (publicInfoForm.get('bio')?.touched && publicInfoForm.get('bio')?.invalid) {
-        <div class="error-banner">
-          <small>Bio is required.</small>
-        </div>
-        }
+      <div class="form-row single-col">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Short Bio</mat-label>
+          <textarea
+            matInput
+            formControlName="bio"
+            placeholder="Tell your story..."
+            rows="3"
+            cdkTextareaAutosize
+          ></textarea>
+          <mat-hint align="end">{{ publicInfoForm.get('bio')?.value?.length || 0 }} chars</mat-hint>
+          @if (publicInfoForm.get('bio')?.hasError('minlength')) {
+          <mat-error>Bio must be at least 10 characters.</mat-error>
+          }
+        </mat-form-field>
       </div>
 
       <!-- 4. Actions -->
       <div class="actions">
-        <button class="main-btn" type="submit" [disabled]="publicInfoForm.invalid">Continue</button>
+        <!-- Continue: Primary Material Button (Pill shape via Global CSS) -->
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+          class="action-btn"
+          [disabled]="publicInfoForm.invalid"
+        >
+          Continue
+        </button>
 
-        <button class="skip-btn" type="button" (click)="skip()">I'll do this later</button>
+        <!-- Skip: Basic Text Button -->
+        <button mat-button type="button" class="skip-btn" (click)="skip()">
+          I'll do this later
+        </button>
       </div>
     </form>
   </div>
 </div>
-  

@@ -1,20 +1,26 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+
+// Services
 import { UserService } from '../../services/UserService';
 import { TokenService } from '../../services/token.service';
+
+// Angular Material Imports
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-users-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './users-page.html',
   styleUrls: ['./users-page.css'],
 })
 export class UsersPageComponent implements OnInit {
   users: any[] = [];
-  loading = true; // Initial loading
-  loadingMore = false; // "Load More" button loading state
+  loading = true;
+  loadingMore = false;
   currentUserId: string | null = null;
   skeletonItems = new Array(8);
 
@@ -38,7 +44,8 @@ export class UsersPageComponent implements OnInit {
 
     this.userService.getAllUsers(page, this.pageSize).subscribe({
       next: (data) => {
-        const newUsers = data.content.filter((u) => u.id !== this.currentUserId);
+        // Filter out current user from the list
+        const newUsers = data.content.filter((u: any) => u.id !== this.currentUserId);
 
         if (page === 0) {
           this.users = newUsers;
@@ -53,8 +60,6 @@ export class UsersPageComponent implements OnInit {
 
         this.loading = false;
         this.loadingMore = false;
-
-        console.log('USERS DATA:', data);
       },
       error: () => {
         this.loading = false;

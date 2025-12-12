@@ -1,55 +1,54 @@
 import { Component, inject, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-// UPDATED IMPORTS
-import { PostResponse, SinglePostResponse } from '../../models/POST/PostResponse';
-import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { switchMap, tap } from 'rxjs';
-import { PostService } from '../../services/post.service';
-import {
-  faHeart as faHeartRegular,
-  faComment as faCommentRegular,
-} from '@fortawesome/free-regular-svg-icons';
-import { faHeart as faHeartSolid } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { PostOptionsMenuComponent } from '../../share/PostOptionsMenu/post-options-menu';
-import { TokenService } from '../../services/token.service';
-import { ConfirmDialogComponent } from '../../share/ConfirmDialogComponent/confirm-dialog';
+import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { switchMap, tap } from 'rxjs';
+
+// Models & Services
+import { PostResponse, SinglePostResponse } from '../../models/POST/PostResponse';
+import { PostService } from '../../services/post.service';
+import { TokenService } from '../../services/token.service';
+
+// Components
 import { MarkdownComponent } from 'ngx-markdown';
+import { PostOptionsMenuComponent } from '../../share/PostOptionsMenu/post-options-menu';
 import { SuggestedUsersComponent } from '../../share/SuggestedAccounts/suggested-users';
+import { ConfirmDialogComponent } from '../../share/ConfirmDialogComponent/confirm-dialog';
+
+// Angular Material Imports
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-post-page',
   standalone: true,
   imports: [
     CommonModule,
-    FontAwesomeModule,
-    PostOptionsMenuComponent,
-    ConfirmDialogComponent,
     FormsModule,
     RouterLink,
     MarkdownComponent,
+    PostOptionsMenuComponent,
     SuggestedUsersComponent,
+    // Material Modules
+    MatDialogModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
   ],
   providers: [PostService],
   templateUrl: './post.html',
   styleUrl: './post.css',
 })
 export class PostPage implements OnInit, OnDestroy {
-  // Icons
-  faHeartRegular = faHeartRegular;
-  faHeartSolid = faHeartSolid;
-  faCommentRegular = faCommentRegular;
-
   // State
   isAdmin = false;
-  showConfirm = false;
   postToDelete: PostResponse | null = null;
-
   postId!: string;
-
-  // UPDATED: This must be SinglePostResponse to access 'comments'
   post: SinglePostResponse | null = null;
 
   loading = true;
@@ -66,8 +65,8 @@ export class PostPage implements OnInit, OnDestroy {
   // Services
   postService = inject(PostService);
   tokenService = inject(TokenService);
-
   private router = inject(Router);
+  private dialog = inject(MatDialog); // Inject MatDialog
 
   private observer: IntersectionObserver | null = null;
 
@@ -103,19 +102,15 @@ export class PostPage implements OnInit, OnDestroy {
         tap(() => this.resetState()),
         switchMap((params) => {
           this.postId = params.get('id')!;
-          // Returns SinglePostResponse now
           return this.postService.getPostMetadata(this.postId);
         })
       )
       .subscribe({
         next: (res) => {
           this.post = res;
-
-          // Defensive Check: Ensure comments array exists
           if (!this.post.comments) {
             this.post.comments = [];
           }
-
           this.loading = false;
           this.loadNextChunk();
         },
@@ -200,32 +195,31 @@ export class PostPage implements OnInit, OnDestroy {
     this.router.navigate(['/report', userId]);
   }
 
-  // 2. Handle Delete Trigger
+  // --- DELETE LOGIC (Using MatDialog) ---
   onDelete(p: PostResponse) {
-    this.postToDelete = p;
-    this.showConfirm = true;
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '380px',
+      data: { message: 'Delete this story?' },
+      panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-backdrop-blur',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result === true) {
+        this.confirmDelete(p);
+      }
+    });
   }
 
-  // 3. Confirm Delete & Redirect
-  confirmDelete() {
-    if (this.postToDelete) {
-      this.postService.deletePost(this.postToDelete.id).subscribe({
-        next: () => {
-          this.showConfirm = false;
-          // Redirect to home after deleting the story you are currently reading
-          this.router.navigate(['/']);
-        },
-        error: (err) => {
-          console.error('Delete failed', err);
-          this.showConfirm = false;
-        },
-      });
-    }
-  }
-
-  cancelDelete() {
-    this.showConfirm = false;
-    this.postToDelete = null;
+  confirmDelete(p: PostResponse) {
+    this.postService.deletePost(p.id).subscribe({
+      next: () => {
+        this.router.navigate(['/']);
+      },
+      error: (err) => {
+        console.error('Delete failed', err);
+      },
+    });
   }
 
   sendComment() {
@@ -234,10 +228,8 @@ export class PostPage implements OnInit, OnDestroy {
     this.postService.createComment(this.post.id, this.newComment).subscribe({
       next: (comment) => {
         if (!this.post!.comments) this.post!.comments = [];
-
         this.post!.comments.push(comment);
-        this.post!.commentCount++; 
-
+        this.post!.commentCount++;
         this.newComment = '';
       },
       error: (err) => console.log(err),
