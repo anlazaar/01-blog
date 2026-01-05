@@ -2,44 +2,54 @@
   <h3 class="sidebar-title">Who to follow</h3>
 
   <div class="suggested-list">
-    @for(user of suggestedUsers; track user.id) {
+    @for(user of suggestedUsers(); track user.id) {
     <div class="suggested-user-card">
+      <!-- User Profile Link -->
       <div class="user-card-left" [routerLink]="['/profile', user.id]">
+        <!-- Avatar -->
         @if(user.avatarUrl) {
-        <img [src]="'http://localhost:8080' + user.avatarUrl" class="user-avatar" />
+        <img
+          [src]="'http://localhost:8080' + user.avatarUrl"
+          class="user-avatar"
+          [alt]="user.username"
+        />
         } @else {
         <div class="user-avatar-placeholder">
           {{ user.username.charAt(0) | uppercase }}
         </div>
         }
+
+        <!-- Info -->
         <div class="user-info">
           <span class="user-name">{{ user.username }}</span>
-          <p class="user-bio" title="{{ user.bio }}">
-            {{
-              user.bio
-                ? (user.bio | slice : 0 : 30) + (user.bio.length > 30 ? '...' : '')
-                : 'Writer'
-            }}
+          <!-- CSS Truncation is better than JS slice -->
+          <p class="user-bio text-clamp" [title]="user.bio || 'Writer'">
+            {{ user.bio || 'Writer' }}
           </p>
         </div>
       </div>
+
+      <!-- Follow Button -->
       <button class="follow-btn" [class.is-following]="user.following" (click)="toggleFollow(user)">
         {{ user.following ? 'Following' : 'Follow' }}
       </button>
     </div>
-    } @if(suggestedUsers.length === 0 && currentUserId != null ) {
+    }
+
+    <!-- Empty States -->
+    @if(suggestedUsers().length === 0 && currentUserId() !== null) {
     <p class="no-suggestions">No suggestions available.</p>
-    } @else if (currentUserId == null) {
-    <p class="no-suggestions">Login to see suggestions.</p>
+    } @else if (currentUserId() === null) {
+    <p class="no-suggestions">
+      <a routerLink="/auth/login" class="login-link">Login</a> to see suggestions.
+    </p>
     }
   </div>
 
   <div class="sidebar-footer">
     <a routerLink="/help">Help</a>
     <a href="#">Status</a>
-    <a routerLink="/writers" style="font-size: 13px; color: #1a8917; text-decoration: none"
-      >Writers</a
-    >
+    <a routerLink="/writers" class="writer-link">Writers</a>
     <a href="#">Blog</a>
     <a routerLink="/privacy">Privacy</a>
   </div>

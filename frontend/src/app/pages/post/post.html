@@ -1,16 +1,15 @@
-@if (loading) {
+@if (loading()) {
 <div class="loading-state">
   <mat-spinner diameter="40"></mat-spinner>
 </div>
-} @else if (post) {
-
+} @else if (post(); as postData) {
 <!-- LAYOUT WRAPPER -->
 <div class="post-page-layout">
   <!-- LEFT COLUMN: The Article -->
   <main class="article-container">
     <!-- 1. Article Header -->
     <header class="article-header">
-      <h1 class="article-title">{{ post.title }}</h1>
+      <h1 class="article-title">{{ postData.title }}</h1>
 
       <!-- Author & Meta -->
       <div class="author-meta-block">
@@ -18,44 +17,43 @@
           <div class="author-avatar">
             <img
               [src]="
-                post.author.avatarUrl
-                  ? 'http://localhost:8080' + post.author.avatarUrl
+                postData.author.avatarUrl
+                  ? 'http://localhost:8080' + postData.author.avatarUrl
                   : '/default-avatar.jpg'
               "
-              alt="{{ post.author.username }}"
-              onerror="this.src='/default-avatar.jpg'"
+              [alt]="postData.author.username"
             />
           </div>
           <div class="meta-text">
-            <div class="author-name" [routerLink]="['/profile', post.author.id]">
-              {{ post.author.username }}
+            <div class="author-name" [routerLink]="['/profile', postData.author.id]">
+              {{ postData.author.username }}
             </div>
             <div class="publish-date">
-              <span>{{ post.createdAt | date : 'MMM d, y' }}</span>
+              <span>{{ postData.createdAt | date : 'MMM d, y' }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Post Menu (Materialized in previous steps) -->
-        @if (currentUserId) {
+        <!-- Post Menu -->
+        @if (currentUserId()) {
         <app-post-options-menu
-          [postId]="post.id"
-          [canEdit]="currentUserId == post.author.id || isAdmin"
-          [canReport]="currentUserId != post.author.id && !isAdmin"
-          (delete)="onDelete(post)"
-          (report)="onReport(post.author.id)"
+          [postId]="postData.id"
+          [canEdit]="currentUserId() === postData.author.id || isAdmin()"
+          [canReport]="currentUserId() !== postData.author.id && !isAdmin()"
+          (delete)="onDelete(postData)"
+          (report)="onReport(postData.author.id)"
         ></app-post-options-menu>
         }
       </div>
     </header>
 
     <!-- 2. Main Media (Cover) -->
-    @if (post.mediaUrl) {
+    @if (postData.mediaUrl) {
     <figure class="article-feature-media">
-      @if (post.mediaType == 'IMAGE') {
-      <img [src]="'http://localhost:8080' + post.mediaUrl" alt="Feature image" />
-      } @if (post.mediaType == 'VIDEO') {
-      <video [src]="'http://localhost:8080' + post.mediaUrl" controls></video>
+      @if (postData.mediaType === 'IMAGE') {
+      <img [src]="'http://localhost:8080' + postData.mediaUrl" alt="Feature image" />
+      } @else if (postData.mediaType === 'VIDEO') {
+      <video [src]="'http://localhost:8080' + postData.mediaUrl" controls></video>
       }
     </figure>
     }
@@ -63,38 +61,53 @@
     <!-- 3. Article Body -->
     <section class="article-content">
       <div class="post-body">
-        <markdown [data]="fullContentDisplay"></markdown>
+        <markdown [data]="fullContentDisplay()"></markdown>
       </div>
 
-      @if (isLoadingChunks) {
+      @if (isLoadingChunks()) {
       <div class="chunk-loading-indicator">
         <mat-spinner diameter="30"></mat-spinner>
       </div>
       }
+
+      <!-- Scroll Anchor -->
       <div #scrollAnchor style="height: 20px; width: 100%"></div>
     </section>
 
+    <!-- ================== 3.5 HASHTAGS SECTION (UPDATED) ================== -->
+    @if (postData.tags && postData.tags.length > 0) {
+    <section class="article-tags">
+      @for (tag of postData.tags; track tag) {
+      <!-- Link to Home Page with ?tag= query param -->
+      <a [routerLink]="['/']" [queryParams]="{ tag: tag }" class="tag-chip">
+        {{ tag }}
+      </a>
+      }
+    </section>
+    }
+    <!-- ==================================================================== -->
+
     <!-- 4. Engagement Bar -->
-    @if (!isAdmin) {
+    @if (!isAdmin()) {
     <section class="engagement-bar">
       <div class="engagement-left">
-        @if (currentUserId ) {
+        @if (currentUserId()) {
         <button
           mat-icon-button
           class="action-btn like-btn"
-          [class.active]="post.likedByCurrentUser"
-          (click)="toggleLike(post)"
-          [matTooltip]="post.likedByCurrentUser ? 'Unlike' : 'Like'"
+          [class.active]="postData.likedByCurrentUser"
+          (click)="toggleLike(postData)"
+          [matTooltip]="postData.likedByCurrentUser ? 'Unlike' : 'Like'"
         >
-          <mat-icon>{{ post.likedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
+          <mat-icon>{{ postData.likedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
         </button>
-        <span class="count-label">{{ post.likeCount }}</span>
+        <span class="count-label">{{ postData.likeCount }}</span>
         }
 
         <button mat-icon-button class="action-btn comment-trigger" matTooltip="Responses">
           <mat-icon>chat_bubble_outline</mat-icon>
         </button>
-        <span class="count-label">{{ post.comments.length }}</span>
+        <span class="count-label">{{ postData.comments.length }}</span>
       </div>
     </section>
     }
@@ -103,22 +116,24 @@
 
     <!-- 5. Comments Section -->
     <section class="responses-section">
-      <h3>Responses ({{ post.comments.length }})</h3>
+      <h3>Responses ({{ postData.comments.length }})</h3>
 
-      @if (currentUserId && !isAdmin) {
+      @if (currentUserId() && !isAdmin()) {
       <div class="add-response-box">
         <div class="user-avatar-small">
-          <span>{{ post.author.username.charAt(0) | uppercase }}</span>
+          <span>{{ postData.author.username.charAt(0) | uppercase }}</span>
         </div>
         <div class="input-wrapper">
           <textarea
             placeholder="What are your thoughts?"
-            [(ngModel)]="newComment"
+            [ngModel]="newComment()"
+            (ngModelChange)="newComment.set($event)"
             rows="1"
           ></textarea>
-          @if (newComment) {
+
+          @if (newComment()) {
           <div class="input-actions">
-            <button mat-button class="cancel-btn" (click)="newComment = ''">Cancel</button>
+            <button mat-button class="cancel-btn" (click)="newComment.set('')">Cancel</button>
             <button mat-flat-button class="submit-btn" (click)="sendComment()">Respond</button>
           </div>
           }
@@ -127,9 +142,9 @@
       }
 
       <div class="response-list">
-        @if (post.comments.length == 0) {
+        @if (postData.comments.length === 0) {
         <p class="empty-responses">No responses yet.</p>
-        } @for (c of post.comments; track c) {
+        } @else { @for (c of postData.comments; track c.id) {
         <div class="response-item">
           <div class="response-header">
             <div class="response-author" [routerLink]="['/profile', c.author.id]">
@@ -139,7 +154,6 @@
                     ? 'http://localhost:8080' + c.author.avatarUrl
                     : '/default-avatar.jpg'
                 "
-                onerror="this.src='/default-avatar.jpg'"
               />
               <span class="response-name">{{ c.author.username }}</span>
               <span class="response-date">{{ c.createdAt | date : 'MMM d' }}</span>
@@ -149,15 +163,20 @@
             <p>{{ c.text }}</p>
           </div>
         </div>
-        }
+        } }
       </div>
     </section>
   </main>
 
   <!-- RIGHT COLUMN: Sidebar -->
-  @if (!isAdmin) {
+  @if (!isAdmin()) {
   <aside class="sidebar-container">
-    <app-suggested-users></app-suggested-users>
+    <div class="sticky-sidebar-wrapper">
+      <app-popular-tags></app-popular-tags>
+
+      <!-- 2. WHO TO FOLLOW -->
+      <app-suggested-users></app-suggested-users>
+    </div>
   </aside>
   }
 </div>

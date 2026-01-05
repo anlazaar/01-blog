@@ -20,6 +20,7 @@ import { UsersPageComponent } from './pages/UsersPage/users-page';
 import { DraftsComponent } from './pages/drafts/drafts';
 import { SavedPostsComponent } from './pages/saved-posts/saved-posts';
 import { AuthCallbackComponent } from './auth/AuthCallbackComponent';
+// import { StageRoom } from './pages/stage-room/stage-room';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -41,5 +42,7 @@ export const routes: Routes = [
   { path: 'auth/callback', component: AuthCallbackComponent },
   { path: 'help', component: HelpComponent },
   { path: 'privacy', component: PrivacyPage },
+  // { path: 'stages/:id', component: StageRoom },
+
   { path: '**', component: NotFoundComponent },
 ];

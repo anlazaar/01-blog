@@ -12,11 +12,12 @@
         <div class="avatar-wrapper" (click)="fileInput.click()">
           <!-- Preview or Placeholder -->
           <div class="avatar-circle">
-            @if (avatarPreview) {
-            <img [src]="avatarPreview" alt="Preview" />
+            @if (avatarPreview()) {
+            <img [src]="avatarPreview()" alt="Preview" />
             } @else {
             <div class="placeholder">
-              {{ publicInfoForm.get('firstname')?.value?.charAt(0) || '?' | uppercase }}
+              <!-- Safe access to form control value -->
+              {{ publicInfoForm.controls.firstname.value?.charAt(0) || '?' | uppercase }}
             </div>
             }
 
@@ -34,8 +35,8 @@
 
           <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden />
 
-          @if (fileError) {
-          <span class="error-msg">{{ fileError }}</span>
+          @if (fileError()) {
+          <span class="error-msg">{{ fileError() }}</span>
           }
         </div>
       </div>
@@ -46,7 +47,7 @@
         <mat-form-field appearance="fill" class="half-width">
           <mat-label>First Name</mat-label>
           <input matInput formControlName="firstname" placeholder="Jane" />
-          @if (publicInfoForm.get('firstname')?.hasError('minlength')) {
+          @if (publicInfoForm.controls.firstname.hasError('minlength')) {
           <mat-error>Name is too short</mat-error>
           }
         </mat-form-field>
@@ -55,6 +56,9 @@
         <mat-form-field appearance="fill" class="half-width">
           <mat-label>Last Name</mat-label>
           <input matInput formControlName="lastname" placeholder="Doe" />
+          @if (publicInfoForm.controls.lastname.hasError('minlength')) {
+          <mat-error>Name is too short</mat-error>
+          }
         </mat-form-field>
       </div>
 
@@ -69,8 +73,11 @@
             rows="3"
             cdkTextareaAutosize
           ></textarea>
-          <mat-hint align="end">{{ publicInfoForm.get('bio')?.value?.length || 0 }} chars</mat-hint>
-          @if (publicInfoForm.get('bio')?.hasError('minlength')) {
+          <!-- Using .value accessor safely -->
+          <mat-hint align="end"
+            >{{ publicInfoForm.controls.bio.value?.length || 0 }} chars</mat-hint
+          >
+          @if (publicInfoForm.controls.bio.hasError('minlength')) {
           <mat-error>Bio must be at least 10 characters.</mat-error>
           }
         </mat-form-field>
@@ -78,19 +85,25 @@
 
       <!-- 4. Actions -->
       <div class="actions">
-        <!-- Continue: Primary Material Button (Pill shape via Global CSS) -->
+        <!-- Continue -->
         <button
           mat-flat-button
           color="primary"
           type="submit"
           class="action-btn"
-          [disabled]="publicInfoForm.invalid"
+          [disabled]="publicInfoForm.invalid || isSubmitting()"
         >
-          Continue
+          {{ isSubmitting() ? 'Saving...' : 'Continue' }}
         </button>
 
-        <!-- Skip: Basic Text Button -->
-        <button mat-button type="button" class="skip-btn" (click)="skip()">
+        <!-- Skip -->
+        <button
+          mat-button
+          type="button"
+          class="skip-btn"
+          (click)="skip()"
+          [disabled]="isSubmitting()"
+        >
           I'll do this later
         </button>
       </div>

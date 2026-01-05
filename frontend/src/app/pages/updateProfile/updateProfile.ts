@@ -1,7 +1,7 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common'; // UpperCasePipe
 import { UserService } from '../../services/UserService';
 import { UserResponse } from '../../models/USER/UserResponse';
 
@@ -18,59 +18,78 @@ import { MatIconModule } from '@angular/material/icon';
     ReactiveFormsModule,
     RouterModule,
     CommonModule,
-    // Material Modules
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule,
   ],
-  providers: [UserService],
   templateUrl: './updateProfile.html',
   styleUrl: './updateProfile.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UpdateProfile implements OnInit {
+  // Services
   private userService = inject(UserService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
-  public user: UserResponse | null = null;
-  public selectedFile: File | null = null;
-  public avatarPreview: string | ArrayBuffer | null = null;
-  public fileError: string | null = null;
-  public userId: string = '';
-  public errorMessage: string | null = null;
+  // State Signals
+  user = signal<UserResponse | null>(null);
+  avatarPreview = signal<string | ArrayBuffer | null>(null);
+  fileError = signal<string | null>(null);
+  errorMessage = signal<string | null>(null);
+  isSubmitting = signal(false);
 
+  // Constants
+  userId = '';
+  private selectedFile: File | null = null;
+
+  // Typed Form
   publicInfoForm = this.fb.group({
-    bio: ['', []],
-    firstname: ['', []],
-    lastname: ['', []],
-    oldpassword: ['', []],
-    password: ['', []],
-    username: ['', []],
-    email: ['', []],
+    bio: new FormControl('', [Validators.maxLength(160)]),
+    firstname: new FormControl('', [Validators.required]),
+    lastname: new FormControl('', [Validators.required]),
+    username: new FormControl('', [Validators.required]),
+    email: new FormControl('', [Validators.required, Validators.email]),
+    // Password fields are optional
+    oldpassword: new FormControl(''),
+    password: new FormControl('', [Validators.minLength(6)]),
   });
 
   ngOnInit(): void {
+    // We can stick to snapshot here if the component is re-created on route change,
+    // or use paramMap.subscribe if we expect ID changes while staying on the same component instance.
+    // For a settings page, snapshot is usually fine.
     this.userId = this.route.snapshot.paramMap.get('id') || '';
+
     if (!this.userId) {
-      console.log('User Id needed');
+      this.errorMessage.set('User ID is missing from URL.');
       return;
     }
 
     this.userService.getUserFullData(this.userId).subscribe({
       next: (data) => {
-        this.user = data;
+        this.user.set(data);
+
+        // Initial Avatar
+        if (data.avatarUrl) {
+          this.avatarPreview.set('http://localhost:8080' + data.avatarUrl);
+        }
+
         // Pre-fill form
         this.publicInfoForm.patchValue({
           firstname: data.firstname,
           lastname: data.lastname,
           username: data.username,
           email: data.email,
-          bio: data.bio,
+          bio: data.bio || '',
         });
       },
-      error: (err) => console.log(err),
+      error: (err) => {
+        console.error(err);
+        this.errorMessage.set('Failed to load user profile.');
+      },
     });
   }
 
@@ -80,41 +99,52 @@ export class UpdateProfile implements OnInit {
 
     const file = input.files[0];
 
+    // Validation
     if (!file.type.startsWith('image/')) {
-      this.fileError = 'Only images are allowed.';
+      this.fileError.set('Only images are allowed.');
       return;
     }
     if (file.size > 20 * 1024 * 1024) {
-      this.fileError = 'File is too large. Max 20MB.';
+      // 20MB
+      this.fileError.set('File is too large. Max 20MB.');
       return;
     }
 
-    this.fileError = null;
+    this.fileError.set(null);
     this.selectedFile = file;
 
+    // Preview
     const reader = new FileReader();
     reader.onload = () => {
-      this.avatarPreview = reader.result;
+      this.avatarPreview.set(reader.result);
     };
     reader.readAsDataURL(file);
+
+    // Mark form as dirty so Save button enables
+    this.publicInfoForm.markAsDirty();
   }
 
   onSubmit() {
     if (this.publicInfoForm.invalid) return;
 
+    this.isSubmitting.set(true);
+    this.errorMessage.set(null);
+
     const formData = new FormData();
-    // Helper to append only if value exists
-    const appendIf = (key: string, val: any) => {
-      if (val) formData.append(key, val);
+    const formVal = this.publicInfoForm.getRawValue();
+
+    // Append non-null values
+    const appendIf = (key: string, val: string | null | undefined) => {
+      if (val !== null && val !== undefined && val !== '') formData.append(key, val);
     };
 
-    appendIf('bio', this.publicInfoForm.get('bio')?.value);
-    appendIf('firstname', this.publicInfoForm.get('firstname')?.value);
-    appendIf('lastname', this.publicInfoForm.get('lastname')?.value);
-    appendIf('oldpassword', this.publicInfoForm.get('oldpassword')?.value);
-    appendIf('password', this.publicInfoForm.get('password')?.value);
-    appendIf('username', this.publicInfoForm.get('username')?.value);
-    appendIf('email', this.publicInfoForm.get('email')?.value);
+    appendIf('bio', formVal.bio);
+    appendIf('firstname', formVal.firstname);
+    appendIf('lastname', formVal.lastname);
+    appendIf('username', formVal.username);
+    appendIf('email', formVal.email);
+    appendIf('oldpassword', formVal.oldpassword);
+    appendIf('password', formVal.password);
 
     if (this.selectedFile) {
       formData.append('avatar', this.selectedFile, this.selectedFile.name);
@@ -122,12 +152,15 @@ export class UpdateProfile implements OnInit {
 
     this.userService.patchUser(formData, this.userId).subscribe({
       next: (res) => {
-        console.log('Response from server: ', res);
-        this.router.navigate(['/']);
+        console.log('Update success', res);
+        this.isSubmitting.set(false);
+        this.router.navigate(['/']); // Or stay and show success toast
       },
       error: (err) => {
-        this.errorMessage = err.error.error || 'An error occurred while updating the profile.';
-        console.error('ERROR MESSAGE ', err);
+        this.isSubmitting.set(false);
+        const msg = err.error?.error || 'An error occurred while updating the profile.';
+        this.errorMessage.set(msg);
+        console.error('Update Error:', err);
       },
     });
   }

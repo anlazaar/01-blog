@@ -1,26 +1,32 @@
 <div class="home-layout">
   <!-- LEFT COLUMN: The Feed -->
-  <main class="feed-container" [class.full-width]="isAdmin">
+  <main class="feed-container" [class.full-width]="isAdmin()">
     <!-- Feed Header -->
     <div class="feed-header">
       <div class="header-content">
-        <h1>{{ isAdmin ? 'Published Post' : 'For you' }}</h1>
+        <!-- DYNAMIC TITLE -->
+        <div class="title-section">
+          @if (selectedTag()) {
+          <h1 class="topic-title"><span class="topic-label">Topic:</span> #{{ selectedTag() }}</h1>
+          <button mat-icon-button (click)="clearFilter()" matTooltip="Clear filter">
+            <mat-icon>close</mat-icon>
+          </button>
+          } @else {
+          <h1>{{ isAdmin() ? 'Published Post' : 'For you' }}</h1>
+          }
+        </div>
 
         <div class="header-actions">
-          <div class="search-wrapper">
-            <input type="text" placeholder="Search..." class="search-input" />
-          </div>
-
-          @if (currentUserId && !isAdmin) {
-          <!-- Write Button: Using Material Flat Button (Pill shape via CSS) -->
+          <!-- Only show Write button if not filtering (optional decision) -->
+          @if (currentUserId() && !isAdmin() && !selectedTag()) {
           <a mat-flat-button color="primary" routerLink="new-story" class="write-btn">Write</a>
           }
         </div>
       </div>
     </div>
 
-    <!-- === LOADING STATE: SKELETONS === -->
-    @if (loading) {
+    <!-- === LOADING STATE === -->
+    @if (loading()) {
     <div class="skeleton-list">
       @for (item of skeletonItems; track $index) {
       <div class="skeleton-item">
@@ -32,7 +38,6 @@
           <div class="skeleton-text-group">
             <div class="skeleton-line title"></div>
             <div class="skeleton-line body"></div>
-            <div class="skeleton-line body short"></div>
           </div>
           <div class="skeleton-image"></div>
         </div>
@@ -42,16 +47,21 @@
     }
 
     <!-- === REAL CONTENT === -->
-    @else { @if (posts.length > 0) {
+    @else { @if (posts().length > 0) {
     <div class="posts-list">
-      @for (p of posts; track p.id) {
+      @for (p of posts(); track p.id) {
       <article class="post-item">
+        <!-- ... EXISTING POST CARD HTML ... -->
         <!-- 1. Meta Header -->
         <div class="post-meta-header">
           <div class="author-info" [routerLink]="['/profile', p.author.id]">
             <div class="author-avatar-placeholder">
               @if(p.author.avatarUrl) {
-              <img [src]="'http://localhost:8080' + p.author.avatarUrl" class="avatar-img" />
+              <img
+                [src]="'http://localhost:8080' + p.author.avatarUrl"
+                class="avatar-img"
+                [alt]="p.author.username"
+              />
               } @else {
               {{ p.author.username.charAt(0) | uppercase }}
               }
@@ -61,15 +71,13 @@
             <span class="post-date">{{ p.createdAt | date : 'MMM d' }}</span>
           </div>
 
-          @if (currentUserId) {
-          <!-- Post Options (Already Materialized) -->
+          @if (currentUserId()) {
           <app-post-options-menu
             [postId]="p.id"
-            [canEdit]="currentUserId == p.author.id || isAdmin"
-            [canReport]="currentUserId != p.author.id && !isAdmin"
-            (update)="onUpdate(p)"
-            (delete)="onDelete(p)"
+            [canEdit]="currentUserId() === p.author.id || isAdmin()"
+            [canReport]="currentUserId() !== p.author.id && !isAdmin()"
             (report)="onReport(p.author.id)"
+            (delete)="onDelete(p)"
           ></app-post-options-menu>
           }
         </div>
@@ -79,12 +87,22 @@
           <div class="post-text">
             <h2 class="post-title">{{ p.title }}</h2>
             <p class="post-preview">{{ p.description }}</p>
+
+            <!-- SHOW TAGS IN FEED CARD (Optional but good) -->
+            @if (p.tags && p.tags.length > 0) {
+            <div class="feed-tags">
+              @for(t of p.tags; track t) {
+              <span class="mini-tag">#{{ t }}</span>
+              }
+            </div>
+            }
           </div>
+
           @if (p.mediaUrl) {
           <div class="post-media">
             @if (p.mediaType === 'IMAGE') {
             <img [src]="'http://localhost:8080' + p.mediaUrl" alt="Cover" />
-            } @if (p.mediaType === 'VIDEO') {
+            } @else if (p.mediaType === 'VIDEO') {
             <video [src]="'http://localhost:8080' + p.mediaUrl" controls muted></video>
             }
           </div>
@@ -94,8 +112,7 @@
         <!-- 3. Footer Actions -->
         <div class="post-actions-footer">
           <div class="right-actions">
-            <!-- SAVE BUTTON: Material Icon Button -->
-            @if (currentUserId) {
+            @if (currentUserId()) {
             <button
               mat-icon-button
               (click)="toggleSave($event, p)"
@@ -114,34 +131,42 @@
       }
     </div>
 
-    <!-- LOAD MORE BUTTON -->
-    @if (hasMorePosts) {
+    @if (hasMorePosts()) {
     <div class="load-more-container">
-      <!-- Using Material Stroked Button for secondary action -->
       <button
         mat-stroked-button
         class="load-more-btn"
         (click)="loadMore()"
-        [disabled]="loadingMore"
+        [disabled]="loadingMore()"
       >
-        {{ loadingMore ? 'Loading...' : 'Show more stories' }}
+        {{ loadingMore() ? 'Loading...' : 'Show more stories' }}
       </button>
     </div>
     } @else {
-    <div class="end-of-feed">
-      <p>You're all caught up!</p>
-    </div>
+    <div class="end-of-feed"><p>You're all caught up!</p></div>
     } } @else {
+    <!-- EMPTY STATE -->
     <div class="empty-state">
+      @if (selectedTag()) {
+      <mat-icon class="empty-icon">label_off</mat-icon>
+      <h2>No stories found for #{{ selectedTag() }}</h2>
+      <button mat-button color="primary" (click)="clearFilter()">Back to all posts</button>
+      } @else {
       <h2>No stories yet.</h2>
+      }
     </div>
     } }
   </main>
 
   <!-- RIGHT COLUMN: Sidebar -->
-  @if (!isAdmin) {
+  @if (!isAdmin()) {
   <aside class="sidebar-container">
-    <app-suggested-users></app-suggested-users>
+    <div class="sticky-sidebar-wrapper">
+      <app-popular-tags></app-popular-tags>
+
+      <!-- 2. WHO TO FOLLOW -->
+      <app-suggested-users></app-suggested-users>
+    </div>
   </aside>
   }
 </div>

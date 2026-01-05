@@ -7,6 +7,10 @@ import {
   QueryList,
   AfterViewInit,
   HostListener,
+  signal,
+  computed,
+  effect,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule, TitleCasePipe, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -20,6 +24,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -38,32 +43,31 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private adminService = inject(AdminService);
+  private apiUrl = environment.apiUrl;
 
   @ViewChildren(BaseChartDirective) charts!: QueryList<BaseChartDirective>;
 
-  // State
-  activeTab: 'overview' | 'users' | 'posts' | 'reports' = 'overview';
+  // --- STATE SIGNALS ---
+  activeTab = signal<'overview' | 'users' | 'posts' | 'reports'>('overview');
+  stats = signal<DashboardStats | null>(null);
+  message = signal<string>('');
+  isLoading = signal(false);
 
-  // Data Sources
-  users: any[] = [];
-  posts: any[] = [];
-  reports: any[] = [];
-  stats: DashboardStats | null = null;
+  // Data Sources (Signals)
+  users = signal<any[]>([]);
+  posts = signal<any[]>([]);
+  reports = signal<any[]>([]);
 
-  // Global loading (for initial stats/setup)
-  isLoading = false;
-  message = '';
-
-  // === PAGINATION STATE ===
-  // Tracks the current page, size, and loading status for each tab independently
-  pagination = {
+  // Pagination State (Signal Object)
+  pagination = signal({
     users: { page: 0, size: 20, loading: false, finished: false },
     posts: { page: 0, size: 20, loading: false, finished: false },
     reports: { page: 0, size: 20, loading: false, finished: false },
-  };
+  });
 
   // Material Table Column Definitions
   userColumns: string[] = ['user', 'role', 'status', 'actions'];
@@ -72,11 +76,11 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
   private themeObserver: MutationObserver | null = null;
 
-  // --- CHART CONFIGURATION (Kept exactly as provided) ---
-  public lineChartData: ChartConfiguration<'line'>['data'] = {
-    labels: [],
-    datasets: [],
-  };
+  // --- CHART CONFIGURATION ---
+  // Note: Chart configuration objects themselves are mutable by library design,
+  // but we trigger updates manually.
+  public lineChartData: ChartConfiguration<'line'>['data'] = { labels: [], datasets: [] };
+  public postChartData: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [] };
 
   public lineChartOptions: ChartOptions<'line'> = {
     responsive: true,
@@ -91,11 +95,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     },
   };
 
-  public postChartData: ChartConfiguration<'bar'>['data'] = {
-    labels: [],
-    datasets: [],
-  };
-
   public barChartOptions: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
@@ -106,106 +105,77 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     },
   };
 
+  constructor() {
+    // Effect to react to stats changes and update chart data
+    effect(() => {
+      const currentStats = this.stats();
+      if (currentStats) {
+        this.setupCharts(currentStats);
+      }
+    });
+  }
+
   ngOnInit() {
     this.loadStats();
   }
 
   ngAfterViewInit() {
-    this.themeObserver = new MutationObserver(() => {
-      this.updateChartTheme();
-    });
-    this.themeObserver.observe(document.body, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-    this.updateChartTheme();
+    // Theme observer relies on DOM, so we keep it here
+    this.themeObserver = new MutationObserver(() => this.updateChartTheme());
+    this.themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    // Initial theme update
+    setTimeout(() => this.updateChartTheme(), 100);
   }
 
   ngOnDestroy() {
-    if (this.themeObserver) {
-      this.themeObserver.disconnect();
-    }
+    if (this.themeObserver) this.themeObserver.disconnect();
   }
 
   // === SCROLL LISTENER ===
   @HostListener('window:scroll', [])
   onWindowScroll() {
-    if (this.activeTab === 'overview') return;
+    if (this.activeTab() === 'overview') return;
 
-    // Calculate scroll position
     const pos =
       (document.documentElement.scrollTop || document.body.scrollTop) + window.innerHeight;
     const max = document.documentElement.scrollHeight || document.body.scrollHeight;
 
-    // If we are within 100px of the bottom
     if (pos > max - 100) {
-      if (this.activeTab === 'users') this.loadUsers();
-      if (this.activeTab === 'posts') this.loadPosts();
-      if (this.activeTab === 'reports') this.loadReports();
+      const tab = this.activeTab();
+      if (tab === 'users') this.loadUsers();
+      if (tab === 'posts') this.loadPosts();
+      if (tab === 'reports') this.loadReports();
     }
   }
 
-  updateChartTheme() {
-    if (!this.charts) return;
-    const styles = getComputedStyle(document.body);
-    const textPrimary = styles.getPropertyValue('--text-primary').trim();
-    const textSecondary = styles.getPropertyValue('--text-secondary').trim();
-    const borderColor = styles.getPropertyValue('--border').trim();
-    const cardBg = styles.getPropertyValue('--card').trim();
-
-    const scaleOptions = {
-      x: { grid: { display: false, color: borderColor }, ticks: { color: textSecondary } },
-      y: { grid: { color: borderColor }, ticks: { color: textSecondary } },
-    };
-
-    const pluginOptions = {
-      legend: { display: false },
-      tooltip: { backgroundColor: textPrimary, titleColor: cardBg, bodyColor: cardBg },
-    };
-
-    this.lineChartOptions = {
-      ...this.lineChartOptions,
-      scales: scaleOptions,
-      plugins: pluginOptions,
-    };
-    this.barChartOptions = {
-      ...this.barChartOptions,
-      scales: scaleOptions,
-      plugins: pluginOptions,
-    };
-
-    this.charts.forEach((chart) => {
-      if (chart.chart) chart.chart.update();
-    });
-  }
-
   switchTab(tab: 'overview' | 'users' | 'posts' | 'reports') {
-    this.activeTab = tab;
-    this.message = '';
+    this.activeTab.set(tab);
+    this.message.set('');
 
     if (tab === 'overview') {
       this.loadStats();
       setTimeout(() => this.updateChartTheme(), 100);
     }
-    // Only load if empty to prevent resetting scroll position or re-fetching
-    if (tab === 'users' && this.users.length === 0) this.loadUsers();
-    if (tab === 'posts' && this.posts.length === 0) this.loadPosts();
-    if (tab === 'reports' && this.reports.length === 0) this.loadReports();
+
+    // Load data if empty
+    if (tab === 'users' && this.users().length === 0) this.loadUsers();
+    if (tab === 'posts' && this.posts().length === 0) this.loadPosts();
+    if (tab === 'reports' && this.reports().length === 0) this.loadReports();
   }
 
   // === LOAD DATA ===
+
   loadStats() {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.adminService.getDashboardStats().subscribe({
       next: (res) => {
-        this.stats = res;
-        this.setupCharts(res);
-        this.isLoading = false;
-        setTimeout(() => this.updateChartTheme(), 0);
+        this.stats.set(res);
+        this.isLoading.set(false);
       },
       error: (err) => {
         console.error(err);
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
     });
   }
@@ -244,59 +214,113 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         },
       ],
     };
+
+    // Force chart update if charts exist
+    this.charts?.forEach((c) => c.chart?.update());
+  }
+
+  updateChartTheme() {
+    if (!this.charts) return;
+    const styles = getComputedStyle(document.body);
+    const textPrimary = styles.getPropertyValue('--text-primary').trim();
+    const textSecondary = styles.getPropertyValue('--text-secondary').trim();
+    const borderColor = styles.getPropertyValue('--border').trim();
+    const cardBg = styles.getPropertyValue('--card').trim();
+
+    const scaleOptions = {
+      x: { grid: { display: false, color: borderColor }, ticks: { color: textSecondary } },
+      y: { grid: { color: borderColor }, ticks: { color: textSecondary } },
+    };
+
+    const pluginOptions = {
+      legend: { display: false },
+      tooltip: { backgroundColor: textPrimary, titleColor: cardBg, bodyColor: cardBg },
+    };
+
+    this.lineChartOptions = {
+      ...this.lineChartOptions,
+      scales: scaleOptions,
+      plugins: pluginOptions,
+    };
+    this.barChartOptions = {
+      ...this.barChartOptions,
+      scales: scaleOptions,
+      plugins: pluginOptions,
+    };
+
+    this.charts.forEach((chart) => {
+      if (chart.chart) chart.chart.update();
+    });
   }
 
   // === PAGINATED LOADERS ===
 
   loadUsers() {
-    const state = this.pagination.users;
-    if (state.loading || state.finished) return;
+    const pag = this.pagination();
+    if (pag.users.loading || pag.users.finished) return;
 
-    state.loading = true;
-    this.adminService.getAllUsers(state.page, state.size).subscribe({
+    // Set loading
+    this.pagination.update((p) => ({ ...p, users: { ...p.users, loading: true } }));
+
+    this.adminService.getAllUsers(pag.users.page, pag.users.size).subscribe({
       next: (res) => {
-        // Append new data
-        this.users = [...this.users, ...res.content];
+        this.users.update((current) => [...current, ...res.content]);
 
-        // Update pagination tracking
-        state.page++;
-        state.finished = res.page.number >= res.page.totalPages - 1;
-        state.loading = false;
+        this.pagination.update((p) => ({
+          ...p,
+          users: {
+            ...p.users,
+            loading: false,
+            page: p.users.page + 1,
+            finished: res.page.number >= res.page.totalPages - 1,
+          },
+        }));
       },
       error: () => {
-        state.loading = false;
+        this.pagination.update((p) => ({ ...p, users: { ...p.users, loading: false } }));
       },
     });
   }
 
   loadPosts() {
-    const state = this.pagination.posts;
-    if (state.loading || state.finished) return;
+    const pag = this.pagination();
+    if (pag.posts.loading || pag.posts.finished) return;
 
-    state.loading = true;
-    this.adminService.getAllPosts(state.page, state.size).subscribe({
+    this.pagination.update((p) => ({ ...p, posts: { ...p.posts, loading: true } }));
+
+    this.adminService.getAllPosts(pag.posts.page, pag.posts.size).subscribe({
       next: (res) => {
-        this.posts = [...this.posts, ...res.content];
+        this.posts.update((current) => [...current, ...res.content]);
 
-        state.page++;
-        state.finished = res.page.number >= res.page.totalPages - 1;
-        state.loading = false;
+        this.pagination.update((p) => ({
+          ...p,
+          posts: {
+            ...p.posts,
+            loading: false,
+            page: p.posts.page + 1,
+            finished: res.page.number >= res.page.totalPages - 1,
+          },
+        }));
       },
       error: () => {
-        state.loading = false;
+        this.pagination.update((p) => ({ ...p, posts: { ...p.posts, loading: false } }));
       },
     });
   }
 
   loadReports() {
-    this.isLoading = true;
+    // For reports, reusing simple logic or could add pagination if API supports it
+    // assuming here standard fetch all for simplicity based on original code,
+    // or reusing pagination struct if API paginates.
+    this.isLoading.set(true);
     this.adminService.getAllReports().subscribe({
       next: (res: any) => {
-        this.reports =
+        const data =
           res.content && Array.isArray(res.content) ? res.content : Array.isArray(res) ? res : [];
-        this.isLoading = false;
+        this.reports.set(data);
+        this.isLoading.set(false);
       },
-      error: () => (this.isLoading = false),
+      error: () => this.isLoading.set(false),
     });
   }
 
@@ -306,10 +330,10 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     if (!confirm('Are you sure?')) return;
     this.adminService.banUser(id).subscribe({
       next: (msg) => {
-        this.message = msg;
-        // Update local array directly instead of reloading to keep scroll position
-        const user = this.users.find((u) => u.id === id);
-        if (user) user.banned = !user.banned;
+        this.message.set(msg);
+        this.users.update((list) =>
+          list.map((u) => (u.id === id ? { ...u, banned: !u.banned } : u))
+        );
       },
       error: (err) => console.error(err),
     });
@@ -319,9 +343,8 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     if (!confirm('Delete user?')) return;
     this.adminService.deleteUser(id).subscribe({
       next: (msg) => {
-        this.message = msg;
-        // Filter out locally
-        this.users = this.users.filter((u) => u.id !== id);
+        this.message.set(msg);
+        this.users.update((list) => list.filter((u) => u.id !== id));
       },
       error: (err) => console.error(err),
     });
@@ -330,10 +353,10 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   resolveReport(id: string) {
     this.adminService.resolveReport(id).subscribe({
       next: (msg) => {
-        this.message = msg;
-        // Update local status
-        const report = this.reports.find((r) => r.id === id);
-        if (report) report.resolved = true;
+        this.message.set(msg);
+        this.reports.update((list) =>
+          list.map((r) => (r.id === id ? { ...r, resolved: true } : r))
+        );
       },
       error: (err) => console.error(err),
     });
@@ -346,10 +369,12 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
     this.adminService.updateUserRole(user.id, newRole).subscribe({
       next: (msg) => {
-        this.message = msg;
-        user.role = newRole;
+        this.message.set(msg);
+        this.users.update((list) =>
+          list.map((u) => (u.id === user.id ? { ...u, role: newRole } : u))
+        );
       },
-      error: () => (this.message = 'Failed to update role'),
+      error: () => this.message.set('Failed to update role'),
     });
   }
 }

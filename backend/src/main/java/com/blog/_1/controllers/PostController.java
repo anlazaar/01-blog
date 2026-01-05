@@ -36,9 +36,11 @@ public class PostController {
             @RequestParam("title") String title,
             @RequestParam("description") String summary,
             @RequestParam(value = "mediaType", required = false) String mediaType,
-            @RequestParam(value = "media", required = false) MultipartFile mediaFile) {
+            @RequestParam(value = "media", required = false) MultipartFile mediaFile,
+            @RequestParam(value = "tags", required = false) List<String> tags // <--- Added
+    ) {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(postService.initPost(title, summary, mediaType, mediaFile, currentUser.getId()));
+        return ResponseEntity.ok(postService.initPost(title, summary, mediaType, mediaFile, currentUser.getId(), tags));
     }
 
     @PostMapping("/chunk")
@@ -135,5 +137,13 @@ public class PostController {
         boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         postService.delete(id, currentUser.getId(), isAdmin);
         return ResponseEntity.ok(Map.of("res", "Post deleted successfully"));
+    }
+
+    @GetMapping("/tag/{tag}")
+    public ResponseEntity<Page<PostResponse>> getByTag(
+            @PathVariable String tag,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(postService.getByTag(tag, page, size));
     }
 }

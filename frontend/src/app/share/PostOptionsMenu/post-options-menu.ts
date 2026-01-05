@@ -1,9 +1,9 @@
 import {
   Component,
-  EventEmitter,
-  Input,
-  Output,
+  input,
+  output,
   ViewEncapsulation,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatMenuModule } from '@angular/material/menu';
@@ -16,13 +16,16 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [RouterLink, MatMenuModule, MatButtonModule, MatIconModule],
   templateUrl: './post-options-menu.html',
   styleUrls: ['./post-options-menu.css'],
-  encapsulation: ViewEncapsulation.None // Required to style the popup menu
+  encapsulation: ViewEncapsulation.None, // Required to style the popup menu
+  changeDetection: ChangeDetectionStrategy.OnPush, // Performance optimization
 })
 export class PostOptionsMenuComponent {
-  @Input() postId: string | null = null;
-  @Input() canEdit: boolean = false;
-  @Input() canReport: boolean = false;
+  // New Signal Inputs (replaces @Input)
+  postId = input<string | null>(null);
+  canEdit = input(false);
+  canReport = input(false);
 
-  @Output() report = new EventEmitter<void>();
-  @Output() delete = new EventEmitter<void>();
+  // New Output API (replaces @Output + EventEmitter)
+  report = output<void>();
+  delete = output<void>();
 }

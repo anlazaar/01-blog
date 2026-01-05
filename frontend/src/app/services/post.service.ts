@@ -122,4 +122,22 @@ export class PostService {
   getSavedPosts(): Observable<PostResponse[]> {
     return this.http.get<PostResponse[]>(`${this.POSTS_URL}/saved`);
   }
+
+  getPostsByTag(tag: string, page: number, size: number): Observable<Page<PostResponse>> {
+    // Handles the # automatically via URL encoding if needed,
+    // but better to strip it client side or ensure backend handles it.
+    const cleanTag = tag.replace('#', '');
+    return this.http.get<Page<PostResponse>>(
+      `${this.POSTS_URL}/tag/${cleanTag}?page=${page}&size=${size}`
+    );
+  }
+
+  // Add this method to fetch popular tags
+  getPopularTags(): Observable<string[]> {
+    return this.http.get<string[]>(`${environment.apiUrl}/hashtags/popular?limit=10`);
+  }
+
+  searchTags(query: string): Observable<string[]> {
+    return this.http.get<string[]>(`${environment.apiUrl}/hashtags/search?query=${query}`);
+  }
 }

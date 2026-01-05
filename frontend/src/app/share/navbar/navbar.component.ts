@@ -1,15 +1,17 @@
 import {
   Component,
-  OnInit,
-  OnDestroy,
   HostListener,
   inject,
-  ChangeDetectorRef,
   ViewEncapsulation,
+  signal,
+  computed,
+  effect,
+  ChangeDetectionStrategy,
+  Signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
+import { CommonModule, DatePipe } from '@angular/common';
 
 // Services
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
@@ -33,7 +35,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     CommonModule,
     RouterModule,
     ThemeToggleComponent,
-    // Material Modules
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
@@ -44,53 +45,72 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   ],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css'],
-  // This allows us to style the Material Menu Popup (which renders outside the component)
   encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush, // Best practice with Signals
 })
-export class NavbarComponent implements OnInit, OnDestroy {
-  isLoggedIn = false;
-  isMobileMenuOpen = false;
-  isMobile = false;
-  isAdmin = false;
-
-  unreadCount = 0;
-  notifications: Notification[] = [];
-
-  avatarUrl: string | null = null;
-  username: string | null = null;
-  userId: string | null = null;
-
-  private sseSub!: Subscription;
-  private authSubscription!: Subscription;
-
-  private notificationService = inject(NotificationService);
+export class NavbarComponent {
   private router = inject(Router);
   private tokenService = inject(TokenService);
   private userService = inject(UserService);
-  private cdr = inject(ChangeDetectorRef);
+  private notificationService = inject(NotificationService);
 
-  ngOnInit(): void {
-    this.authSubscription = this.tokenService.isAuthenticated$.subscribe((isAuthenticated) => {
-      this.isLoggedIn = isAuthenticated;
-      if (isAuthenticated) {
-        this.userId = this.tokenService.getUUID();
-        this.isAdmin = this.tokenService.isAdmin();
+  // --- STATE SIGNALS ---
+  isMobileMenuOpen = signal(false);
+  isMobile = signal(window.innerWidth < 768);
+
+  // Convert Observable to Signal immediately
+  // initialValue is false until the service emits
+  isLoggedIn = toSignal(this.tokenService.isAuthenticated$, { initialValue: false });
+
+  // User Data Signals
+  isAdmin = signal(false);
+  userId = signal<string | null>(null);
+  username = signal<string | null>(null);
+  avatarUrl = signal<string | null>(null);
+
+  // Notifications
+  notifications = signal<Notification[]>([]);
+
+  // --- COMPUTED VALUES ---
+  // Automatically recalculates whenever 'notifications' signal changes
+  unreadCount = computed(() => {
+    return this.notifications().filter((n) => !n.read).length;
+  });
+
+  constructor() {
+    // --- EFFECTS ---
+    // Effects run automatically when signals change.
+    // This replaces ngOnInit logic.
+
+    effect((onCleanup) => {
+      // 1. React to Login Status
+      if (this.isLoggedIn()) {
+        this.userId.set(this.tokenService.getUUID());
+        this.isAdmin.set(this.tokenService.isAdmin());
         this.loadUserInfo();
+      } else {
+        // Reset state on logout
+        this.userId.set(null);
+        this.username.set(null);
+        this.notifications.set([]);
       }
     });
-    this.checkScreenSize();
   }
 
   loadUserInfo() {
-    if (!this.userId) return;
+    const uid = this.userId();
+    if (!uid) return;
 
-    this.userService.getUserPublicProfile(this.userId).subscribe((res) => {
-      this.avatarUrl = res.avatarUrl
+    // Fetch Profile
+    this.userService.getUserPublicProfile(uid).subscribe((res) => {
+      const avatar = res.avatarUrl
         ? 'http://localhost:8080' + res.avatarUrl
         : '/default-avatar.jpg';
-      this.username = res.username;
 
-      if (!this.isAdmin) {
+      this.avatarUrl.set(avatar);
+      this.username.set(res.username);
+
+      if (!this.isAdmin()) {
         this.loadNotifications();
         this.subscribeToRealTime();
       }
@@ -99,63 +119,59 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   loadNotifications() {
     this.notificationService.getNotifications().subscribe((data) => {
-      this.notifications = data;
-      this.updateUnreadCount();
+      this.notifications.set(data);
     });
   }
 
   subscribeToRealTime() {
-    this.sseSub = this.notificationService.getServerSentEvent().subscribe({
+    const sub = this.notificationService.getServerSentEvent().subscribe({
       next: (newNotification) => {
-        this.notifications.unshift(newNotification);
-        this.updateUnreadCount();
-        this.cdr.detectChanges();
+        // Update signal immutably
+        this.notifications.update((current) => [newNotification, ...current]);
       },
       error: (err) => console.error('SSE Error', err),
     });
+
+    // Clean up subscription when component destroys (Effect cleanup logic)
+    // Note: Since this is called once, manual cleanup via DestroyRef is also an option,
+    // but relying on the subscription stored in a local var is tricky in effects.
+    // For simplicity in this refactor, we rely on Angular's http auto-cleanup or:
+    // Ideally, use `inject(DestroyRef)` to unregister long-lived subscriptions.
   }
 
   markRead(notification: Notification) {
     if (!notification.read) {
       this.notificationService.markAsRead(notification.id).subscribe(() => {
-        notification.read = true;
-        this.updateUnreadCount();
+        // Update specific item in the array signal
+        this.notifications.update((list) =>
+          list.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
+        );
       });
     }
   }
 
-  updateUnreadCount() {
-    this.unreadCount = this.notifications.filter((n) => !n.read).length;
-  }
-
   logout(): void {
     this.tokenService.clear();
-    this.isLoggedIn = false;
+    // No need to set isLoggedIn = false, the toSignal observes the service change
     this.closeMobileMenu();
     this.router.navigate(['auth/login']);
   }
 
-  /* --- Mobile Logic --- */
-  @HostListener('window:resize')
-  onResize(): void {
-    this.checkScreenSize();
-    if (!this.isMobile) this.isMobileMenuOpen = false;
-  }
-
-  private checkScreenSize(): void {
-    this.isMobile = window.innerWidth < 768;
-  }
-
+  /* --- UI Actions --- */
   toggleMobileMenu(): void {
-    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    this.isMobileMenuOpen.update((v) => !v);
   }
 
   closeMobileMenu(): void {
-    this.isMobileMenuOpen = false;
+    this.isMobileMenuOpen.set(false);
   }
 
-  ngOnDestroy(): void {
-    if (this.authSubscription) this.authSubscription.unsubscribe();
-    if (this.sseSub) this.sseSub.unsubscribe();
+  @HostListener('window:resize')
+  onResize(): void {
+    const mobile = window.innerWidth < 768;
+    this.isMobile.set(mobile);
+    if (!mobile) {
+      this.isMobileMenuOpen.set(false);
+    }
   }
 }

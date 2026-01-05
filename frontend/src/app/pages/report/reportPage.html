@@ -3,50 +3,56 @@
     <h1>Report Post</h1>
     <p class="subtitle">Help us understand what's happening with this post.</p>
 
-    <!-- Reason Select (Material) -->
-    <div class="input-group">
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>What is the issue?</mat-label>
-        <mat-select [(ngModel)]="reason" required>
-          <mat-option value="spam">It's spam</mat-option>
-          <mat-option value="harassment">Harassment or bullying</mat-option>
-          <mat-option value="hate-speech">Hate speech</mat-option>
-          <mat-option value="nsfw">Nudity or sexual activity</mat-option>
-          <mat-option value="violence">Violence or dangerous organizations</mat-option>
-          <mat-option value="other">Something else</mat-option>
-        </mat-select>
-        <!-- Material handles the arrow automatically -->
-      </mat-form-field>
-    </div>
+    <form [formGroup]="reportForm" (ngSubmit)="submitReport()">
+      <!-- Reason Select -->
+      <div class="input-group">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>What is the issue?</mat-label>
+          <mat-select formControlName="reason">
+            <mat-option value="spam">It's spam</mat-option>
+            <mat-option value="harassment">Harassment or bullying</mat-option>
+            <mat-option value="hate-speech">Hate speech</mat-option>
+            <mat-option value="nsfw">Nudity or sexual activity</mat-option>
+            <mat-option value="violence">Violence or dangerous organizations</mat-option>
+            <mat-option value="other">Something else</mat-option>
+          </mat-select>
+          @if (reportForm.controls.reason.invalid && reportForm.controls.reason.touched) {
+          <mat-error>Please select a reason</mat-error>
+          }
+        </mat-form-field>
+      </div>
 
-    <!-- Description Textarea (Material) -->
-    <div class="input-group">
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Additional details (Optional)</mat-label>
-        <textarea
-          matInput
-          placeholder="Please provide any specific details..."
-          [(ngModel)]="description"
-          rows="5"
-        ></textarea>
-      </mat-form-field>
-    </div>
+      <!-- Description Textarea -->
+      <div class="input-group">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Additional details (Optional)</mat-label>
+          <textarea
+            matInput
+            placeholder="Please provide any specific details..."
+            formControlName="description"
+            rows="5"
+          ></textarea>
+        </mat-form-field>
+      </div>
 
-    <!-- Actions -->
-    <div class="actions">
-      <!-- Submit: Primary Flat Button (Pill Shape) -->
-      <button
-        mat-flat-button
-        color="primary"
-        class="submit-btn"
-        (click)="submitReport()"
-        [disabled]="!reason"
-      >
-        Submit Report
-      </button>
+      <!-- Actions -->
+      <div class="actions">
+        <!-- Submit Button -->
+        <button
+          mat-flat-button
+          color="primary"
+          class="submit-btn"
+          type="submit"
+          [disabled]="reportForm.invalid || isSubmitting()"
+        >
+          {{ isSubmitting() ? 'Submitting...' : 'Submit Report' }}
+        </button>
 
-      <!-- Cancel: Text Button -->
-      <a mat-button routerLink="/" class="cancel-btn">Cancel</a>
-    </div>
+        <!-- Cancel Button -->
+        <a mat-button routerLink="/" class="cancel-btn" [class.disabled]="isSubmitting()">
+          Cancel
+        </a>
+      </div>
+    </form>
   </div>
 </div>

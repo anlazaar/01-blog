@@ -1,7 +1,7 @@
-import { Component, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common'; // UpperCasePipe
 import { UserService } from '../../services/UserService';
 
 // Angular Material Imports
@@ -11,37 +11,41 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
-  selector: 'app-completeProfile',
+  selector: 'app-complete-profile',
   standalone: true,
   imports: [
     ReactiveFormsModule,
     RouterModule,
     CommonModule,
-    // Material Modules
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule,
   ],
-  providers: [UserService],
   templateUrl: './completeProfile.html',
   styleUrl: './completeProfile.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CompleteProfile {
+  // Services
   private userService = inject(UserService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
-  public selectedFile: File | null = null;
-  public avatarPreview: string | ArrayBuffer | null = null;
-  public fileError: string | null = null;
-  private userId: string = '';
+  // State Signals
+  avatarPreview = signal<string | ArrayBuffer | null>(null);
+  fileError = signal<string | null>(null);
+  isSubmitting = signal(false);
 
+  // Internal
+  private selectedFile: File | null = null;
+
+  // Typed Form
   publicInfoForm = this.fb.group({
-    bio: ['', [Validators.minLength(10)]],
-    firstname: ['', [Validators.minLength(2)]],
-    lastname: ['', [Validators.minLength(2)]],
+    firstname: new FormControl('', [Validators.minLength(2)]),
+    lastname: new FormControl('', [Validators.minLength(2)]),
+    bio: new FormControl('', [Validators.minLength(10)]),
   });
 
   onFileSelected(event: Event) {
@@ -50,21 +54,24 @@ export class CompleteProfile {
 
     const file = input.files[0];
 
+    // Validation
     if (!file.type.startsWith('image/')) {
-      this.fileError = 'Only images are allowed.';
+      this.fileError.set('Only images are allowed.');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      this.fileError = 'File is too large. Max 5MB.';
+      // 5MB
+      this.fileError.set('File is too large. Max 5MB.');
       return;
     }
 
-    this.fileError = null;
+    this.fileError.set(null);
     this.selectedFile = file;
 
+    // Preview
     const reader = new FileReader();
     reader.onload = () => {
-      this.avatarPreview = reader.result;
+      this.avatarPreview.set(reader.result);
     };
     reader.readAsDataURL(file);
   }
@@ -72,20 +79,36 @@ export class CompleteProfile {
   onSubmit() {
     if (this.publicInfoForm.invalid) return;
 
-    this.userId = this.route.snapshot.paramMap.get('id') || '';
+    const userId = this.route.snapshot.paramMap.get('id');
+    if (!userId) {
+      console.error('User ID missing from route');
+      return;
+    }
+
+    this.isSubmitting.set(true);
 
     const formData = new FormData();
-    formData.append('bio', this.publicInfoForm.get('bio')?.value || '');
-    formData.append('firstname', this.publicInfoForm.get('firstname')?.value || '');
-    formData.append('lastname', this.publicInfoForm.get('lastname')?.value || '');
+    const { firstname, lastname, bio } = this.publicInfoForm.getRawValue();
+
+    // Append fields only if they have values
+    if (firstname) formData.append('firstname', firstname);
+    if (lastname) formData.append('lastname', lastname);
+    if (bio) formData.append('bio', bio);
 
     if (this.selectedFile) {
       formData.append('avatar', this.selectedFile, this.selectedFile.name);
     }
 
-    this.userService.patchUser(formData, this.userId).subscribe({
-      next: () => this.router.navigate(['/']),
-      error: (err) => console.error(err),
+    this.userService.patchUser(formData, userId).subscribe({
+      next: () => {
+        this.isSubmitting.set(false);
+        this.router.navigate(['/']);
+      },
+      error: (err) => {
+        console.error(err);
+        this.isSubmitting.set(false);
+        // Optional: Show toast error here
+      },
     });
   }
 

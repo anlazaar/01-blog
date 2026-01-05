@@ -1,26 +1,40 @@
+import { ApplicationConfig, provideZoneChangeDetection, SecurityContext } from '@angular/core';
 import {
-  ApplicationConfig,
-  provideBrowserGlobalErrorListeners,
-  provideZoneChangeDetection,
-  SecurityContext, // Import this
-} from '@angular/core';
-import { provideRouter, withViewTransitions } from '@angular/router';
-import { routes } from './app.routes';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { AuthInterceptor } from './core/auth.interceptor';
+  provideRouter,
+  withViewTransitions,
+  withComponentInputBinding,
+  withInMemoryScrolling,
+} from '@angular/router';
+import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+
+// Third-party libraries
 import { provideMarkdown } from 'ngx-markdown';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
-import { provideAnimations } from '@angular/platform-browser/animations';
+
+// Local imports
+import { routes } from './app.routes';
+import { AuthInterceptor } from './core/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes),
-    provideHttpClient(withInterceptors([AuthInterceptor])),
-    provideMarkdown(),
+
+    provideRouter(
+      routes,
+      withViewTransitions(),
+      withComponentInputBinding(),
+      withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })
+    ),
+
+    // 3. HTTP: Added withFetch for better performance (uses native Fetch API)
+    provideHttpClient(withFetch(), withInterceptors([AuthInterceptor])),
+
+    provideAnimationsAsync(),
+
+    provideMarkdown({
+      sanitize: SecurityContext.NONE,
+    }),
     provideCharts(withDefaultRegisterables()),
-    provideAnimations(),
-    provideRouter(routes, withViewTransitions())
   ],
 };

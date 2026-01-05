@@ -1,9 +1,9 @@
 <button
   mat-icon-button
   (click)="toggleTheme()"
-  [matTooltip]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+  [matTooltip]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
   class="theme-toggle-btn"
 >
-  <!-- Material Icons: 'light_mode' is the sun, 'dark_mode' is the moon -->
-  <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
+  <!-- Material Icons -->
+  <mat-icon>{{ isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
 </button>

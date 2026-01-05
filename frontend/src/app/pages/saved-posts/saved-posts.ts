@@ -1,5 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common'; // DatePipe
 import { RouterLink } from '@angular/router';
 import { PostService } from '../../services/post.service';
 import { PostResponse } from '../../models/POST/PostResponse';
@@ -21,17 +21,18 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatTooltipModule,
     MatProgressSpinnerModule,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page-container">
       <header class="library-header">
         <h1>Your Library</h1>
       </header>
 
-      @if (loading) {
+      @if (loading()) {
       <div class="loading-state">
         <mat-spinner diameter="40"></mat-spinner>
       </div>
-      } @else { @if (posts.length === 0) {
+      } @else { @if (posts().length === 0) {
       <div class="empty-state">
         <mat-icon class="empty-icon">bookmark_border</mat-icon>
         <p>You haven't saved any stories yet.</p>
@@ -39,7 +40,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       </div>
       } @else {
       <div class="posts-list">
-        @for (p of posts; track p.id) {
+        @for (p of posts(); track p.id) {
         <article class="saved-item">
           <div class="saved-content">
             <a [routerLink]="['/posts', p.id]" class="post-link">
@@ -54,14 +55,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
             </div>
           </div>
 
-          <!-- Unsave Button (Material Icon) -->
+          <!-- Unsave Button -->
           <button
             mat-icon-button
-            (click)="unsave(p.id)"
+            (click)="unsave(p)"
             matTooltip="Remove from library"
             class="unsave-btn"
           >
-            <!-- Filled bookmark indicates it is saved -->
             <mat-icon>bookmark</mat-icon>
           </button>
         </article>
@@ -106,7 +106,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
       .saved-content {
         flex: 1;
-        min-width: 0; /* Prevents flex overflow */
+        min-width: 0;
       }
 
       .post-link {
@@ -154,7 +154,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
       /* --- Action Button --- */
       .unsave-btn {
-        color: var(--text-primary) !important; /* Filled Black/White */
+        color: var(--text-primary) !important;
         opacity: 0.8;
         transition: opacity 0.2s;
       }
@@ -190,35 +190,42 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       }
 
       .go-home {
-        color: #1a8917 !important; /* Green */
+        color: #1a8917 !important;
         font-weight: 400;
       }
     `,
   ],
 })
 export class SavedPostsComponent implements OnInit {
-  posts: PostResponse[] = [];
-  loading = true;
   private postService = inject(PostService);
+
+  // State Signals
+  posts = signal<PostResponse[]>([]);
+  loading = signal(true);
 
   ngOnInit() {
     this.postService.getSavedPosts().subscribe({
       next: (data) => {
-        this.posts = data;
-        this.loading = false;
+        this.posts.set(data);
+        this.loading.set(false);
       },
-      error: () => (this.loading = false),
+      error: (err) => {
+        console.error(err);
+        this.loading.set(false);
+      },
     });
   }
 
-  unsave(id: string) {
-    // Optimistic UI update: remove immediately
-    this.posts = this.posts.filter((p) => p.id !== id);
+  unsave(post: PostResponse) {
+    // 1. Optimistic UI update: Remove immediately
+    this.posts.update((current) => current.filter((p) => p.id !== post.id));
 
-    this.postService.toggleSavePost(id).subscribe({
+    // 2. API Call
+    this.postService.toggleSavePost(post.id).subscribe({
       error: () => {
-        // Re-fetch or show error if failed (Optional)
+        // 3. Rollback on Error: Add it back if server failed
         console.error('Failed to unsave');
+        this.posts.update((current) => [post, ...current]);
       },
     });
   }

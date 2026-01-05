@@ -1,6 +1,7 @@
 <div class="editor-layout">
   <!-- Navbar -->
   <nav class="editor-nav">
+    <!-- ... (No changes here) ... -->
     <div class="nav-left">
       <a mat-button routerLink="/" class="back-link">
         <mat-icon>arrow_back</mat-icon> Back to feed
@@ -46,8 +47,9 @@
     }
 
     <form [formGroup]="postForm" [class.disabled-form]="isSubmitting || editorMediaLoading">
-      <!-- COVER IMAGE AREA -->
+      <!-- COVER IMAGE AREA (No changes) -->
       <div class="cover-image-area">
+        <!-- ... existing cover code ... -->
         @if (!coverPreviewUrl) {
         <button type="button" mat-button class="add-cover-btn" (click)="triggerFileInput()">
           <mat-icon>add_photo_alternate</mat-icon> Add cover image or video
@@ -82,7 +84,43 @@
         (input)="autoResize($event)"
       ></textarea>
 
-      <!-- HIDDEN EDITOR UPLOAD -->
+      <!-- ================== HASHTAGS INPUT ================== -->
+      <div class="tags-container">
+        <mat-form-field class="tag-form-field" appearance="fill">
+          <mat-chip-grid #chipGrid aria-label="Enter tags">
+            @for (tag of tags; track tag) {
+            <mat-chip-row (removed)="removeTag(tag)">
+              #{{ tag }}
+              <button matChipRemove [attr.aria-label]="'remove ' + tag">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip-row>
+            }
+
+            <!-- UPDATED INPUT -->
+            <input
+              #tagInput
+              placeholder="Add a topic..."
+              [formControl]="tagCtrl"
+              [matChipInputFor]="chipGrid"
+              [matAutocomplete]="auto"
+              [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+              (matChipInputTokenEnd)="addTag($event)"
+              class="tag-input"
+            />
+          </mat-chip-grid>
+
+          <!-- AUTOCOMPLETE DROPDOWN -->
+          <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
+            @for (tag of filteredTags | async; track tag) {
+            <mat-option [value]="tag"> #{{ tag }} </mat-option>
+            }
+          </mat-autocomplete>
+        </mat-form-field>
+      </div>
+      <!-- ==================================================== -->
+
+      <!-- HIDDEN EDITOR UPLOAD (No changes) -->
       <input
         type="file"
         id="editor-image-upload"
@@ -91,9 +129,10 @@
         (change)="onEditorFileSelected($event)"
       />
 
-      <!-- TOOLBAR (Material Icons) -->
+      <!-- TOOLBAR (No changes) -->
       @if (editor) {
       <div class="tiptap-toolbar">
+        <!-- ... existing toolbar buttons ... -->
         <button
           type="button"
           mat-icon-button

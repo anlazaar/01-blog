@@ -36,4 +36,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     @Query("SELECT p.createdAt FROM Post p WHERE p.createdAt > :date")
     List<LocalDateTime> findAllCreatedDatesAfter(LocalDateTime date);
+
+    @EntityGraph(attributePaths = { "author" })
+    Page<Post> findByHashtags_NameAndStatus(String name, PostStatus status, Pageable pageable);
 }

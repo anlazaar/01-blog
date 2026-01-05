@@ -54,4 +54,18 @@ public class Post extends BaseEntity {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications;
+
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(name = "post_hashtags", joinColumns = @JoinColumn(name = "post_id"), inverseJoinColumns = @JoinColumn(name = "hashtag_id"))
+    private Set<Hashtag> hashtags = new HashSet<>();
+
+    // Helper method to add tag
+    public void addHashtag(Hashtag hashtag) {
+        this.hashtags.add(hashtag);
+    }
+
+    // Helper method to remove tag
+    public void removeHashtag(Hashtag hashtag) {
+        this.hashtags.remove(hashtag);
+    }
 }

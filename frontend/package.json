@@ -36,6 +36,7 @@
     "@fortawesome/free-brands-svg-icons": "^7.1.0",
     "@fortawesome/free-regular-svg-icons": "^7.1.0",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@stomp/stompjs": "^7.2.1",
     "@tiptap/core": "^3.13.0",
     "@tiptap/extension-bubble-menu": "^3.13.0",
     "@tiptap/extension-floating-menu": "^3.13.0",
@@ -47,6 +48,7 @@
     "ngx-markdown": "^20.1.0",
     "ngx-tiptap": "^14.0.1",
     "rxjs": "~7.8.0",
+    "sockjs-client": "^1.6.1",
     "tiptap-markdown": "^0.9.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
@@ -56,6 +58,7 @@
     "@angular/cli": "^21.0.2",
     "@angular/compiler-cli": "^21.0.3",
     "@types/jasmine": "~5.1.0",
+    "@types/sockjs-client": "^1.5.4",
     "jasmine-core": "~5.9.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",

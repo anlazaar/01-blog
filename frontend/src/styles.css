@@ -612,3 +612,111 @@ input.has-success {
   height: auto !important;
   padding-bottom: 0 !important;
 }
+
+.sidebar-container {
+  width: 368px;
+  min-width: 368px;
+  display: none;
+  border-left: 1px solid var(--border);
+  padding-left: 40px;
+  /* Remove sticky from here if it exists */
+}
+
+/* --- NEW STICKY WRAPPER --- */
+.sticky-sidebar-wrapper {
+  position: sticky;
+  top: 100px; /* The distance from the top of the browser */
+  display: flex;
+  flex-direction: column;
+  gap: 40px; /* Space between Tags and Suggested Users */
+}
+
+/* ==============================================================
+   GLOBAL OVERLAY STYLES (Fixes Dark Mode Menus)
+   ============================================================== */
+
+/* 1. Menu Panel & Content Background */
+body.dark .custom-menu.mat-mdc-menu-panel,
+body.dark .custom-menu .mat-mdc-menu-content {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border) !important;
+  padding: 0 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* 2. Individual Menu Items */
+body.dark .custom-menu .mat-mdc-menu-item {
+  background-color: var(--background) !important;
+  color: var(--text-primary) !important;
+}
+
+/* 3. Icons and Text inside Menu Items */
+body.dark .custom-menu .mat-mdc-menu-item .mat-mdc-menu-item-text,
+body.dark .custom-menu .mat-mdc-menu-item .mat-icon:not(.mat-warn) {
+  color: var(--text-primary) !important;
+}
+
+body.dark .custom-menu .mat-mdc-menu-item .mat-icon {
+  margin-right: 12px;
+}
+
+/* 4. Hover States */
+body.dark .custom-menu .mat-mdc-menu-item:hover:not([disabled]) {
+  background-color: var(--secondary) !important;
+}
+
+/* 5. User Info Header (Inside Profile Menu) */
+body.dark .user-info-header {
+  padding: 16px;
+  background-color: var(--background) !important;
+}
+body.dark .u-name {
+  font-weight: 700;
+  color: var(--text-primary) !important;
+  font-size: 15px;
+  margin: 0;
+}
+body.dark .u-handle {
+  color: var(--text-secondary) !important;
+  font-size: 13px;
+  margin: 0;
+}
+
+/* 6. Notification Menu Specifics */
+body.dark .notif-menu {
+  max-width: 360px !important;
+  width: 360px;
+}
+body.dark .menu-header {
+  padding: 16px;
+  background-color: var(--background);
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border);
+}
+body.dark .notif-item {
+  background-color: var(--background) !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--text-primary) !important;
+}
+body.dark .notif-item.unread {
+  background-color: var(--secondary) !important;
+  border-left: 3px solid var(--primary);
+}
+body.dark .notif-msg {
+  color: var(--text-primary) !important;
+}
+body.dark .empty-state {
+  color: var(--text-muted) !important;
+  background-color: var(--background);
+}
+
+/* 7. General Overrides */
+body.dark .mat-divider {
+  border-top-color: var(--border) !important;
+}
+
+/* 8. Sign Out / Warn buttons */
+body.dark .custom-menu button[color='warn'] .mat-mdc-menu-item-text,
+body.dark .custom-menu button[color='warn'] .mat-icon {
+  color: var(--destructive) !important;
+}

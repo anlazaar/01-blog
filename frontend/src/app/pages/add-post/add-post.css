@@ -29,12 +29,41 @@
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+}
+
+.nav-left .draft-status::before {
+  content: '|';
+  margin: 0 12px;
+  color: var(--border);
+  font-weight: 200;
 }
 
 .back-link {
   color: var(--text-secondary) !important;
-  font-weight: 400 !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  text-decoration: none;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 8px !important;
+  margin-left: -8px;
+  transition: color 0.2s ease-in-out !important;
+}
+
+.back-link:hover {
+  color: var(--text-primary) !important;
+  background-color: transparent !important; /* Keep it clean without the grey box */
+}
+
+.back-link mat-icon {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin-right: 6px;
+  /* Ensure the icon doesn't shift when text scales */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .draft-status {
@@ -250,4 +279,103 @@
 /* Override MatProgressBar color */
 ::ng-deep .mat-mdc-progress-bar .mdc-linear-progress__bar-inner {
   border-color: #1a8917 !important;
+}
+
+/* --- TAGS INPUT CUSTOMIZATION --- */
+.tags-container {
+  margin-bottom: 24px;
+}
+
+/* 1. RESET FORM FIELD (Remove gray box, underline, and ripple) */
+.tag-form-field {
+  width: 100%;
+}
+
+.tag-form-field .mat-mdc-text-field-wrapper {
+  background-color: transparent !important;
+  padding: 0 !important;
+}
+
+/* Hide the bottom underline/ripple completely */
+.tag-form-field .mat-mdc-form-field-subscript-wrapper,
+.tag-form-field .mat-mdc-line-ripple,
+.tag-form-field .mat-mdc-form-field-bottom-align::before,
+.tag-form-field .mat-mdc-form-field-bottom-align::after {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+/* 2. INPUT STYLING (Fixing Placeholder & Text Color) */
+.tag-input {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 15px !important;
+  /* Ensure the cursor and typed text are visible (White in dark mode) */
+  color: var(--text-primary) !important;
+  caret-color: var(--text-primary) !important;
+}
+
+/* Force Placeholder Visibility */
+.tag-input::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 1 !important; /* Required for Firefox/Material overrides */
+  -webkit-text-fill-color: var(--text-muted) !important;
+}
+
+/* 3. CHIP CUSTOMIZATION (The Bubbles) */
+.mat-mdc-chip-set {
+  gap: 8px;
+}
+
+.mat-mdc-standard-chip {
+  /* Background: Use a slightly lighter grey than background, or specific border */
+  background-color: var(--secondary) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 9999px !important; /* Pill shape */
+  min-height: 32px !important;
+}
+
+/* Fix Tag Text Visibility (Targeting internal MDC label) */
+.mat-mdc-standard-chip .mdc-evolution-chip__text-label {
+  color: var(--text-primary) !important; /* Make tag text White/Dark */
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+}
+
+/* Fix "X" Icon Visibility */
+.mat-mdc-standard-chip .mat-mdc-chip-remove {
+  color: var(--text-muted) !important;
+  opacity: 0.7;
+}
+
+.mat-mdc-standard-chip .mat-mdc-chip-remove:hover {
+  opacity: 1;
+  color: var(--destructive) !important;
+}
+
+/* Remove Material's default focus/hover overlays */
+.mat-mdc-standard-chip::after {
+  opacity: 0 !important;
+}
+.mat-mdc-standard-chip:hover::after {
+  opacity: 0 !important;
+}
+
+.mat-mdc-autocomplete-panel {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.mat-mdc-option {
+  color: var(--text-primary) !important;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+.mat-mdc-option:hover,
+.mat-mdc-option.mat-mdc-option-active {
+  background-color: var(--secondary) !important;
+}
+
+.cdk-overlay-container {
+  z-index: 11000 !important;
 }

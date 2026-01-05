@@ -345,3 +345,30 @@ textarea {
     padding-right: 20px;
   }
 }
+
+/* --- Tag Chips --- */
+.article-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 40px; /* Space between tags and Like/Comment bar */
+}
+
+.tag-chip {
+  background-color: var(--secondary); /* Light grey (or dark grey in dark mode) */
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: 9999px; /* Pill shape */
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent; /* Prepare for border on hover if needed */
+}
+
+.tag-chip:hover {
+  background-color: var(--border); /* Slightly darker grey on hover */
+  color: var(--text-primary);
+}

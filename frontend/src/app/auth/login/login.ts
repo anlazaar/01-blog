@@ -7,6 +7,7 @@ import { faGoogle, faGithub } from '@fortawesome/free-brands-svg-icons';
 import { ApiService } from '../../services/auth.service';
 import { MaterialImports } from '../../material-imports';
 import { TokenService } from '../../services/token.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -20,6 +21,7 @@ export class Login {
   faGoogle = faGoogle;
   faGithub = faGithub;
   errorMessage = '';
+  private apiUrl = `${environment.apiUrl}`;
 
   private auth = inject(ApiService);
   private router = inject(Router);
@@ -66,10 +68,10 @@ export class Login {
     });
   }
   loginWithGithub() {
-    window.location.href = 'http://localhost:8080/oauth2/authorization/github';
+    window.location.href = `${this.apiUrl}/oauth2/authorization/github`;
   }
 
   loginWithGoogle() {
-    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+    window.location.href = `${this.apiUrl}/oauth2/authorization/google`;
   }
 }

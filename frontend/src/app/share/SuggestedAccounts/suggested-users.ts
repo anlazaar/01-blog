@@ -1,8 +1,17 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common'; // contains UpperCasePipe
 import { Router, RouterLink } from '@angular/router';
 import { UserService } from '../../services/UserService';
 import { TokenService } from '../../services/token.service';
+
+// Interface for type safety
+interface SuggestedUser {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  following: boolean;
+}
 
 @Component({
   selector: 'app-suggested-users',
@@ -10,49 +19,50 @@ import { TokenService } from '../../services/token.service';
   imports: [CommonModule, RouterLink],
   templateUrl: './suggested-users.html',
   styleUrls: ['./suggested-users.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SuggestedUsersComponent implements OnInit {
-  suggestedUsers: any[] = [];
-  currentUserId: string | null = null;
-
+  // Services
   private userService = inject(UserService);
   private tokenService = inject(TokenService);
   private router = inject(Router);
 
+  // State
+  suggestedUsers = signal<SuggestedUser[]>([]);
+  currentUserId = signal<string | null>(null);
+
   ngOnInit(): void {
-    this.currentUserId = this.tokenService.getUUID();
+    // Set initial User ID
+    this.currentUserId.set(this.tokenService.getUUID());
     this.loadSuggestedUsers();
   }
 
   loadSuggestedUsers() {
     this.userService.getSuggestedUsers().subscribe({
-      next: (data) => {
-        this.suggestedUsers = data;
-      },
+      next: (data) => this.suggestedUsers.set(data),
       error: (err) => console.error('Error loading suggestions', err),
     });
   }
 
-  toggleFollow(user: any) {
-    if (!this.currentUserId) {
+  toggleFollow(user: SuggestedUser) {
+    if (!this.currentUserId()) {
       this.router.navigate(['/auth/login']);
       return;
     }
 
-    if (user.following) {
-      this.userService.unfollowUser(user.id).subscribe({
-        next: () => {
-          user.following = false;
-        },
-        error: (err) => console.error('ERROR UNFOLLOWING USER :', err),
-      });
-    } else {
-      this.userService.followUser(user.id).subscribe({
-        next: () => {
-          user.following = true;
-        },
-        error: (err) => console.error('ERROR FOLLOWING USER :', err),
-      });
-    }
+    const action$ = user.following
+      ? this.userService.unfollowUser(user.id)
+      : this.userService.followUser(user.id);
+
+    action$.subscribe({
+      next: () => {
+        // Immutable update of the specific user inside the array
+        this.suggestedUsers.update((users) =>
+          users.map((u) => (u.id === user.id ? { ...u, following: !u.following } : u))
+        );
+      },
+      error: (err) =>
+        console.error(`Error ${user.following ? 'unfollowing' : 'following'} user:`, err),
+    });
   }
 }

@@ -1,31 +1,21 @@
 <!-- Trigger Button -->
-<button 
-  mat-icon-button 
-  [matMenuTriggerFor]="optionsMenu" 
+<button
+  mat-icon-button
+  [matMenuTriggerFor]="optionsMenu"
   class="options-trigger"
-  aria-label="More options">
+  aria-label="More options"
+>
   <mat-icon>more_horiz</mat-icon>
 </button>
 
 <!-- Menu Definition -->
-<!-- We add the class 'post-options-panel' to target this specific menu in CSS -->
 <mat-menu #optionsMenu="matMenu" xPosition="before" class="post-options-panel">
-  
-  @if (canReport) {
-    <button mat-menu-item (click)="report.emit()">
-      Report user
-    </button>
-  }
+  @if (canReport()) {
+  <button mat-menu-item (click)="report.emit()">Report user</button>
+  } @if (canEdit() && postId()) {
+  <!-- Note: postId() is a signal, so we call it -->
+  <a mat-menu-item [routerLink]="['/p', postId(), 'edit']"> Edit story </a>
 
-  @if (canEdit && postId) {
-    <!-- RouterLink on a menu item works perfectly -->
-    <a mat-menu-item [routerLink]="['/p', postId, 'edit']">
-      Edit story
-    </a>
-    
-    <!-- Destructive Action -->
-    <button mat-menu-item class="destructive-item" (click)="delete.emit()">
-      Delete story
-    </button>
+  <button mat-menu-item class="destructive-item" (click)="delete.emit()">Delete story</button>
   }
 </mat-menu>

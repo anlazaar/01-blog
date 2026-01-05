@@ -12,27 +12,25 @@
         <app-theme-toggle></app-theme-toggle>
 
         <!-- A) GUEST VIEW -->
-        @if (!isLoggedIn) {
+        @if (!isLoggedIn()) {
         <a mat-button routerLink="/auth/login" class="nav-link">Sign in</a>
-        <a mat-flat-button color="primary" routerLink="/auth/register" class="nav-btn-primary"
-          >Get started</a
-        >
+        <a mat-flat-button color="primary" routerLink="/auth/register" class="nav-btn-primary">
+          Get started
+        </a>
         }
 
         <!-- B) LOGGED IN VIEW -->
-        @if (isLoggedIn) {
-        <!-- LIBRARY LINK (Kept here, removed from dropdown) -->
-        <a routerLink="/me/saved" mat-button class="nav-link text-link">Library</a>
-
-        <!-- USER ACTIONS (Non-Admin) -->
-        @if (!isAdmin) {
-
-        <!-- Drafts Icon -->
-        <a mat-icon-button routerLink="/me/drafts" matTooltip="Stories" class="action-icon">
-          <mat-icon fontIcon="edit_note"></mat-icon>
+        @if (isLoggedIn()) {
+        <a mat-icon-button routerLink="/me/saved" matTooltip="Library" class="action-icon">
+          <mat-icon>bookmarks</mat-icon>
         </a>
 
-        <!-- Write Link -->
+        <!-- USER ACTIONS (Non-Admin) -->
+        @if (!isAdmin()) {
+        <a mat-icon-button routerLink="/me/drafts" matTooltip="Your Draft Stories" class="action-icon">
+          <mat-icon>description</mat-icon>
+        </a>
+
         <a mat-button routerLink="/new-story" class="write-link">
           <mat-icon fontIcon="edit_square" class="write-icon"></mat-icon>
           <span>Write</span>
@@ -41,7 +39,7 @@
         <!-- NOTIFICATIONS -->
         <button mat-icon-button [matMenuTriggerFor]="notificationMenu" class="action-icon">
           <mat-icon
-            [matBadge]="unreadCount > 0 ? (unreadCount > 9 ? '9+' : unreadCount) : null"
+            [matBadge]="unreadCount() > 0 ? (unreadCount() > 9 ? '9+' : unreadCount()) : null"
             matBadgeColor="warn"
             matBadgeSize="small"
           >
@@ -49,6 +47,7 @@
           </mat-icon>
         </button>
         }
+
         <!-- ADMIN DASHBOARD -->
         @else {
         <a mat-button routerLink="/admin/dashboard">Dashboard</a>
@@ -56,7 +55,7 @@
 
         <!-- USER PROFILE TRIGGER -->
         <button class="avatar-btn" [matMenuTriggerFor]="userMenu">
-          <img [src]="avatarUrl || '/default-avatar.jpg'" class="nav-avatar" [alt]="username" />
+          <img [src]="avatarUrl() || '/default-avatar.jpg'" class="nav-avatar" [alt]="username()" />
         </button>
         }
       </div>
@@ -67,31 +66,31 @@
       <app-theme-toggle></app-theme-toggle>
 
       <button mat-icon-button (click)="toggleMobileMenu()">
-        <mat-icon>{{ isMobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+        <mat-icon>{{ isMobileMenuOpen() ? 'close' : 'menu' }}</mat-icon>
       </button>
     </div>
   </div>
 
   <!-- 4. MOBILE MENU OVERLAY -->
-  <div class="mobile-menu" [class.open]="isMobileMenuOpen">
+  <div class="mobile-menu" [class.open]="isMobileMenuOpen()">
     <div class="mobile-menu-content">
-      @if (!isLoggedIn) {
+      @if (!isLoggedIn()) {
       <a mat-button routerLink="/auth/login" (click)="closeMobileMenu()">Sign in</a>
-      <a mat-flat-button color="primary" routerLink="/auth/register" (click)="closeMobileMenu()"
-        >Get started</a
-      >
+      <a mat-flat-button color="primary" routerLink="/auth/register" (click)="closeMobileMenu()">
+        Get started
+      </a>
       } @else {
       <!-- User Info Mobile -->
       <div
         class="mobile-user-profile"
-        [routerLink]="['/profile', userId]"
+        [routerLink]="['/profile', userId()]"
         (click)="closeMobileMenu()"
       >
-        <img [src]="avatarUrl || '/default-avatar.jpg'" class="mobile-avatar" />
-        <span class="mobile-username">{{ username }}</span>
+        <img [src]="avatarUrl() || '/default-avatar.jpg'" class="mobile-avatar" />
+        <span class="mobile-username">{{ username() }}</span>
       </div>
 
-      @if (!isAdmin) {
+      @if (!isAdmin()) {
       <a mat-button class="mobile-link" routerLink="/new-story" (click)="closeMobileMenu()">
         <mat-icon>edit</mat-icon> Write a Story
       </a>
@@ -99,7 +98,7 @@
         <mat-icon>description</mat-icon> My Drafts
       </a>
       <button mat-button class="mobile-link" [matMenuTriggerFor]="notificationMenu">
-        <mat-icon [matBadge]="unreadCount || null" matBadgeColor="warn">notifications</mat-icon>
+        <mat-icon [matBadge]="unreadCount() || null" matBadgeColor="warn">notifications</mat-icon>
         Notifications
       </button>
       } @else {
@@ -112,7 +111,11 @@
     </div>
   </div>
 
-  <div class="mobile-overlay" [class.visible]="isMobileMenuOpen" (click)="closeMobileMenu()"></div>
+  <div
+    class="mobile-overlay"
+    [class.visible]="isMobileMenuOpen()"
+    (click)="closeMobileMenu()"
+  ></div>
 
   <!-- ============================================================== -->
   <!-- SHARED MENUS -->
@@ -122,9 +125,9 @@
   <mat-menu #notificationMenu="matMenu" class="custom-menu notif-menu" xPosition="before">
     <div class="menu-header">Notifications</div>
     <div class="menu-scroll-content">
-      @if (notifications.length === 0) {
+      @if (notifications().length === 0) {
       <div class="empty-state">No notifications yet.</div>
-      } @else { @for (notif of notifications; track notif.id) {
+      } @else { @for (notif of notifications(); track notif.id) {
       <button
         mat-menu-item
         class="notif-item"
@@ -141,20 +144,18 @@
     </div>
   </mat-menu>
 
-  <!-- 2. USER MENU (Fixed Duplication) -->
+  <!-- 2. USER MENU -->
   <mat-menu #userMenu="matMenu" class="custom-menu user-menu" xPosition="before">
     <div class="user-info-header">
-      <p class="u-name">{{ username }}</p>
-      <p class="u-handle">@ {{ username }}</p>
+      <p class="u-name">{{ username() }}</p>
+      <p class="u-handle">@ {{ username() }}</p>
     </div>
     <mat-divider></mat-divider>
 
-    <button mat-menu-item [routerLink]="['/profile', userId]">
+    <button mat-menu-item [routerLink]="['/profile', userId()]">
       <mat-icon>person_outline</mat-icon>
       <span>Profile</span>
     </button>
-
-    <!-- REMOVED LIBRARY LINK FROM HERE -->
 
     <button mat-menu-item routerLink="/settings">
       <mat-icon>settings</mat-icon>

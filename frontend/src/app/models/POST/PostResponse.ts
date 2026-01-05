@@ -20,6 +20,8 @@ export interface PostResponse {
   updatedAt: string | null;
   author: UserPublicProfileDTO;
 
+  tags: string[];
+
   likeCount: number;
   commentCount: number;
 

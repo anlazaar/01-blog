@@ -1,9 +1,18 @@
-import { Component, inject, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import {
+  Component,
+  ElementRef,
+  inject,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  ViewEncapsulation,
+} from '@angular/core';
+import { ReactiveFormsModule, FormBuilder, Validators, FormControl } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Observable, of, from } from 'rxjs';
-import { concatMap, last, switchMap, tap } from 'rxjs/operators';
+import { concatMap, debounceTime, last, startWith, switchMap, tap } from 'rxjs/operators';
+import { COMMA, ENTER } from '@angular/cdk/keycodes'; // <--- Import Keycodes
 
 // TipTap Imports
 import { TiptapEditorDirective } from 'ngx-tiptap';
@@ -23,6 +32,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatChipsModule, MatChipInputEvent } from '@angular/material/chips';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import {
+  MatAutocompleteModule,
+  MatAutocompleteSelectedEvent,
+  MatAutocompleteTrigger,
+} from '@angular/material/autocomplete';
 
 @Component({
   selector: 'app-add-post',
@@ -37,6 +53,9 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
     MatIconModule,
     MatTooltipModule,
     MatProgressBarModule,
+    MatChipsModule,
+    MatFormFieldModule,
+    MatAutocompleteModule,
   ],
   templateUrl: './add-post.html',
   styleUrls: ['./add-post.css'],
@@ -61,6 +80,32 @@ export class AddPost implements OnInit, OnDestroy {
   postId: string | null = null;
   existingMediaUrl: string | null = null;
 
+  // --- Tags Configuration ---
+  readonly separatorKeysCodes = [ENTER, COMMA] as const;
+  tags: string[] = [];
+
+  tagCtrl = new FormControl('');
+  filteredTags: Observable<string[]>;
+
+  @ViewChild('tagInput') tagInput!: ElementRef<HTMLInputElement>;
+  @ViewChild(MatAutocompleteTrigger) autocompleteTrigger!: MatAutocompleteTrigger;
+
+  constructor() {
+    // Setup Autocomplete Stream
+    this.filteredTags = this.tagCtrl.valueChanges.pipe(
+      startWith(null),
+      debounceTime(300),
+      switchMap((value: string | null) => {
+        if (value && value.length > 0) {
+          const cleanVal = value.replace('#', '').toLowerCase();
+          return this.postService.searchTags(cleanVal);
+        } else {
+          return of([]);
+        }
+      })
+    );
+  }
+
   postForm = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(3)]],
     description: ['', [Validators.required, Validators.minLength(10)]],
@@ -75,6 +120,7 @@ export class AddPost implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // ... Existing Editor Config ...
     this.editor = new Editor({
       extensions: [
         StarterKit,
@@ -109,6 +155,13 @@ export class AddPost implements OnInit, OnDestroy {
             description: '',
             mediaType: post.mediaType,
           });
+
+          // --- Load Tags ---
+          // Assuming your PostMetadata DTO now returns `tags: Set<String>` or `List<String>`
+          if (post.tags) {
+            this.tags = Array.from(post.tags);
+          }
+
           if (post.mediaUrl) {
             this.existingMediaUrl = post.mediaUrl;
             this.coverPreviewUrl = this.BACKEND_URL + post.mediaUrl;
@@ -118,6 +171,50 @@ export class AddPost implements OnInit, OnDestroy {
       });
   }
 
+  private normalizeTag(tag: string): string {
+    return tag.replace(/#/g, '').trim().toLowerCase();
+  }
+
+  // --- Tag Logic ---
+  addTag(event: MatChipInputEvent): void {
+    if (this.autocompleteTrigger.panelOpen) {
+      return;
+    }
+    const value = (event.value || '').trim();
+    const cleanValue = this.normalizeTag(value);
+
+    if (cleanValue) {
+      if (!this.tags.includes(cleanValue)) {
+        this.tags.push(cleanValue);
+      }
+    }
+
+    // Reset the input
+    event.chipInput!.clear();
+    this.tagCtrl.setValue(null);
+  }
+
+  selected(event: MatAutocompleteSelectedEvent): void {
+    const rawValue = event.option.value;
+    const cleanValue = this.normalizeTag(rawValue);
+
+    if (cleanValue && !this.tags.includes(cleanValue)) {
+      this.tags.push(cleanValue);
+    }
+
+    // Clear input
+    this.tagInput.nativeElement.value = '';
+    this.tagCtrl.setValue(null);
+  }
+
+  removeTag(tag: string): void {
+    const index = this.tags.indexOf(tag);
+    if (index >= 0) {
+      this.tags.splice(index, 1);
+    }
+  }
+
+  // ... loadDraftContent, ngOnDestroy, Toolbar Logic, Cover Logic (Keep as is) ...
   loadDraftContent(id: string) {
     this.postService.getFullPostContent(id).subscribe((content) => {
       if (this.editor) {
@@ -134,7 +231,6 @@ export class AddPost implements OnInit, OnDestroy {
     }
   }
 
-  // --- Toolbar Logic ---
   setLink() {
     const previousUrl = this.editor.getAttributes('link')['href'];
     const url = window.prompt('URL', previousUrl);
@@ -173,7 +269,6 @@ export class AddPost implements OnInit, OnDestroy {
     });
   }
 
-  // --- Cover Logic ---
   triggerFileInput() {
     document.getElementById('cover-upload')?.click();
   }
@@ -211,7 +306,6 @@ export class AddPost implements OnInit, OnDestroy {
     el.style.height = el.scrollHeight + 'px';
   }
 
-  // --- Save Logic ---
   onPublish() {
     this.handleSave(true);
   }
@@ -237,11 +331,14 @@ export class AddPost implements OnInit, OnDestroy {
     let saveObservable: Observable<any>;
 
     if (this.isEditMode && this.postId) {
-      const updatePayload = {
+      // --- Update Logic (JSON) ---
+      const updatePayload: any = {
+        // Use 'any' or strict DTO
         title: title,
         description: summary,
         mediaType: currentMediaType,
         mediaUrl: this.existingMediaUrl,
+        tags: this.tags, // <--- Pass Tags Array
       };
 
       let preUpdateAction: Observable<any> = of(null);
@@ -260,10 +357,16 @@ export class AddPost implements OnInit, OnDestroy {
         concatMap(() => this.postService.clearPostContent(this.postId!))
       );
     } else {
+      // --- Init Logic (FormData) ---
       const formData = new FormData();
       formData.append('title', title || '');
       formData.append('description', summary);
       formData.append('mediaType', currentMediaType || 'IMAGE');
+
+      // <--- Append Tags individually for Spring @RequestParam List<String>
+      this.tags.forEach((tag) => {
+        formData.append('tags', tag);
+      });
 
       if (this.selectedFile) {
         formData.append('media', this.selectedFile);
@@ -310,6 +413,7 @@ export class AddPost implements OnInit, OnDestroy {
       });
   }
 
+  // ... uploadChunksSequentially ...
   private uploadChunksSequentially(postId: string, content: string): Observable<any> {
     const CHUNK_SIZE = 4000;
     const totalChunks = Math.ceil(content.length / CHUNK_SIZE);

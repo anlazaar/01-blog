@@ -51,33 +51,36 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/{id}/block").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
-                        // Ensure serving uploaded files is public
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
 
-                        // USER ROUTES
-                        // Explicitly allow Media Upload (POST)
-                        .requestMatchers(HttpMethod.POST, "/api/posts/media/upload").hasRole("USER")
+                        .requestMatchers("/ws/**").permitAll()
 
-                        // General Post CRUD
+                        // USER ONLY ROUTES (Creation)
+                        .requestMatchers(HttpMethod.POST, "/api/posts/media/upload").hasRole("USER")
                         .requestMatchers(HttpMethod.GET, "/api/users/{id}").hasRole("USER")
                         .requestMatchers(HttpMethod.POST, "/api/posts").hasRole("USER")
-                        .requestMatchers(HttpMethod.POST, "/api/posts/**").hasRole("USER")
-                        .requestMatchers(HttpMethod.PUT, "/api/posts/**").hasRole("USER")
-                        .requestMatchers(HttpMethod.PATCH, "/api/posts/**").hasRole("USER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/posts/**").hasRole("USER")
-                        .requestMatchers(HttpMethod.POST, "/api/posts/{id}/save").hasRole("USER")
-                        .requestMatchers(HttpMethod.GET, "/api/posts/saved").hasRole("USER")
 
-                        // Other User Routes
+                        // SHARED ROUTES (USER + ADMIN)
+                        .requestMatchers(HttpMethod.POST, "/api/posts/{id}/save").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/posts/saved").hasAnyRole("USER", "ADMIN")
+
+                        // .requestMatchers("/api/stages/**").hasAnyRole("USER", "ADMIN")
+
+                        .requestMatchers(HttpMethod.PUT, "/api/posts/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/posts/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/posts/**").hasAnyRole("USER", "ADMIN")
+
+                        .requestMatchers(HttpMethod.PUT, "/api/users/profile/update/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/**").hasAnyRole("USER", "ADMIN")
+
+                        // USER ONLY (Interaction/Social)
                         .requestMatchers("/api/comments/**").hasRole("USER")
                         .requestMatchers("/api/likes/**").hasRole("USER")
                         .requestMatchers("/api/subscriptions/**").hasRole("USER")
                         .requestMatchers("/api/notifications/**").hasRole("USER")
                         .requestMatchers(HttpMethod.POST, "/api/reports/**").hasRole("USER")
-                        .requestMatchers(HttpMethod.PUT, "/api/users/profile/update/**").hasRole("USER")
-                        .requestMatchers(HttpMethod.PATCH, "/api/users/**").hasRole("USER")
 
-                        // ADMIN ROUTES
+                        // ADMIN SPECIFIC ROUTES
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/reports/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/reports/**").hasRole("ADMIN")

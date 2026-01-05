@@ -10,11 +10,12 @@
       <!-- Profile Image Section -->
       <div class="profile-upload-section">
         <div class="avatar-wrapper">
-          @if (avatarPreview) {
-          <img [src]="avatarPreview" alt="Avatar Preview" />
+          @if (avatarPreview()) {
+          <img [src]="avatarPreview()" alt="Avatar Preview" />
           } @else {
           <div class="avatar-placeholder">
-            {{ user?.username?.charAt(0) || '?' | uppercase }}
+            <!-- Safe Access with Signals -->
+            {{ user()?.username?.charAt(0) || '?' | uppercase }}
           </div>
           }
         </div>
@@ -28,9 +29,9 @@
 
           <span class="upload-hint">Recommended: Square JPG, PNG.</span>
 
-          @if (fileError) {
+          @if (fileError()) {
           <div class="error-msg">
-            <small>{{ fileError }}</small>
+            <small>{{ fileError() }}</small>
           </div>
           }
         </div>
@@ -41,11 +42,17 @@
         <mat-form-field appearance="fill" class="half-width">
           <mat-label>First name</mat-label>
           <input matInput formControlName="firstname" />
+          @if(publicInfoForm.controls.firstname.invalid) {
+          <mat-error>First name is required</mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field appearance="fill" class="half-width">
           <mat-label>Last name</mat-label>
           <input matInput formControlName="lastname" />
+          @if(publicInfoForm.controls.lastname.invalid) {
+          <mat-error>Last name is required</mat-error>
+          }
         </mat-form-field>
       </div>
 
@@ -53,11 +60,17 @@
         <mat-form-field appearance="fill" class="full-width">
           <mat-label>Email</mat-label>
           <input matInput type="email" formControlName="email" />
+          @if(publicInfoForm.controls.email.invalid) {
+          <mat-error>Valid email is required</mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field appearance="fill" class="full-width">
           <mat-label>Username</mat-label>
           <input matInput formControlName="username" />
+          @if(publicInfoForm.controls.username.invalid) {
+          <mat-error>Username is required</mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field appearance="fill" class="full-width">
@@ -68,8 +81,8 @@
             rows="3"
             placeholder="Tell your story..."
           ></textarea>
-          @if (publicInfoForm.get('bio')?.invalid) {
-          <mat-error>Bio is required.</mat-error>
+          @if (publicInfoForm.controls.bio.invalid) {
+          <mat-error>Bio is too long.</mat-error>
           }
         </mat-form-field>
       </div>
@@ -88,25 +101,28 @@
         <mat-form-field appearance="fill" class="full-width">
           <mat-label>New Password</mat-label>
           <input matInput type="password" formControlName="password" />
+          @if(publicInfoForm.controls.password.invalid) {
+          <mat-error>Password must be at least 6 characters</mat-error>
+          }
         </mat-form-field>
       </div>
 
-      @if (errorMessage) {
+      @if (errorMessage()) {
       <div class="error-banner">
-        <p>{{ errorMessage }}</p>
+        <p>{{ errorMessage() }}</p>
       </div>
       }
 
       <div class="actions">
-        <!-- Save Button (Green) -->
+        <!-- Save Button -->
         <button
           mat-flat-button
           color="primary"
           class="save-btn"
           type="submit"
-          [disabled]="publicInfoForm.invalid || publicInfoForm.pristine"
+          [disabled]="publicInfoForm.invalid || publicInfoForm.pristine || isSubmitting()"
         >
-          Save
+          {{ isSubmitting() ? 'Saving...' : 'Save' }}
         </button>
       </div>
     </form>

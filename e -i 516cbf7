@@ -1,0 +1,25 @@
+[33m0eadd0c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m Ignore the application.properties
+[33mc7f0b25[m Remove OAuth secrets and use env vars
+[33m9089563[m Done:  - Majore Updates [enhacing code, using latest Ngx version and utilities, adding more features to the app like {Post Update, informing toasts, hashtags and filters}] Next:  - Upadating all controllers, Services to use the DTO and work more on mappers [BACKEND]  - Using same DTO for APIs in angular [front]  - Implementing a search feature.
+[33m516cbf7[m[33m ([m[1;31morigin/master[m[33m)[m Fix: removed secrets from properties
+[33m80e060d[m allowing Banner to be a video/image
+[33m594ed15[m readMe
+[33m6ba5428[m[33m ([m[1;32mrestored[m[33m)[m adding app.prop
+[33m78b88a6[m  - Refactored the notification system preventing the N+1 problem   - Adding oAuth for google and GitHub authentication   - Adding Users Role toggle for admin dashboard   - enhancing the UI by adding a toast instead of default browser alert   - Optimizing Post Service / User Service and also Repositories using @EntityGraph to insure lazy loading   - Update story frontend   - Fixing missing or broken routes in [routerLinks]
+[33mf8a8636[m Reducing the N+1 querying problem by 60% and refactoring Services and repositories and DTOs for better performance, pagination for users and posts in users page and home page.
+[33m6dcbfb0[m Major performance overhaul to fix N+1 Select problems and implement efficient pagination across the full stack. Query count per feed load reduced from ~35+ to ~3.
+[33mf702854[m feat: save post backend and front end + saved posts page
+[33m025e873[m feat: Implement Users and Drafts pages with responsive design and loading states and backend full logic
+[33m742cf18[m Seperating suggested-user from home into a single component and used in home and post page
+[33m3e839a0[m Feat: Implement real-time notifications (SSE) and UI enhancements
+[33m0246f2d[m feat: add Privacy Policy page with content and styles, and suggested accounts to follow
+[33mc6db04a[m enhancing complete profile styles
+[33me18f7e6[m feat: support unlimited post content via PostChunks
+[33mad03d74[m Patch post backend service and controller
+[33mf1f6868[m Uploading the FRONTEND
+[33m7aec89f[m adding admin functionalities
+[33mf1e9d16[m adding ADMIN controllers - services - repo, fixing user update to handle null values, updating user model to include a boolean {isBanned}  and jwt filter to check for banned user and prevent them from login in.
+[33m0730c81[m post remove - report service, repo, contoller +  front end
+[33m647e461[m Login - Register - Comment[add] - Post[add] - Profile[update] - Reaction[add-delete] - upload Image & video
+[33mb0ff412[m Initial project push
+[33me7f47a9[m Expand README with project details

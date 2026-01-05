@@ -6,7 +6,7 @@
     </header>
 
     <!-- LOADING SKELETON (Only for initial load) -->
-    @if (loading) {
+    @if (loading()) {
     <div class="users-grid">
       @for(item of skeletonItems; track $index) {
       <div class="user-card skeleton-card">
@@ -27,7 +27,7 @@
     <!-- DATA GRID -->
     @else {
     <div class="users-grid">
-      @for (user of users; track user.id) {
+      @for (user of users(); track user.id) {
       <div class="user-card">
         <div class="card-header">
           <img
@@ -36,12 +36,13 @@
             "
             class="card-avatar"
             [routerLink]="['/profile', user.id]"
+            [alt]="user.username"
             onerror="this.src='/default-avatar.jpg'"
           />
 
           <!-- FOLLOW BUTTON LOGIC -->
           @if (user.following) {
-          <!-- Already Following: Stroked Button (Green Text via CSS override) -->
+          <!-- Already Following -->
           <button
             mat-stroked-button
             color="primary"
@@ -51,7 +52,7 @@
             Following
           </button>
           } @else {
-          <!-- Not Following: Flat Button (Green Bg via CSS override) -->
+          <!-- Not Following -->
           <button mat-flat-button color="primary" class="follow-btn" (click)="toggleFollow(user)">
             Follow
           </button>
@@ -67,20 +68,20 @@
     </div>
 
     <!-- PAGINATION / LOAD MORE -->
-    @if (!isLastPage) {
+    @if (!isLastPage()) {
     <div class="load-more-container">
       <button
         mat-stroked-button
         class="load-more-btn"
         (click)="loadMore()"
-        [disabled]="loadingMore"
+        [disabled]="loadingMore()"
       >
-        @if (loadingMore) {
+        @if (loadingMore()) {
         <span>Loading...</span>
         } @else { Load More }
       </button>
     </div>
-    } @if (users.length === 0 && !loading) {
+    } @if (users().length === 0 && !loading()) {
     <div class="empty-state">
       <p>No writers found.</p>
     </div>

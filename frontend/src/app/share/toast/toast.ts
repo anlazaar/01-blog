@@ -1,5 +1,5 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common'; // Needed for pipes/directives if any, but specifically mostly handled by control flow now
 import { ToastService } from '../../services/toast.service';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {
@@ -14,12 +14,13 @@ import { animate, style, transition, trigger } from '@angular/animations';
   selector: 'app-toast',
   standalone: true,
   imports: [CommonModule, FontAwesomeModule],
+  changeDetection: ChangeDetectionStrategy.OnPush, // Optimizes rendering
   animations: [
     trigger('toastAnimation', [
       transition(':enter', [
         style({ transform: 'translateY(20px) scale(0.95)', opacity: 0 }),
         animate(
-          '400ms cubic-bezier(0.16, 1, 0.3, 1)', // Apple-like spring curve
+          '400ms cubic-bezier(0.16, 1, 0.3, 1)',
           style({ transform: 'translateY(0) scale(1)', opacity: 1 })
         ),
       ]),
@@ -30,17 +31,21 @@ import { animate, style, transition, trigger } from '@angular/animations';
   ],
   template: `
     <div class="toast-container">
-      <div
-        *ngFor="let toast of toastService.toasts()"
-        class="toast-glass"
-        [ngClass]="toast.type"
-        @toastAnimation
-      >
+      <!-- 
+         @for loop requires a 'track' expression. 
+         Using 'toast.id' ensures Angular knows exactly which element to animate out.
+      -->
+      @for (toast of toastService.toasts(); track toast.id) {
+      <div class="toast-glass" [class]="toast.type" @toastAnimation>
         <!-- Icon -->
         <div class="toast-icon">
-          <fa-icon *ngIf="toast.type === 'success'" [icon]="faCheck"></fa-icon>
-          <fa-icon *ngIf="toast.type === 'error'" [icon]="faError"></fa-icon>
-          <fa-icon *ngIf="toast.type === 'info'" [icon]="faInfo"></fa-icon>
+          @if (toast.type === 'success') {
+          <fa-icon [icon]="faCheck"></fa-icon>
+          } @else if (toast.type === 'error') {
+          <fa-icon [icon]="faError"></fa-icon>
+          } @else {
+          <fa-icon [icon]="faInfo"></fa-icon>
+          }
         </div>
 
         <!-- Message -->
@@ -53,13 +58,14 @@ import { animate, style, transition, trigger } from '@angular/animations';
           <fa-icon [icon]="faClose"></fa-icon>
         </button>
       </div>
+      }
     </div>
   `,
   styles: [
     `
       .toast-container {
         position: fixed;
-        bottom: 32px; /* Slightly higher */
+        bottom: 32px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 2147483647;
@@ -75,28 +81,19 @@ import { animate, style, transition, trigger } from '@angular/animations';
         min-width: 340px;
         max-width: 500px;
 
-        /* --- GLASS EFFECT --- */
-        /* Use your global --foreground (dark) but make it 85% opaque */
+        /* Glass Effect */
         background: color-mix(in srgb, var(--foreground) 85%, transparent);
-
-        /* The Blur - this creates the "Frosted" look over content behind it */
         backdrop-filter: blur(12px) saturate(180%);
         -webkit-backdrop-filter: blur(12px) saturate(180%);
 
-        /* Text Color: Always white/light because background is dark glass */
         color: var(--background);
-
-        /* Border: Very subtle, slightly lighter than bg to mimic glass edge */
         border: 1px solid rgba(255, 255, 255, 0.1);
-
-        /* Shadow: Deep and soft to lift it off the page */
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 12px 24px -4px rgba(0, 0, 0, 0.2);
 
-        border-radius: 12px; /* Softer, more modern corners */
+        border-radius: 12px;
         padding: 14px 18px;
-
         display: flex;
-        align-items: flex-start; /* Align top for long text */
+        align-items: flex-start;
         gap: 14px;
 
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -105,8 +102,7 @@ import { animate, style, transition, trigger } from '@angular/animations';
         line-height: 1.5;
       }
 
-      /* --- Type Indicators (Glowing Left Border) --- */
-      /* Instead of a hard border, we use a box-shadow glow */
+      /* Type Indicators */
       .toast-glass.success {
         box-shadow: inset 3px 0 0 0 #1a8917, 0 12px 24px -4px rgba(0, 0, 0, 0.2);
       }
@@ -117,19 +113,19 @@ import { animate, style, transition, trigger } from '@angular/animations';
         box-shadow: inset 3px 0 0 0 var(--text-secondary), 0 12px 24px -4px rgba(0, 0, 0, 0.2);
       }
 
-      /* --- Icons --- */
+      /* Icons */
       .toast-icon {
         display: flex;
         align-items: center;
-        margin-top: 2px; /* Optical alignment with text */
+        margin-top: 2px;
         font-size: 16px;
       }
       .toast-glass.success .toast-icon {
         color: #4ade80;
-      } /* Neon Green */
+      }
       .toast-glass.error .toast-icon {
         color: #f87171;
-      } /* Neon Red */
+      }
       .toast-glass.info .toast-icon {
         color: #94a3b8;
       }
@@ -137,16 +133,15 @@ import { animate, style, transition, trigger } from '@angular/animations';
       .toast-content {
         flex: 1;
       }
-
       .toast-message {
         display: block;
       }
 
-      /* --- Close Button --- */
+      /* Close Button */
       .toast-close {
         background: transparent;
         border: none;
-        color: rgba(255, 255, 255, 0.5); /* Semi-transparent white */
+        color: rgba(255, 255, 255, 0.5);
         cursor: pointer;
         padding: 4px;
         margin: -4px -4px 0 0;
@@ -156,7 +151,6 @@ import { animate, style, transition, trigger } from '@angular/animations';
         align-items: center;
         justify-content: center;
       }
-
       .toast-close:hover {
         background: rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 1);
@@ -165,9 +159,11 @@ import { animate, style, transition, trigger } from '@angular/animations';
   ],
 })
 export class ToastComponent {
-  toastService = inject(ToastService);
-  faCheck = faCheckCircle;
-  faError = faExclamationCircle;
-  faInfo = faInfoCircle;
-  faClose = faTimes;
+  // Services
+  protected toastService = inject(ToastService);
+
+  protected faCheck = faCheckCircle;
+  protected faError = faExclamationCircle;
+  protected faInfo = faInfoCircle;
+  protected faClose = faTimes;
 }

@@ -1,8 +1,12 @@
 package com.blog._1.dto.post;
 
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.blog._1.dto.user.UserPublicProfileDTO;
+import com.blog._1.models.Hashtag;
 import com.blog._1.models.Post;
 
 import lombok.Data;
@@ -28,6 +32,8 @@ public class PostResponse {
     // User interaction flags (set by the Service later)
     private boolean savedByCurrentUser;
     private boolean likedByCurrentUser;
+
+    private Set<String> tags;
 
     public static PostResponse from(Post post) {
         PostResponse dto = new PostResponse();
@@ -66,6 +72,10 @@ public class PostResponse {
         // Defaults
         dto.setLikedByCurrentUser(false);
         dto.setSavedByCurrentUser(false);
+
+        dto.setTags(post.getHashtags().stream()
+                .map(Hashtag::getName)
+                .collect(Collectors.toSet()));
 
         return dto;
     }

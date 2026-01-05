@@ -1,56 +1,48 @@
-@if (user) {
+@if (loading()) {
+<div class="loading-state">
+  <mat-spinner diameter="40"></mat-spinner>
+  <p>Loading profile...</p>
+</div>
+} @else if (user(); as u) {
 <div class="profile-page-container">
   <!-- 1. Minimal Profile Header -->
   <header class="profile-header">
     <div class="header-content">
       <div class="info-group">
-        <h1 class="profile-name">{{ user.lastname }} {{ user.firstname }}</h1>
-        <p class="profile-username">@{{ user.username }}</p>
+        <h1 class="profile-name">{{ u.lastname }} {{ u.firstname }}</h1>
+        <p class="profile-username">@{{ u.username }}</p>
 
-        @if (user.bio) {
-        <p class="profile-bio">{{ user.bio }}</p>
+        @if (u.bio) {
+        <p class="profile-bio">{{ u.bio }}</p>
         } @else {
         <p class="profile-bio empty">Writer on Blog.</p>
         }
 
         <div class="profile-meta-row">
           <span class="meta-item">
-            <strong>{{ user.followersCount || 0 }}</strong> Followers
+            <strong>{{ u.followersCount || 0 }}</strong> Followers
           </span>
           <span class="meta-item">
-            <strong>{{ user.followingCount || 0 }}</strong> Following
+            <strong>{{ u.followingCount || 0 }}</strong> Following
           </span>
 
           <!-- Edit / Follow Actions -->
           <div class="action-buttons">
-            @if (isCurrentUser) {
-            <!-- Edit Profile: Simple Text Link Button -->
-            <a
-              mat-button
-              color="accent"
-              [routerLink]="['/profile/update', user.id]"
-              class="text-btn"
-            >
+            @if (isCurrentUser()) {
+            <!-- Edit Profile -->
+            <a mat-button color="accent" [routerLink]="['/profile/update', u.id]" class="text-btn">
               Edit profile
             </a>
 
-            <!-- Write: Primary Pill Button (Override CSS) -->
+            <!-- Write Button -->
             <a mat-flat-button color="primary" routerLink="/new-story" class="write-btn">Write</a>
-
-            } @else if (isAdmin){
-            <a
-              mat-button
-              color="accent"
-              [routerLink]="['/profile/update', user.id]"
-              class="text-btn"
-            >
+            } @else if (isAdmin()) {
+            <a mat-button color="accent" [routerLink]="['/profile/update', u.id]" class="text-btn">
               Edit profile
             </a>
-
             } @else {
             <!-- Follow Button Logic -->
-            @if (user.following) {
-            <!-- Already Following: Stroked Button (Green Text) -->
+            @if (u.following) {
             <button
               mat-stroked-button
               color="primary"
@@ -60,7 +52,6 @@
               Following
             </button>
             } @else {
-            <!-- Not Following: Flat Button (Green Bg) -->
             <button mat-flat-button color="primary" class="follow-btn" (click)="toggleFollow()">
               Follow
             </button>
@@ -69,11 +60,11 @@
         </div>
       </div>
 
-      <!-- Avatar on Right (Desktop) or Top (Mobile) -->
+      <!-- Avatar -->
       <div class="avatar-group">
         <img
-          [src]="user.avatarUrl ? user.avatarUrl : '/default-avatar.jpg'"
-          alt="Avatar"
+          [src]="u.avatarUrl || '/default-avatar.jpg'"
+          [alt]="u.username"
           class="profile-avatar"
           onerror="this.src='/default-avatar.jpg'"
         />
@@ -85,11 +76,11 @@
 
   <!-- 2. User's Posts Feed (List View) -->
   <section class="user-feed">
-    <h3 class="section-title">{{ isCurrentUser ? 'Your stories' : 'Latest' }}</h3>
+    <h3 class="section-title">{{ isCurrentUser() ? 'Your stories' : 'Latest' }}</h3>
 
-    @if (user.posts.length > 0) {
+    @if (u.posts.length > 0) {
     <div class="posts-list">
-      @for (p of user.posts; track $index) {
+      @for (p of u.posts; track p.id) {
       <article class="feed-item">
         <div class="item-content" [routerLink]="['/posts', p.id]">
           <div class="text-content">
@@ -101,12 +92,12 @@
             </div>
           </div>
 
-          <!-- Thumbnail if exists -->
+          <!-- Thumbnail -->
           @if (p.mediaUrl) {
           <div class="media-thumbnail">
             @if (p.mediaType === 'IMAGE') {
-            <img [src]="'http://localhost:8080' + p.mediaUrl" />
-            } @if (p.mediaType === 'VIDEO') {
+            <img [src]="'http://localhost:8080' + p.mediaUrl" alt="Thumbnail" />
+            } @else if (p.mediaType === 'VIDEO') {
             <video [src]="'http://localhost:8080' + p.mediaUrl"></video>
             }
           </div>
@@ -122,10 +113,5 @@
     </div>
     }
   </section>
-</div>
-} @else {
-<div class="loading-state">
-  <mat-spinner diameter="40"></mat-spinner>
-  <p>Loading profile...</p>
 </div>
 }

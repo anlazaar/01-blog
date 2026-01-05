@@ -135,24 +135,37 @@ a[mat-button].nav-link:hover {
 /* --- Material Menu Customization (THE FIX FOR DARK MODE) --- */
 
 /* The Menu Panel (Popup Container) */
-::ng-deep .custom-menu.mat-mdc-menu-panel {
-  background-color: var(--background) !important; /* Black in dark mode */
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  box-shadow: var(--shadow-lg);
-  max-width: 320px;
-  min-width: 200px;
+::ng-deep .custom-menu.mat-mdc-menu-panel,
+::ng-deep .custom-menu .mat-mdc-menu-content {
+  background-color: var(--background) !important;
+  /* Add a border to make it pop against the background in dark mode */
+  border: 1px solid var(--border) !important;
+  padding: 0 !important; /* Removes default padding to allow headers/dividers to touch edges */
 }
 
 /* 1. Force Text Color on the Button Itself */
 ::ng-deep .custom-menu .mat-mdc-menu-item {
-  color: var(--text-primary) !important; /* White in dark mode */
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
-  min-height: 44px; /* Standardize height */
+  background-color: var(--background) !important;
+  transition: background-color 0.2s;
+}
+
+::ng-deep .custom-menu .mat-mdc-menu-item:hover:not([disabled]) {
+  background-color: var(--secondary) !important;
+}
+
+/* 5. Style the Divider inside the menu */
+::ng-deep .custom-menu .mat-divider {
+  border-top-color: var(--border) !important;
+}
+
+/* 6. Fix for the Elevation (Shadow) */
+::ng-deep .custom-menu.mat-mdc-menu-panel {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* 2. Force Text Color on the Internal Span (Crucial for MDC) */
-::ng-deep .custom-menu .mat-mdc-menu-item .mat-mdc-menu-item-text {
+::ng-deep .custom-menu .mat-mdc-menu-item .mat-mdc-menu-item-text,
+::ng-deep .custom-menu .mat-mdc-menu-item .mat-icon {
   color: var(--text-primary) !important;
 }
 
@@ -174,18 +187,27 @@ a[mat-button].nav-link:hover {
 /* 5. User Info Header (Inside the menu) */
 .user-info-header {
   padding: 16px;
-  outline: none;
-  cursor: default;
+  background-color: var(--background); /* Match menu */
 }
+
 .u-name {
-  font-weight: 700;
-  color: var(--text-primary); /* White */
-  font-size: 15px;
-  margin-bottom: 2px;
+  color: var(--text-primary);
+  margin: 0;
+  font-weight: 600;
 }
+
 .u-handle {
-  color: var(--text-secondary); /* Grey */
+  color: var(--text-secondary);
+  margin: 0;
   font-size: 13px;
+}
+.action-icon {
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+.action-icon:hover {
+  color: var(--text-primary);
+  background-color: transparent !important;
 }
 
 /* 6. Sign Out Button (Optional: Red Text if desired) */
@@ -237,6 +259,15 @@ a[mat-button].nav-link:hover {
   text-align: center;
   color: var(--text-muted);
   font-size: 13px;
+}
+
+::ng-deep .custom-menu .notif-item {
+  background-color: var(--background) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+::ng-deep .custom-menu .notif-item.unread {
+  background-color: var(--secondary) !important; /* Slightly different shade for unread */
 }
 
 /* --- Mobile Menu (Sidebar style) --- */

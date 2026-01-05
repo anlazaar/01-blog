@@ -1,7 +1,14 @@
-import { Component, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { switchMap } from 'rxjs';
+import { switchMap, tap } from 'rxjs/operators';
 
 // Models & Services
 import { UserService } from '../../services/UserService';
@@ -11,78 +18,93 @@ import { UserPublicProfileDTO } from '../../models/USER/UserPublicProfileDTO';
 // Angular Material Imports
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { environment } from '../../../environments/environment';
 
 @Component({
-  selector: 'app-product-page',
+  selector: 'app-profile-page',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    MatButtonModule,
-    MatIconModule,
-    MatTabsModule,
-    MatProgressSpinnerModule,
-  ],
+  imports: [CommonModule, RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   templateUrl: './profile.component.html',
   styleUrls: ['profile.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfilePage implements OnInit {
-  user!: UserPublicProfileDTO;
-  isCurrentUser: boolean = false;
-  isAdmin = false;
+  // --- INJECTIONS ---
+  private route = inject(ActivatedRoute);
+  private userService = inject(UserService);
+  private tokenService = inject(TokenService);
 
-  tokenService = inject(TokenService);
+  // --- STATE SIGNALS ---
+  user = signal<UserPublicProfileDTO | null>(null);
+  loading = signal(true);
+  isAdmin = signal(false);
 
-  constructor(private route: ActivatedRoute, private userService: UserService) {}
+  // --- COMPUTED VALUES ---
+  // Automatically checks if the loaded user ID matches the logged-in ID
+  isCurrentUser = computed(() => {
+    const u = this.user();
+    return u ? u.id === this.tokenService.getUUID() : false;
+  });
 
-  toggleFollow() {
-    if (this.user.following) {
-      this.userService.unfollowUser(this.user.id).subscribe({
-        next: (res) => {
-          this.user.following = false;
-          this.user.followersCount--;
-          console.log(res);
-        },
-        error: (err) => {
-          console.log('ERROR UNFOLLOWING USER :', err);
-        },
-      });
-    } else {
-      this.userService.followUser(this.user.id).subscribe({
-        next: (res) => {
-          this.user.following = true;
-          this.user.followersCount++;
-          console.log(res);
-        },
-        error: (err) => {
-          console.log('ERROR FOLLOWING USER :', err);
-        },
-      });
-    }
-  }
+  private readonly BACKEND_URL = environment.serverUrl;
 
   ngOnInit(): void {
-    // Subscribe to route param changes
+    this.isAdmin.set(this.tokenService.isAdmin());
+
+    // Reactively fetch user data when Route Param ID changes
     this.route.paramMap
       .pipe(
+        tap(() => this.loading.set(true)), // Show spinner on nav start
         switchMap((params) => {
-          const id = params.get('id')!;
-          this.isCurrentUser = this.tokenService.getUUID() === id;
-          this.isAdmin = this.tokenService.isAdmin();
+          const id = params.get('id');
+          if (!id) throw new Error('No ID provided');
           return this.userService.getUserPublicProfile(id);
         })
       )
       .subscribe({
         next: (data) => {
-          this.user = data;
-          console.log('USER', this.user);
-          this.user.avatarUrl = this.user.avatarUrl
-            ? 'http://localhost:8080' + this.user.avatarUrl
-            : '/default-avatar.jpg'; // Use local fallback
+          // Normalize Avatar URL immediately upon load
+          if (data.avatarUrl && !data.avatarUrl.startsWith('http')) {
+            data.avatarUrl = this.BACKEND_URL + data.avatarUrl;
+          }
+          this.user.set(data);
+          this.loading.set(false);
         },
-        error: (err) => console.log(err),
+        error: (err) => {
+          console.error('Error loading profile', err);
+          this.loading.set(false);
+        },
       });
+  }
+
+  toggleFollow() {
+    const currentUser = this.user();
+    if (!currentUser) return;
+
+    // 1. Calculate new state (Optimistic)
+    const wasFollowing = currentUser.following;
+    const newFollowingStatus = !wasFollowing;
+    const newCount = wasFollowing ? currentUser.followersCount - 1 : currentUser.followersCount + 1;
+
+    // 2. Update UI Immediately
+    this.user.update((u) =>
+      u ? { ...u, following: newFollowingStatus, followersCount: newCount } : null
+    );
+
+    // 3. Perform API Request
+    const action$ = wasFollowing
+      ? this.userService.unfollowUser(currentUser.id)
+      : this.userService.followUser(currentUser.id);
+
+    action$.subscribe({
+      error: (err) => {
+        console.error('Follow action failed', err);
+        // 4. Revert on Error
+        this.user.update((u) =>
+          u ? { ...u, following: wasFollowing, followersCount: currentUser.followersCount } : null
+        );
+      },
+    });
   }
 }

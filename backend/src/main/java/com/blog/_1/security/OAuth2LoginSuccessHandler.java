@@ -45,12 +45,10 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         if ("google".equalsIgnoreCase(provider)) {
             email = oAuth2User.getAttribute("email");
             avatarUrl = oAuth2User.getAttribute("picture");
-            // Google returns "John Doe". We want "johndoe"
             String fullName = oAuth2User.getAttribute("name");
             if (fullName != null) {
                 baseUsername = fullName.toLowerCase().replaceAll("\\s+", "");
-            } else {
-                // Fallback: use part of email before @ if name is missing
+            } else if (email != null) {
                 baseUsername = email.split("@")[0];
             }
         } else if ("github".equalsIgnoreCase(provider)) {
@@ -82,7 +80,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             user.setUsername(candidateUsername);
             user.setRole(Role.USER);
             user.setAvatarUrl(avatarUrl);
-            user.setPassword(""); // No password
+            user.setPassword("");
             user.setCompletedAccount(false);
 
             userRepository.save(user);

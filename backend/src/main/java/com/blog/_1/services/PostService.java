@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -36,6 +37,7 @@ public class PostService {
     private final NotificationService notificationService;
     private final SubscriptionRepository subscriptionRepository;
     private final SavedPostRepository savedPostRepository;
+    private final HashtagRepository hashtagRepository;
 
     @Value("${file.upload-dir:uploads}")
     private String uploadDir;
@@ -125,14 +127,20 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponse initPost(String title, String summary, String mediaType, MultipartFile mediaFile,
-            UUID authorId) {
+    public PostResponse initPost(String title, String summary, String mediaType,
+            MultipartFile mediaFile, UUID authorId, List<String> tags) { // <--- Added tags arg
         User author = userRepository.getReferenceById(authorId);
         Post post = new Post();
         post.setTitle(title);
         post.setDescription(summary);
         post.setAuthor(author);
         post.setStatus(PostStatus.DRAFT);
+
+        // Handle Tags
+        if (tags != null && !tags.isEmpty()) {
+            post.setHashtags(processHashtags(tags));
+        }
+
         if (mediaFile != null && !mediaFile.isEmpty()) {
             post.setMediaUrl(saveFile(mediaFile));
             post.setMediaType(mediaType);
@@ -298,6 +306,8 @@ public class PostService {
         dto.setLikeCount(base.getLikeCount());
         dto.setCommentCount(base.getCommentCount());
 
+        dto.setTags(base.getTags());
+
         // 3. Map Comments explicitly
         if (post.getComments() != null) {
             List<CommentDTO> commentDTOs = post.getComments().stream()
@@ -359,9 +369,6 @@ public class PostService {
         if (post.getMediaUrl() != null) {
             deleteFileFromDisk(post.getMediaUrl());
         }
-
-        // JPA will handle cascading deletes for Likes/Comments/Chunks if mapped
-        // correctly
         postRepository.delete(post);
     }
 
@@ -376,12 +383,57 @@ public class PostService {
             post.setMediaType(request.getMediaType());
 
         if (request.getMediaUrl() != null && !request.getMediaUrl().equals(post.getMediaUrl())) {
-            // Delete the old image to free space
             deleteFileFromDisk(post.getMediaUrl());
-            // Set the new one
             post.setMediaUrl(request.getMediaUrl());
+        }
+
+        if (request.getTags() != null) {
+            post.setHashtags(processHashtags(request.getTags()));
         }
 
         return PostResponse.from(postRepository.save(post));
     }
+
+    private Set<Hashtag> processHashtags(List<String> tagNames) {
+        Set<Hashtag> hashtags = new HashSet<>();
+        if (tagNames == null || tagNames.isEmpty())
+            return hashtags;
+
+        for (String name : tagNames) {
+            String cleanName = name.trim().replace("#", "").toLowerCase();
+
+            if (cleanName.isBlank())
+                continue;
+
+            // 2. Find or Create
+            Hashtag tag = hashtagRepository.findByName(cleanName)
+                    .orElseGet(() -> hashtagRepository.save(
+                            Hashtag.builder().name(cleanName).build()));
+
+            hashtags.add(tag);
+        }
+        return hashtags;
+    }
+
+    public Page<PostResponse> getByTag(String tagName, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        // Sanitize the tag (frontend might send "#Tech" or just "Tech")
+        String cleanTag = tagName.trim().replace("#", "").toLowerCase();
+
+        // 1. Fetch Entities (Only Published ones)
+        Page<Post> postsPage = postRepository.findByHashtags_NameAndStatus(
+                cleanTag,
+                PostStatus.PUBLISHED,
+                pageable);
+
+        // 2. Map to DTO
+        Page<PostResponse> dtoPage = postsPage.map(PostResponse::from);
+
+        // 3. Enrich with User Interaction (Likes/Saves)
+        enrichWithUserInteraction(dtoPage.getContent());
+
+        return dtoPage;
+    }
+
 }
