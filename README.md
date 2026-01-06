@@ -1,125 +1,224 @@
-      ## 01Blog
+# 01Blog
 
-      ### Overview
+## Overview
 
-      In this project, you will build a **social blogging platform** called **01Blog**, where students can share their learning experiences, discoveries, and progress throughout their journey. Users can interact with each other’s content, follow one another, and engage in meaningful discussions.
+**01Blog** is a fullstack **social blogging platform** designed for students to document their learning journey. Users can create posts, follow other learners, and interact with content through likes, comments, and subscriptions. The platform also provides real-time notifications, draft management, and advanced authentication options to create a secure, engaging experience.
 
-      This project will guide you through creating a fullstack application using **Java Spring Boot** for the backend and **Angular** for the frontend — from setting up REST APIs to building an interactive and responsive interface.
+Built with **Java Spring Boot** for the backend and **Angular** for the frontend, 01Blog demonstrates modern fullstack development practices, including secure authentication, role-based access control, and responsive UI design.
 
-      ### Role Play
+---
 
-      You are a **fullstack developer** working for a platform dedicated to helping students document their learning journey. Your mission is to create a user-friendly and secure blogging system where students can post content, subscribe to others, and report inappropriate behavior. Administrators must have tools to moderate the content and manage users.
+## Features
 
-      ### Learning Objectives
+### Core Features
 
-      - Master **Java Spring Boot** (REST API, authentication, services, security)
-      - Build **Angular** applications (components, routing, services, UI/UX)
-      - Understand **fullstack architecture** and RESTful API integration
-      - Handle **user-generated content** (media upload, content management)
-      - Design and use **relational databases** for social interactions (likes, comments, subscriptions)
-      - Implement **secure authentication** and **role-based access**
-      - Create tools for **moderation and administration**
-      - Collaborate using **Git**, GitHub, and agile practices (issues, branches, commits)
+- **User Authentication & Authorization**
 
-      ### Instructions
+  - Register and login with email/password, Google OAuth, or GitHub OAuth
+  - Role-based access control: `user` and `admin`
+  - Secure password storage with Spring Security & JWT
 
-      #### Backend
+- **User Profiles ("Blocks")**
 
-      - **Authentication**
+  - Public profile page for each user displaying all their posts
+  - Subscribe/unsubscribe to users
+  - View followers and subscriptions
+  - Real-time notifications for new posts from followed users
 
-        - User registration, login, and secure password handling
-        - Role-based access control (user vs admin)
+- **Posts**
 
-      - **User Block Page**
+  - Create, edit, delete posts with media (images/videos) and text
+  - Markdown support for rich text formatting
+  - Draft posts and save posts for later reading
+  - Hashtags support for better content discovery
+  - Timestamps, likes, and comments on each post
+  - Infinite scroll for content feeds
 
-        - Each user has a public profile (their "block") listing all their posts
-        - Users can subscribe to other profiles
-        - Subscribed users receive notifications when new posts are published
+- **Post Interaction**
 
-      - **Posts**
+  - Like and comment on posts (real-time updates)
+  - Media upload with previews
+  - Notifications for likes, comments, and follows
 
-        - Users can create/edit/delete posts with media (image or video) and text
-        - Each post includes a timestamp, description, and media preview
-        - Other users can like and comment on posts
+- **Reports & Moderation**
 
-      - **Reports**
+  - Users can report inappropriate content with a reason
+  - Reports are visible only to admins
+  - Admin panel for user management, post moderation, and handling reports
 
-        - Users can report profiles for inappropriate or offensive content
-        - Reports must include a reason and timestamp
-        - Reports are stored and visible only to admins
+- **Admin Dashboard**
 
-      - **Admin Panel**
-        - Admin can view and manage all users
-        - Admin can manage posts and remove inappropriate content
-        - Admin can handle user reports (ban/delete user or post)
-        - All admin routes must be protected by access control
+  - View and manage all users and posts
+  - Ban or delete users, remove inappropriate posts
+  - Analytics: most active users, most reported users, post statistics
+  - Clean UI designed for moderation efficiency
 
-      #### Frontend
+- **UI/UX**
 
-      - **User Experience**
+  - Responsive design with Angular Material
+  - Dark mode toggle (optional)
+  - Clean, modern layout with intuitive navigation
 
-        - Homepage with a feed of posts from subscribed users
-        - Personal block page with full post management (CRUD)
-        - View other users’ blocks and subscribe/unsubscribe
+---
 
-      - **Post Interaction**
+## Bonus Features
 
-        - Like and comment on posts (comments update in real time or via refresh)
-        - Upload media (images/videos) with previews
-        - Display timestamps, likes, and comments on each post
+- Real-time notifications using **SSE**
+- Infinite scroll for feeds and posts
+- Markdown editor with live preview
+- Save posts to read later
+- Hashtags support for content organization
+- Multi-auth login (Google & GitHub OAuth)
 
-      - **Notifications**
+---
 
-        - Notification icon showing updates from subscribed profiles
-        - Mark notifications as read/unread
+## Tech Stack
 
-      - **Reporting**
+| Layer           | Technology                                                    |
+| --------------- | ------------------------------------------------------------- |
+| Backend         | Java Spring Boot, Spring Security, JWT, JPA, PostgreSQL/MySQL |
+| Frontend        | Angular, Angular Material                                     |
+| Realtime        | SSE                                                           |
+| Authentication  | Email/Password, Google OAuth, GitHub OAuth                    |
+| Media Storage   | Local filesystem                                              |
+| Version Control | Git & GitHub                                                  |
 
-        - Report a user with a text reason (UI component/modal)
-        - Confirmation before submitting the report
+---
 
-      - **Admin Dashboard**
+## Architecture
 
-        - View all users, posts, and submitted reports
-        - Delete or ban users, remove or hide posts
-        - Clean UI for moderation tasks
+- **Backend**: RESTful API using Spring Boot
 
-      - Use a responsive UI framework: **Angular Material** or **Bootstrap**
+  - Authentication & authorization
+  - User management
+  - Posts CRUD with media
+  - Notifications & reporting
+  - Admin endpoints
 
-      ### Constraints
+- **Frontend**: Angular SPA
 
-      - Use **Spring Security** or **JWT** for authentication and role management
-      - Store media securely (in file system or using cloud storage like AWS S3)
-      - Use a relational SQL database (e.g., PostgreSQL or MySQL)
-      - All routes must be protected according to user roles
-      - Code generation tools (like JHipster) are **not allowed**
-      - The project must include a detailed **README** with:
-        - How to run the backend and frontend
-        - Technologies used
+  - Components for feed, user block, post management, notifications
+  - Routing and services for API integration
+  - Responsive UI with Angular Material
+  - Infinite scroll and markdown support
 
-      ### Evaluation
+- **Database**: Relational SQL database (PostgreSQL or MySQL)
 
-      This project is evaluated through **peer-to-peer code review** and **functional demo**. Evaluation criteria include:
+  - Tables: Users, Posts, Comments, Likes, Subscriptions, Reports, Notifications
+  - Optimized for feed queries and real-time updates
 
-      - 💡 **Functionality**: All features implemented and working as expected
-      - 🔐 **Security**: Proper role-based access and secure user data handling
-      - 🎨 **UI/UX**: Responsive, intuitive, and clean interface
+---
 
-      ### Bonus Features (Optional but Recommended)
+## Installation
 
-      - Real-time updates using WebSockets (for comments or notifications)
-      - infinite scroll on feeds
-      - Dark mode toggle
-      - Basic analytics for admins (number of posts, most reported users)
-      - Markdown support for posts
+### Backend
 
-      ### Resources
+1. Clone the repository:
 
-      - [Spring Boot Documentation](https://spring.io/projects/spring-boot)
-      - [Angular Official Documentation](https://angular.io/docs)
-      - [Angular Material Documentation](https://material.angular.io/components/categorie s)
-      - [Spring Boot File Upload](https://www.bezkoder.com/spring-boot-upload-file-database/)
-      - [JWT Introduction – Auth0](https://auth0.com/learn/json-web-tokens/)
-      - [Spring Security Basics – Java Guides](https://www.javaguides.net/2022/01/spring-security-tutorial.html)
-      - [PostgreSQL Basics](https://www.postgresqltutorial.com/)
-      - [JPA (Java Persistence API) Guide](https://www.baeldung.com/the-persistence-layer-with-spring-data-jpa)
+```bash
+git clone https://github.com/yourusername/01Blog.git
+cd 01Blog/backend
+```
+
+2. Configure your database in `application.properties`:
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/01blog
+spring.datasource.username=YOUR_DB_USERNAME
+spring.datasource.password=YOUR_DB_PASSWORD
+spring.jpa.hibernate.ddl-auto=update
+```
+
+3. Run the backend:
+
+```bash
+./mvnw spring-boot:run
+```
+
+---
+
+### Frontend
+
+1. Navigate to frontend directory:
+
+```bash
+cd ../frontend
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Run the frontend:
+
+```bash
+ng serve
+```
+
+4. Open `http://localhost:4200` in your browser.
+
+---
+
+## Usage
+
+- Register a new account or login with Google/GitHub
+- Create, edit, or delete posts from your block
+- Subscribe to other users to receive real-time notifications
+- Like and comment on posts
+- Report inappropriate content (for admins to moderate)
+- Admins can access `/admin` dashboard to manage users and posts
+
+---
+
+## Screenshots
+
+| Home Feed         | Post Page         |
+| ----------------- | ----------------- |
+| ![](public/1.png) | ![](public/2.png) |
+
+| User Page         | Saved Posts       |
+| ----------------- | ----------------- |
+| ![](public/3.png) | ![](public/4.png) |
+
+| Profile Page      | Create Post       |
+| ----------------- | ----------------- |
+| ![](public/5.png) | ![](public/6.png) |
+
+| Admin Dashboard   | Users Dashboard   |
+| ----------------- | ----------------- |
+| ![](public/7.png) | ![](public/8.png) |
+
+| Reports Dashboard |
+| ----------------- |
+| ![](public/9.png) |
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -m 'Add feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
+5. Open a Pull Request
+
+---
+
+## License
+
+MIT License © 2026 Anass Lazaar
+
+---
+
+## Resources
+
+- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
+- [Angular Documentation](https://angular.io/docs)
+- [Angular Material](https://material.angular.io/)
+- [Spring Boot File Upload](https://www.bezkoder.com/spring-boot-upload-file-database/)
+- [JWT Introduction – Auth0](https://auth0.com/learn/json-web-tokens/)
+- [Spring Security Basics – Java Guides](https://www.javaguides.net/2022/01/spring-security-tutorial.html)
+- [PostgreSQL Basics](https://www.postgresqltutorial.com/)
+- [JPA Guide – Baeldung](https://www.baeldung.com/the-persistence-layer-with-spring-data-jpa)
