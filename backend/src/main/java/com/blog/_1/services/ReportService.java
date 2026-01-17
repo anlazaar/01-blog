@@ -25,7 +25,6 @@ public class ReportService {
 
     public ReportResponse createReport(ReportCreateRequest req) {
         User reporter = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        // Optimization: Use Reference
         User reportedUser = userRepository.getReferenceById(req.getReportedUserId());
 
         Report report = new Report();

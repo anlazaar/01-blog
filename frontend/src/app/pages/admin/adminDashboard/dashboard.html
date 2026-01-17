@@ -43,15 +43,13 @@
       <div class="toast-message">{{ message() }}</div>
       }
 
-      <!-- Global Loading (Initial) -->
+      <!-- Global Loading -->
       @if (isLoading()) {
       <div class="loading-state"><mat-spinner diameter="40"></mat-spinner></div>
       }
 
       <!-- 1. OVERVIEW TAB -->
-      @if (activeTab() === 'overview' && !isLoading() && stats()) {
-      <!-- We use an alias 's' for cleaner template access to stats() -->
-      @let s = stats()!;
+      @if (activeTab() === 'overview' && !isLoading() && stats()) { @let s = stats()!;
       <section class="overview-section">
         <div class="stats-grid">
           <div class="stat-card">
@@ -206,9 +204,9 @@
             <ng-container matColumnDef="author">
               <th mat-header-cell *matHeaderCellDef>Author</th>
               <td mat-cell *matCellDef="let post">
-                <a [routerLink]="['/profile', post.author?.id]" class="cell-link">{{
-                  post.author?.username
-                }}</a>
+                <a [routerLink]="['/profile', post.author?.id]" class="cell-link">
+                  {{ post.author?.username }}
+                </a>
               </td>
             </ng-container>
 

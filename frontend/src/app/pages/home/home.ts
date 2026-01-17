@@ -1,11 +1,4 @@
-import {
-  Component,
-  inject,
-  OnInit,
-  signal,
-  ChangeDetectionStrategy,
-  WritableSignal,
-} from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common'; // DatePipe, UpperCasePipe
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
@@ -19,13 +12,13 @@ import { Page } from '../../models/Page';
 import { PostOptionsMenuComponent } from '../../share/PostOptionsMenu/post-options-menu';
 import { ConfirmDialogComponent } from '../../share/ConfirmDialogComponent/confirm-dialog';
 import { SuggestedUsersComponent } from '../../share/SuggestedAccounts/suggested-users';
+import { PopularTagsComponent } from '../../share/popular-tags/popular-tags';
 
 // Angular Material Imports
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { PopularTagsComponent } from '../../share/popular-tags/popular-tags';
 
 @Component({
   selector: 'app-home',
@@ -35,11 +28,11 @@ import { PopularTagsComponent } from '../../share/popular-tags/popular-tags';
     RouterLink,
     PostOptionsMenuComponent,
     SuggestedUsersComponent,
+    PopularTagsComponent,
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    PopularTagsComponent,
   ],
   templateUrl: './home.html',
   styleUrl: './home.css',
@@ -53,46 +46,49 @@ export class Home implements OnInit {
   private dialog = inject(MatDialog);
   private route = inject(ActivatedRoute);
 
-  // --- STATE SIGNALS ---
+  // --- 1. STATE SIGNALS ---
   posts = signal<PostResponse[]>([]);
   loading = signal(true);
   loadingMore = signal(false);
   hasMorePosts = signal(true);
 
-  // User Context Signals
-  isAdmin = signal(false);
-  currentUserId = signal<string | null>(null);
-
+  // Filter state
   selectedTag = signal<string | null>(null);
 
+  // --- 2. COMPUTED / DERIVED STATE ---
+  // We reference TokenService signals directly for reactivity
+  isAdmin = this.tokenService.isAdminSignal;
+  currentUserId = this.tokenService.userId;
+
   // Constants
-  readonly skeletonItems = new Array(5); // For skeleton loader loop
+  readonly skeletonItems = new Array(5);
   private currentPage = 0;
   private readonly pageSize = 4;
 
   ngOnInit(): void {
-    this.isAdmin.set(this.tokenService.isAdmin());
-    this.currentUserId.set(this.tokenService.getUUID());
-
     // Listen to Query Params (e.g., ?tag=Java)
     this.route.queryParams.subscribe((params) => {
       const tag = params['tag'];
-
-      // Reset State on route change
-      this.posts.set([]);
-      this.currentPage = 0;
-      this.hasMorePosts.set(true);
-      this.loading.set(true);
-
-      if (tag) {
-        this.selectedTag.set(tag);
-        this.loadPostsByTag(tag);
-      } else {
-        this.selectedTag.set(null);
-        this.loadAllPosts();
-      }
+      this.resetFeed(tag);
     });
   }
+
+  private resetFeed(tag: string | undefined) {
+    this.posts.set([]);
+    this.currentPage = 0;
+    this.hasMorePosts.set(true);
+    this.loading.set(true);
+
+    if (tag) {
+      this.selectedTag.set(tag);
+      this.loadPostsByTag(tag);
+    } else {
+      this.selectedTag.set(null);
+      this.loadAllPosts();
+    }
+  }
+
+  // --- DATA LOADING ---
 
   private loadPostsByTag(tag: string) {
     this.postService.getPostsByTag(tag, this.currentPage, this.pageSize).subscribe({
@@ -115,7 +111,7 @@ export class Home implements OnInit {
       this.posts.update((current) => [...current, ...data.content]);
     }
 
-    this.updatePaginationState(data);
+    this.hasMorePosts.set(data.page.number < data.page.totalPages - 1);
     this.loading.set(false);
     this.loadingMore.set(false);
   }
@@ -126,7 +122,8 @@ export class Home implements OnInit {
     this.loadingMore.set(false);
   }
 
-  // Called by Load More Button
+  // --- ACTIONS ---
+
   loadMore() {
     if (this.loadingMore() || !this.hasMorePosts()) return;
 
@@ -141,27 +138,24 @@ export class Home implements OnInit {
     }
   }
 
-  private updatePaginationState(data: Page<PostResponse>) {
-    const hasMore = data.page.number < data.page.totalPages - 1;
-    this.hasMorePosts.set(data.page.totalPages > 0 && hasMore);
-  }
-
-  // --- ACTIONS ---
-
   toggleSave(event: Event, post: PostResponse) {
     event.stopPropagation();
 
-    // Optimistic UI Update
-    this.updatePostInList(post.id, { savedByCurrentUser: !post.savedByCurrentUser });
+    // 1. Optimistic UI Update
+    const newState = !post.savedByCurrentUser;
+    this.updatePostInList(post.id, { savedByCurrentUser: newState });
 
+    // 2. API Call
     this.postService.toggleSavePost(post.id).subscribe({
       next: (res) => {
-        // Ensure state matches server response
-        this.updatePostInList(post.id, { savedByCurrentUser: res.isSaved });
+        // Confirm server state matches
+        if (res.isSaved !== newState) {
+          this.updatePostInList(post.id, { savedByCurrentUser: res.isSaved });
+        }
       },
       error: () => {
-        // Revert on error
-        this.updatePostInList(post.id, { savedByCurrentUser: !post.savedByCurrentUser });
+        // 3. Rollback on error
+        this.updatePostInList(post.id, { savedByCurrentUser: !newState });
       },
     });
   }
@@ -170,12 +164,8 @@ export class Home implements OnInit {
     this.router.navigate(['/']);
   }
 
-  onReport(id: string) {
-    this.router.navigate(['/report', id]);
-  }
-
-  onUpdate(post: PostResponse) {
-    this.router.navigate(['/p', post.id, 'edit']);
+  onReport(userId: string) {
+    this.router.navigate(['/report', userId]); // Assuming route is /report/:userId
   }
 
   onDelete(p: PostResponse) {

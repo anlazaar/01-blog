@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { PostResponse, SinglePostResponse, CommentDTO } from '../models/POST/PostResponse';
 import { Page } from '../models/Page';
@@ -15,15 +15,16 @@ export interface PostChunkResponse {
   providedIn: 'root',
 })
 export class PostService {
-  // Base URLs derived from environment
+  private http = inject(HttpClient);
+
+  // Base URLs
   private POSTS_URL = `${environment.apiUrl}/posts`;
   private LIKES_URL = `${environment.apiUrl}/likes`;
   private COMMENTS_URL = `${environment.apiUrl}/comments`;
   private REPORTS_URL = `${environment.apiUrl}/reports`;
 
-  constructor(private http: HttpClient) {}
+  // --- 1. POST CREATION & EDITING ---
 
-  // 1. Init Post
   initPost(formData: FormData): Observable<PostResponse> {
     return this.http.post<PostResponse>(`${this.POSTS_URL}/init`, formData);
   }
@@ -32,7 +33,6 @@ export class PostService {
     return this.http.put<PostResponse>(`${this.POSTS_URL}/${id}`, data);
   }
 
-  // 2. Upload One Chunk
   uploadChunk(postId: string, index: number, content: string): Observable<void> {
     return this.http.post<void>(`${this.POSTS_URL}/chunk`, {
       postId,
@@ -41,19 +41,55 @@ export class PostService {
     });
   }
 
-  // 3. Finalize
   publishPost(postId: string, totalChunks: number): Observable<PostResponse> {
     return this.http.post<PostResponse>(`${this.POSTS_URL}/${postId}/publish`, null, {
       params: { totalChunks: totalChunks.toString() },
     });
   }
 
-  // 4. Get Metadata Only
+  uploadEditorMedia(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${this.POSTS_URL}/media/upload`, formData);
+  }
+
+  clearPostContent(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.POSTS_URL}/${id}/content`);
+  }
+
+  deletePost(id: string) {
+    return this.http.delete(`${this.POSTS_URL}/${id}`);
+  }
+
+  // --- 2. RETRIEVAL & FEED ---
+
   getPostMetadata(id: string): Observable<SinglePostResponse> {
     return this.http.get<SinglePostResponse>(`${this.POSTS_URL}/${id}`);
   }
 
-  // 5. Lazy Load Chunks
+  getAllPosts(page: number = 0, size: number = 4): Observable<Page<PostResponse>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<Page<PostResponse>>(this.POSTS_URL, { params });
+  }
+
+  getDrafts(): Observable<PostResponse[]> {
+    return this.http.get<PostResponse[]>(`${this.POSTS_URL}/drafts`);
+  }
+
+  getSavedPosts(): Observable<PostResponse[]> {
+    return this.http.get<PostResponse[]>(`${this.POSTS_URL}/saved`);
+  }
+
+  getPostsByTag(tag: string, page: number, size: number): Observable<Page<PostResponse>> {
+    // Ensure clean tag for URL
+    const cleanTag = tag.replace('#', '');
+    return this.http.get<Page<PostResponse>>(
+      `${this.POSTS_URL}/tag/${cleanTag}?page=${page}&size=${size}`
+    );
+  }
+
+  // --- 3. CONTENT LOADING ---
+
   getPostContentChunks(
     postId: string,
     page: number,
@@ -64,11 +100,14 @@ export class PostService {
     );
   }
 
-  // 6. Get All Posts (Feed)
-  getAllPosts(page: number = 0, size: number = 4): Observable<Page<PostResponse>> {
-    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
-    return this.http.get<Page<PostResponse>>(this.POSTS_URL, { params });
+  // Helper: Combines chunks into one string
+  getFullPostContent(id: string): Observable<string> {
+    return this.getPostContentChunks(id, 0, 100).pipe(
+      map((chunks) => chunks.map((c) => c.content).join(''))
+    );
   }
+
+  // --- 4. INTERACTION (Likes, Comments, Reports) ---
 
   likePost(id: string) {
     return this.http.post(`${this.LIKES_URL}/${id}/like`, {});
@@ -78,14 +117,14 @@ export class PostService {
     return this.http.post(`${this.LIKES_URL}/${id}/unlike`, {});
   }
 
+  toggleSavePost(id: string): Observable<{ isSaved: boolean }> {
+    return this.http.post<{ isSaved: boolean }>(`${this.POSTS_URL}/${id}/save`, {});
+  }
+
   createComment(postId: string, text: string): Observable<CommentDTO> {
     return this.http.post<CommentDTO>(`${this.COMMENTS_URL}/post/${postId}`, {
       text,
     });
-  }
-
-  deletePost(id: string) {
-    return this.http.delete(`${this.POSTS_URL}/${id}`);
   }
 
   reportUser(reason: string, userId: string) {
@@ -95,44 +134,8 @@ export class PostService {
     });
   }
 
-  uploadEditorMedia(file: File): Observable<{ url: string }> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<{ url: string }>(`${this.POSTS_URL}/media/upload`, formData);
-  }
+  // --- 5. HASHTAGS ---
 
-  getDrafts(): Observable<PostResponse[]> {
-    return this.http.get<PostResponse[]>(`${this.POSTS_URL}/drafts`);
-  }
-
-  clearPostContent(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.POSTS_URL}/${id}/content`);
-  }
-
-  getFullPostContent(id: string): Observable<string> {
-    return this.getPostContentChunks(id, 0, 100).pipe(
-      map((chunks) => chunks.map((c) => c.content).join(''))
-    );
-  }
-
-  toggleSavePost(id: string): Observable<{ isSaved: boolean }> {
-    return this.http.post<{ isSaved: boolean }>(`${this.POSTS_URL}/${id}/save`, {});
-  }
-
-  getSavedPosts(): Observable<PostResponse[]> {
-    return this.http.get<PostResponse[]>(`${this.POSTS_URL}/saved`);
-  }
-
-  getPostsByTag(tag: string, page: number, size: number): Observable<Page<PostResponse>> {
-    // Handles the # automatically via URL encoding if needed,
-    // but better to strip it client side or ensure backend handles it.
-    const cleanTag = tag.replace('#', '');
-    return this.http.get<Page<PostResponse>>(
-      `${this.POSTS_URL}/tag/${cleanTag}?page=${page}&size=${size}`
-    );
-  }
-
-  // Add this method to fetch popular tags
   getPopularTags(): Observable<string[]> {
     return this.http.get<string[]>(`${environment.apiUrl}/hashtags/popular?limit=10`);
   }

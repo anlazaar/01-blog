@@ -26,22 +26,21 @@
             <strong>{{ u.followingCount || 0 }}</strong> Following
           </span>
 
-          <!-- Edit / Follow Actions -->
+          <!-- ACTION BUTTONS -->
           <div class="action-buttons">
             @if (isCurrentUser()) {
-            <!-- Edit Profile -->
+            <!-- Case 1: My Profile -->
             <a mat-button color="accent" [routerLink]="['/profile/update', u.id]" class="text-btn">
               Edit profile
             </a>
-
-            <!-- Write Button -->
             <a mat-flat-button color="primary" routerLink="/new-story" class="write-btn">Write</a>
             } @else if (isAdmin()) {
+            <!-- Case 2: Admin Viewing Someone Else -->
             <a mat-button color="accent" [routerLink]="['/profile/update', u.id]" class="text-btn">
-              Edit profile
+              Edit profile (Admin)
             </a>
             } @else {
-            <!-- Follow Button Logic -->
+            <!-- Case 3: Viewing Someone Else -->
             @if (u.following) {
             <button
               mat-stroked-button

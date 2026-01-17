@@ -6,8 +6,6 @@ import {
   ViewChild,
   ElementRef,
   signal,
-  effect,
-  computed,
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -18,12 +16,14 @@ import { switchMap } from 'rxjs';
 // Models & Services
 import { PostResponse, SinglePostResponse } from '../../models/POST/PostResponse';
 import { TokenService } from '../../services/token.service';
+import { PostService } from '../../services/post.service';
 
 // Components
 import { MarkdownComponent } from 'ngx-markdown';
 import { PostOptionsMenuComponent } from '../../share/PostOptionsMenu/post-options-menu';
 import { SuggestedUsersComponent } from '../../share/SuggestedAccounts/suggested-users';
 import { ConfirmDialogComponent } from '../../share/ConfirmDialogComponent/confirm-dialog';
+import { PopularTagsComponent } from '../../share/popular-tags/popular-tags';
 
 // Material
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -31,8 +31,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { PostService } from '../../services/post.service';
-import { PopularTagsComponent } from "../../share/popular-tags/popular-tags";
 
 @Component({
   selector: 'app-post-page',
@@ -44,14 +42,14 @@ import { PopularTagsComponent } from "../../share/popular-tags/popular-tags";
     MarkdownComponent,
     PostOptionsMenuComponent,
     SuggestedUsersComponent,
+    PopularTagsComponent,
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    PopularTagsComponent
-],
-  providers: [PostService],
+  ],
+  providers: [PostService], // Optional if provided in root
   templateUrl: './post.html',
   styleUrl: './post.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -64,13 +62,13 @@ export class PostPage implements OnInit, OnDestroy {
   private tokenService = inject(TokenService);
   private dialog = inject(MatDialog);
 
-  // --- STATE SIGNALS ---
+  // --- 1. STATE SIGNALS ---
   post = signal<SinglePostResponse | null>(null);
   loading = signal(true);
 
-  // User Context
-  isAdmin = signal(false);
-  currentUserId = signal<string | null>(null);
+  // User Context (Read from Service Signals)
+  isAdmin = this.tokenService.isAdminSignal;
+  currentUserId = this.tokenService.userId;
 
   // Content Chunking
   fullContentDisplay = signal('');
@@ -87,31 +85,31 @@ export class PostPage implements OnInit, OnDestroy {
   @ViewChild('scrollAnchor') scrollAnchorRef!: ElementRef;
 
   ngOnInit(): void {
-    // User Init
-    this.currentUserId.set(this.tokenService.getUUID());
-    this.isAdmin.set(this.tokenService.isAdmin());
-
     // Route Subscription
     this.route.paramMap
       .pipe(
         switchMap((params) => {
-          const id = params.get('id')!;
-          this.resetState(); // Reset signals when ID changes
+          const id = params.get('id');
+          if (!id) throw new Error('Post ID missing');
+
+          this.resetState();
           return this.postService.getPostMetadata(id);
         })
       )
       .subscribe({
         next: (res) => {
-          // Ensure comments array exists
+          // Normalize data
           const data = { ...res, comments: res.comments || [] };
-          console.log(data);
           this.post.set(data);
           this.loading.set(false);
 
-          // Start loading content
-          // We use setTimeout to let the DOM render the scroll anchor first
-          setTimeout(() => this.initObserver(), 0);
-          this.loadNextChunk(res.id);
+          // Start Loading Content
+          // Use setTimeout to ensure the view (scroll anchor) exists
+          setTimeout(() => {
+            this.initObserver();
+            // Initial load
+            this.loadNextChunk(res.id);
+          }, 0);
         },
         error: (err) => {
           console.error(err);
@@ -131,9 +129,11 @@ export class PostPage implements OnInit, OnDestroy {
     this.disconnectObserver();
   }
 
-  // --- SCROLL OBSERVER ---
+  // --- 2. SCROLL OBSERVER ---
+
   private initObserver() {
-    if (this.observer) this.disconnectObserver();
+    this.disconnectObserver(); // Safety clear
+
     if (!this.scrollAnchorRef) return;
 
     const options = { root: null, rootMargin: '200px', threshold: 0.1 };
@@ -191,24 +191,26 @@ export class PostPage implements OnInit, OnDestroy {
       });
   }
 
-  // --- ACTIONS ---
+  // --- 3. ACTIONS ---
 
   toggleLike(postObj: SinglePostResponse) {
-    // Optimistic Update
+    // 1. Optimistic Update
     const wasLiked = postObj.likedByCurrentUser;
     const newCount = wasLiked ? postObj.likeCount - 1 : postObj.likeCount + 1;
 
+    // Update signal immediately
     this.post.update((p) =>
       p ? { ...p, likedByCurrentUser: !wasLiked, likeCount: newCount } : null
     );
 
+    // 2. API Call
     const action$ = wasLiked
       ? this.postService.unlikePost(postObj.id)
       : this.postService.likePost(postObj.id);
 
     action$.subscribe({
       error: () => {
-        // Revert on error
+        // 3. Revert on error
         this.post.update((p) =>
           p ? { ...p, likedByCurrentUser: wasLiked, likeCount: postObj.likeCount } : null
         );
@@ -229,7 +231,6 @@ export class PostPage implements OnInit, OnDestroy {
           return {
             ...current,
             comments: [...current.comments, comment],
-            commentCount: current.commentCount + 1, // Assuming there's a count property, or derived from length
           };
         });
         this.newComment.set('');

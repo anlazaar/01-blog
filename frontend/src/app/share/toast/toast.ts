@@ -1,5 +1,5 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common'; // Needed for pipes/directives if any, but specifically mostly handled by control flow now
+import { CommonModule } from '@angular/common';
 import { ToastService } from '../../services/toast.service';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {
@@ -32,8 +32,7 @@ import { animate, style, transition, trigger } from '@angular/animations';
   template: `
     <div class="toast-container">
       <!-- 
-         @for loop requires a 'track' expression. 
-         Using 'toast.id' ensures Angular knows exactly which element to animate out.
+         Access the signal directly: toastService.toasts()
       -->
       @for (toast of toastService.toasts(); track toast.id) {
       <div class="toast-glass" [class]="toast.type" @toastAnimation>
@@ -159,9 +158,10 @@ import { animate, style, transition, trigger } from '@angular/animations';
   ],
 })
 export class ToastComponent {
-  // Services
+  // Make service protected so template can access it
   protected toastService = inject(ToastService);
 
+  // Icons
   protected faCheck = faCheckCircle;
   protected faError = faExclamationCircle;
   protected faInfo = faInfoCircle;

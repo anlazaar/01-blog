@@ -22,7 +22,6 @@ export interface DashboardStats {
 })
 export class AdminService {
   private http = inject(HttpClient);
-  // Use the global URL + specific endpoint
   private apiUrl = `${environment.apiUrl}/admin`;
 
   // === STATS ===
@@ -61,9 +60,12 @@ export class AdminService {
 
   updateUserRole(id: string, role: string) {
     return this.http.patch(
-      `${this.apiUrl}/users/${id}/role?role=${role}`,
+      `${this.apiUrl}/users/${id}/role`,
       {},
-      { responseType: 'text' }
+      {
+        params: { role },
+        responseType: 'text',
+      }
     );
   }
 }

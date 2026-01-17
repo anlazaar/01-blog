@@ -20,49 +20,39 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ThemeToggleComponent {
-  // Injections for safe DOM access
   private document = inject(DOCUMENT);
   private platformId = inject(PLATFORM_ID);
 
-  // State Signal
-  isDarkMode = signal<boolean>(false);
+  isDarkMode = signal<boolean>(this.getInitialTheme());
 
   constructor() {
-    this.initializeTheme();
-
-    // Effect: Automatically runs whenever isDarkMode() changes
     effect(() => {
       const dark = this.isDarkMode();
 
-      // Ensure we are in the browser before touching DOM or LocalStorage
       if (isPlatformBrowser(this.platformId)) {
-        localStorage.setItem('darkMode', String(dark));
-
         if (dark) {
           this.document.body.classList.add('dark');
         } else {
           this.document.body.classList.remove('dark');
         }
+
+        localStorage.setItem('darkMode', String(dark));
       }
     });
   }
 
-  private initializeTheme() {
-    // Only run initialization logic in the browser
+  private getInitialTheme(): boolean {
     if (isPlatformBrowser(this.platformId)) {
       const savedTheme = localStorage.getItem('darkMode');
-      if (savedTheme) {
-        this.isDarkMode.set(savedTheme === 'true');
-      } else {
-        // Fallback to system preference
-        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        this.isDarkMode.set(systemDark);
+      if (savedTheme !== null) {
+        return savedTheme === 'true';
       }
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
+    return false;
   }
 
   toggleTheme(): void {
-    // Simple boolean toggle
     this.isDarkMode.update((current) => !current);
   }
 }

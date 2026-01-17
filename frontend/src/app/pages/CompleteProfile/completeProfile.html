@@ -16,8 +16,8 @@
             <img [src]="avatarPreview()" alt="Preview" />
             } @else {
             <div class="placeholder">
-              <!-- Safe access to form control value -->
-              {{ publicInfoForm.controls.firstname.value?.charAt(0) || '?' | uppercase }}
+              <!-- Safe access: first char of firstname or '?' -->
+              {{ (publicInfoForm.controls.firstname.value || '?').charAt(0) | uppercase }}
             </div>
             }
 
@@ -73,10 +73,11 @@
             rows="3"
             cdkTextareaAutosize
           ></textarea>
-          <!-- Using .value accessor safely -->
-          <mat-hint align="end"
-            >{{ publicInfoForm.controls.bio.value?.length || 0 }} chars</mat-hint
-          >
+
+          <mat-hint align="end">
+            {{ publicInfoForm.controls.bio.value?.length || 0 }} chars
+          </mat-hint>
+
           @if (publicInfoForm.controls.bio.hasError('minlength')) {
           <mat-error>Bio must be at least 10 characters.</mat-error>
           }

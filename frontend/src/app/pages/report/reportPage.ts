@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@ang
 import { ReactiveFormsModule, FormBuilder, Validators, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PostService } from '../../services/post.service';
+import { ToastService } from '../../services/toast.service'; // Added Toast
 
 // Angular Material Imports
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,7 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
   selector: 'app-report-page',
   standalone: true,
   imports: [
-    ReactiveFormsModule, // Switched to Reactive Forms
+    ReactiveFormsModule,
     RouterModule,
     MatFormFieldModule,
     MatSelectModule,
@@ -29,6 +30,7 @@ export class ReportPage implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private postService = inject(PostService);
+  private toastService = inject(ToastService);
   private fb = inject(FormBuilder);
 
   // State Signals
@@ -38,7 +40,7 @@ export class ReportPage implements OnInit {
   // Form Definition
   reportForm = this.fb.group({
     reason: new FormControl('', [Validators.required]),
-    description: new FormControl('', []), // Optional description
+    description: new FormControl(''),
   });
 
   ngOnInit() {
@@ -46,7 +48,7 @@ export class ReportPage implements OnInit {
     this.reportedId.set(id);
 
     if (!id) {
-      console.error('No ID provided to report');
+      this.toastService.show('Invalid request: ID missing', 'error');
       this.router.navigate(['/']);
     }
   }
@@ -57,26 +59,22 @@ export class ReportPage implements OnInit {
     this.isSubmitting.set(true);
 
     const { reason, description } = this.reportForm.getRawValue();
+    const safeReason = reason || 'Other';
 
-    // Use standard non-null assertion or safe fallback if logic dictates
-    if (!reason) return;
+    // Concatenate details if provided, assuming backend only accepts one string 'reason'
+    // If backend accepts a separate 'description' field, update the service method.
+    const fullReason = description ? `${safeReason} - Details: ${description}` : safeReason;
 
-    // Combine reason and description if your backend expects a single string,
-    // or adjust service method signature to accept both.
-    // Assuming backend takes (reason, id) based on your original code,
-    // but usually description is helpful.
-    // Here I pass just 'reason' as per your original code,
-    // or you might want to concat: `${reason}: ${description}`
-
-    this.postService.reportUser(reason, this.reportedId()!).subscribe({
-      next: (res) => {
-        console.log('Report submitted', res);
+    this.postService.reportUser(fullReason, this.reportedId()!).subscribe({
+      next: () => {
         this.isSubmitting.set(false);
+        this.toastService.show('Report submitted successfully.', 'success');
         this.router.navigate(['/']);
       },
       error: (err) => {
         console.error('Report error', err);
         this.isSubmitting.set(false);
+        this.toastService.show('Failed to submit report. Please try again.', 'error');
       },
     });
   }

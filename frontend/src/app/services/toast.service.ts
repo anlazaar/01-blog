@@ -12,15 +12,25 @@ export interface Toast {
   providedIn: 'root',
 })
 export class ToastService {
-  // We use a Signal to reactively update the UI
-  toasts = signal<Toast[]>([]);
+  // 1. STATE: Single source of truth for UI notifications
+  private _toasts = signal<Toast[]>([]);
 
+  // Public read-only access
+  readonly toasts = this._toasts.asReadonly();
+
+  // 2. ACTIONS
   show(message: string, type: ToastType = 'success') {
-    const id = crypto.randomUUID();
+    // Simple ID generator (crypto.randomUUID works in modern browsers/https)
+    // Fallback for older environments if needed: Math.random().toString(36)
+    const id =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : Date.now().toString();
+
     const newToast: Toast = { id, message, type };
 
-    // Add to the list
-    this.toasts.update((current) => [...current, newToast]);
+    // Update state immutably
+    this._toasts.update((current) => [...current, newToast]);
 
     // Auto-remove after 3 seconds
     setTimeout(() => {
@@ -29,6 +39,6 @@ export class ToastService {
   }
 
   remove(id: string) {
-    this.toasts.update((current) => current.filter((t) => t.id !== id));
+    this._toasts.update((current) => current.filter((t) => t.id !== id));
   }
 }

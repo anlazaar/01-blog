@@ -1,8 +1,9 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common'; // UpperCasePipe
+import { CommonModule } from '@angular/common';
 import { UserService } from '../../services/UserService';
+import { ToastService } from '../../services/toast.service'; // Added Toast for better UX
 
 // Angular Material Imports
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -27,8 +28,9 @@ import { MatIconModule } from '@angular/material/icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CompleteProfile {
-  // Services
+  // Dependencies
   private userService = inject(UserService);
+  private toastService = inject(ToastService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -60,7 +62,7 @@ export class CompleteProfile {
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      // 5MB
+      // 5MB Limit
       this.fileError.set('File is too large. Max 5MB.');
       return;
     }
@@ -81,7 +83,7 @@ export class CompleteProfile {
 
     const userId = this.route.snapshot.paramMap.get('id');
     if (!userId) {
-      console.error('User ID missing from route');
+      this.toastService.show('User ID missing', 'error');
       return;
     }
 
@@ -102,12 +104,13 @@ export class CompleteProfile {
     this.userService.patchUser(formData, userId).subscribe({
       next: () => {
         this.isSubmitting.set(false);
+        this.toastService.show('Profile updated!', 'success');
         this.router.navigate(['/']);
       },
       error: (err) => {
         console.error(err);
         this.isSubmitting.set(false);
-        // Optional: Show toast error here
+        this.toastService.show('Failed to update profile.', 'error');
       },
     });
   }

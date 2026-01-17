@@ -2,16 +2,15 @@ import {
   Component,
   HostListener,
   inject,
+  DestroyRef,
   ViewEncapsulation,
   signal,
-  computed,
   effect,
   ChangeDetectionStrategy,
-  Signal,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterModule } from '@angular/router';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 
 // Services
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
@@ -46,124 +45,135 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css'],
   encapsulation: ViewEncapsulation.None,
-  changeDetection: ChangeDetectionStrategy.OnPush, // Best practice with Signals
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NavbarComponent {
   private router = inject(Router);
-  private tokenService = inject(TokenService);
+  private destroyRef = inject(DestroyRef); // For cleaning up SSE
+
+  // Services
+  public tokenService = inject(TokenService);
   private userService = inject(UserService);
   private notificationService = inject(NotificationService);
 
-  // --- STATE SIGNALS ---
+  private notificationAudio = new Audio('/sound/notification.mp3');
+
+  // --- 1. UI STATE SIGNALS ---
   isMobileMenuOpen = signal(false);
   isMobile = signal(window.innerWidth < 768);
 
-  // Convert Observable to Signal immediately
-  // initialValue is false until the service emits
-  isLoggedIn = toSignal(this.tokenService.isAuthenticated$, { initialValue: false });
-
-  // User Data Signals
-  isAdmin = signal(false);
-  userId = signal<string | null>(null);
+  // Profile data is specific to this view, so we keep it local
   username = signal<string | null>(null);
   avatarUrl = signal<string | null>(null);
 
-  // Notifications
-  notifications = signal<Notification[]>([]);
+  // --- 2. GLOBAL STATE (Aliased) ---
+  // We do NOT create a local signal for notifications.
+  // We reference the Service's signal directly. This ensures synchronization.
+  notifications = this.notificationService.notifications;
 
-  // --- COMPUTED VALUES ---
-  // Automatically recalculates whenever 'notifications' signal changes
-  unreadCount = computed(() => {
-    return this.notifications().filter((n) => !n.read).length;
-  });
+  // We reference the Service's computed signal.
+  unreadCount = this.notificationService.unreadCount;
+
+  // Shortcuts for Auth signals
+  isLoggedIn = this.tokenService.isAuthenticated;
+  isAdmin = this.tokenService.isAdminSignal;
+  userId = this.tokenService.userId;
 
   constructor() {
-    // --- EFFECTS ---
-    // Effects run automatically when signals change.
-    // This replaces ngOnInit logic.
+    // --- 3. EFFECTS ---
+    // React to Login/Logout automatically
+    effect(() => {
+      const uid = this.userId();
 
-    effect((onCleanup) => {
-      // 1. React to Login Status
-      if (this.isLoggedIn()) {
-        this.userId.set(this.tokenService.getUUID());
-        this.isAdmin.set(this.tokenService.isAdmin());
-        this.loadUserInfo();
+      if (uid) {
+        // User Logged In
+        this.loadProfileData(uid);
       } else {
-        // Reset state on logout
-        this.userId.set(null);
-        this.username.set(null);
-        this.notifications.set([]);
+        // User Logged Out
+        this.resetState();
       }
     });
   }
 
-  loadUserInfo() {
-    const uid = this.userId();
-    if (!uid) return;
+  // --- 4. DATA LOADING & SSE ---
 
-    // Fetch Profile
-    this.userService.getUserPublicProfile(uid).subscribe((res) => {
-      const avatar = res.avatarUrl
-        ? 'http://localhost:8080' + res.avatarUrl
-        : '/default-avatar.jpg';
+  private loadProfileData(uid: string) {
+    // A. Load Avatar & Username
+    this.userService.getUserPublicProfile(uid).subscribe({
+      next: (res) => {
+        const avatar = res.avatarUrl
+          ? 'http://localhost:8080' + res.avatarUrl
+          : '/default-avatar.jpg';
 
-      this.avatarUrl.set(avatar);
-      this.username.set(res.username);
+        this.avatarUrl.set(avatar);
+        this.username.set(res.username);
 
-      if (!this.isAdmin()) {
-        this.loadNotifications();
-        this.subscribeToRealTime();
-      }
-    });
-  }
+        // B. If user is Normal User (not Admin), Initialize Notifications
+        if (!this.isAdmin()) {
+          // 1. Trigger Service to fetch initial list
+          this.notificationService.loadNotifications();
 
-  loadNotifications() {
-    this.notificationService.getNotifications().subscribe((data) => {
-      this.notifications.set(data);
-    });
-  }
-
-  subscribeToRealTime() {
-    const sub = this.notificationService.getServerSentEvent().subscribe({
-      next: (newNotification) => {
-        // Update signal immutably
-        this.notifications.update((current) => [newNotification, ...current]);
+          // 2. Start listening for live updates
+          this.subscribeToRealTimeNotifications();
+        }
       },
-      error: (err) => console.error('SSE Error', err),
+      error: (err) => console.error('Error loading profile', err),
     });
-
-    // Clean up subscription when component destroys (Effect cleanup logic)
-    // Note: Since this is called once, manual cleanup via DestroyRef is also an option,
-    // but relying on the subscription stored in a local var is tricky in effects.
-    // For simplicity in this refactor, we rely on Angular's http auto-cleanup or:
-    // Ideally, use `inject(DestroyRef)` to unregister long-lived subscriptions.
   }
+
+  private subscribeToRealTimeNotifications() {
+    // Subscribe to the stream
+    this.notificationService
+      .getServerSentEvent()
+      .pipe(takeUntilDestroyed(this.destroyRef)) // Auto-unsubscribe on destroy
+      .subscribe({
+        next: (newNotification) => {
+          // 1. Push data into the Service's State
+          this.notificationService.addRealTimeNotification(newNotification);
+
+          // 2. Play Sound (UI Side Effect)
+          this.playNotificationSound();
+        },
+        error: (err) => console.error('SSE Error', err),
+      });
+  }
+
+  // --- 5. USER ACTIONS ---
 
   markRead(notification: Notification) {
-    if (!notification.read) {
-      this.notificationService.markAsRead(notification.id).subscribe(() => {
-        // Update specific item in the array signal
-        this.notifications.update((list) =>
-          list.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
-        );
-      });
-    }
+    if (notification.read) return;
+
+    // Delegate to Service (It handles Optimistic Updates + API)
+    this.notificationService.markAsRead(notification.id);
   }
 
   logout(): void {
+    // Clear Token (Triggers effect -> resetState)
     this.tokenService.clear();
-    // No need to set isLoggedIn = false, the toSignal observes the service change
+    this.notificationService.clearState(); // Ensure old notifs are gone
     this.closeMobileMenu();
     this.router.navigate(['auth/login']);
   }
 
-  /* --- UI Actions --- */
+  private resetState() {
+    this.username.set(null);
+    this.avatarUrl.set(null);
+    // Notification service state is cleared in logout()
+  }
+
+  /* --- UI Helpers --- */
+
   toggleMobileMenu(): void {
     this.isMobileMenuOpen.update((v) => !v);
   }
 
   closeMobileMenu(): void {
     this.isMobileMenuOpen.set(false);
+  }
+
+  private playNotificationSound() {
+    this.notificationAudio.currentTime = 0;
+    this.notificationAudio.play().catch(() => {});
   }
 
   @HostListener('window:resize')

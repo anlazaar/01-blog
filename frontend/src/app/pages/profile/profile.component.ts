@@ -38,24 +38,26 @@ export class ProfilePage implements OnInit {
   // --- STATE SIGNALS ---
   user = signal<UserPublicProfileDTO | null>(null);
   loading = signal(true);
-  isAdmin = signal(false);
+
+  // Directly access TokenService signals
+  isAdmin = this.tokenService.isAdminSignal;
+  private currentUserId = this.tokenService.userId;
 
   // --- COMPUTED VALUES ---
   // Automatically checks if the loaded user ID matches the logged-in ID
   isCurrentUser = computed(() => {
     const u = this.user();
-    return u ? u.id === this.tokenService.getUUID() : false;
+    const myId = this.currentUserId();
+    return u && myId ? u.id === myId : false;
   });
 
   private readonly BACKEND_URL = environment.serverUrl;
 
   ngOnInit(): void {
-    this.isAdmin.set(this.tokenService.isAdmin());
-
     // Reactively fetch user data when Route Param ID changes
     this.route.paramMap
       .pipe(
-        tap(() => this.loading.set(true)), // Show spinner on nav start
+        tap(() => this.loading.set(true)), // Show spinner immediately on nav
         switchMap((params) => {
           const id = params.get('id');
           if (!id) throw new Error('No ID provided');
@@ -64,7 +66,7 @@ export class ProfilePage implements OnInit {
       )
       .subscribe({
         next: (data) => {
-          // Normalize Avatar URL immediately upon load
+          // Normalize Avatar URL immediately
           if (data.avatarUrl && !data.avatarUrl.startsWith('http')) {
             data.avatarUrl = this.BACKEND_URL + data.avatarUrl;
           }

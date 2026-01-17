@@ -90,7 +90,7 @@ public class NotificationService {
         return notificationRepository.findByReceiverIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size))
                 .stream()
                 .map(this::mapToResponse)
-                .toList(); // .toList() is cleaner than .collect(Collectors.toList()) in newer Java
+                .toList();
     }
 
     public void markAsRead(UUID notificationId) {
@@ -116,7 +116,6 @@ public class NotificationService {
             PostMinimalDTO postDto = new PostMinimalDTO();
             postDto.setId(n.getPost().getId());
             postDto.setTitle(n.getPost().getTitle());
-            // This line caused the N+1 problem before. Now it's safe.
             postDto.setAuthorUsername(n.getPost().getAuthor().getUsername());
             dto.setPost(postDto);
         }

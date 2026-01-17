@@ -1,15 +1,17 @@
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common'; // UpperCasePipe
+import { CommonModule } from '@angular/common';
 import { UserService } from '../../services/UserService';
 import { UserResponse } from '../../models/USER/UserResponse';
+import { ToastService } from '../../services/toast.service';
 
 // Angular Material Imports
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-updateprofile',
@@ -30,6 +32,7 @@ import { MatIconModule } from '@angular/material/icon';
 export class UpdateProfile implements OnInit {
   // Services
   private userService = inject(UserService);
+  private toastService = inject(ToastService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -38,11 +41,10 @@ export class UpdateProfile implements OnInit {
   user = signal<UserResponse | null>(null);
   avatarPreview = signal<string | ArrayBuffer | null>(null);
   fileError = signal<string | null>(null);
-  errorMessage = signal<string | null>(null);
   isSubmitting = signal(false);
 
-  // Constants
-  userId = '';
+  // Internal
+  private userId = '';
   private selectedFile: File | null = null;
 
   // Typed Form
@@ -58,39 +60,39 @@ export class UpdateProfile implements OnInit {
   });
 
   ngOnInit(): void {
-    // We can stick to snapshot here if the component is re-created on route change,
-    // or use paramMap.subscribe if we expect ID changes while staying on the same component instance.
-    // For a settings page, snapshot is usually fine.
-    this.userId = this.route.snapshot.paramMap.get('id') || '';
+    // Handle route params reactively
+    this.route.paramMap
+      .pipe(
+        switchMap((params) => {
+          this.userId = params.get('id') || '';
+          if (!this.userId) throw new Error('User ID missing');
+          return this.userService.getUserFullData(this.userId);
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          this.user.set(data);
 
-    if (!this.userId) {
-      this.errorMessage.set('User ID is missing from URL.');
-      return;
-    }
+          // Initial Avatar
+          if (data.avatarUrl) {
+            this.avatarPreview.set('http://localhost:8080' + data.avatarUrl);
+          }
 
-    this.userService.getUserFullData(this.userId).subscribe({
-      next: (data) => {
-        this.user.set(data);
-
-        // Initial Avatar
-        if (data.avatarUrl) {
-          this.avatarPreview.set('http://localhost:8080' + data.avatarUrl);
-        }
-
-        // Pre-fill form
-        this.publicInfoForm.patchValue({
-          firstname: data.firstname,
-          lastname: data.lastname,
-          username: data.username,
-          email: data.email,
-          bio: data.bio || '',
-        });
-      },
-      error: (err) => {
-        console.error(err);
-        this.errorMessage.set('Failed to load user profile.');
-      },
-    });
+          // Pre-fill form
+          this.publicInfoForm.patchValue({
+            firstname: data.firstname,
+            lastname: data.lastname,
+            username: data.username,
+            email: data.email,
+            bio: data.bio || '',
+          });
+        },
+        error: (err) => {
+          console.error(err);
+          this.toastService.show('Failed to load profile data', 'error');
+          this.router.navigate(['/']);
+        },
+      });
   }
 
   onFileSelected(event: Event) {
@@ -105,7 +107,6 @@ export class UpdateProfile implements OnInit {
       return;
     }
     if (file.size > 20 * 1024 * 1024) {
-      // 20MB
       this.fileError.set('File is too large. Max 20MB.');
       return;
     }
@@ -128,12 +129,11 @@ export class UpdateProfile implements OnInit {
     if (this.publicInfoForm.invalid) return;
 
     this.isSubmitting.set(true);
-    this.errorMessage.set(null);
 
     const formData = new FormData();
     const formVal = this.publicInfoForm.getRawValue();
 
-    // Append non-null values
+    // Helper to append valid values
     const appendIf = (key: string, val: string | null | undefined) => {
       if (val !== null && val !== undefined && val !== '') formData.append(key, val);
     };
@@ -152,14 +152,14 @@ export class UpdateProfile implements OnInit {
 
     this.userService.patchUser(formData, this.userId).subscribe({
       next: (res) => {
-        console.log('Update success', res);
         this.isSubmitting.set(false);
-        this.router.navigate(['/']); // Or stay and show success toast
+        this.toastService.show('Profile updated successfully!', 'success');
+        this.router.navigate(['/']);
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        const msg = err.error?.error || 'An error occurred while updating the profile.';
-        this.errorMessage.set(msg);
+        const msg = err.error?.error || 'Update failed. Please try again.';
+        this.toastService.show(msg, 'error');
         console.error('Update Error:', err);
       },
     });

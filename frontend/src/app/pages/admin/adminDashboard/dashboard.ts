@@ -1,15 +1,14 @@
 import {
   Component,
   OnInit,
-  OnDestroy,
+  AfterViewInit,
   inject,
   ViewChildren,
   QueryList,
-  AfterViewInit,
   HostListener,
   signal,
-  computed,
   effect,
+  DestroyRef,
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule, TitleCasePipe, DatePipe } from '@angular/common';
@@ -24,7 +23,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -45,40 +43,39 @@ import { environment } from '../../../../environments/environment';
   styleUrls: ['./dashboard.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
+export class AdminDashboardComponent implements OnInit, AfterViewInit {
   private adminService = inject(AdminService);
-  private apiUrl = environment.apiUrl;
+  private destroyRef = inject(DestroyRef); // Clean up observers
 
+  // ViewChildren allows us to access the charts to manually update them
   @ViewChildren(BaseChartDirective) charts!: QueryList<BaseChartDirective>;
 
-  // --- STATE SIGNALS ---
+  // --- 1. STATE SIGNALS ---
   activeTab = signal<'overview' | 'users' | 'posts' | 'reports'>('overview');
   stats = signal<DashboardStats | null>(null);
   message = signal<string>('');
   isLoading = signal(false);
 
-  // Data Sources (Signals)
+  // Data Lists
   users = signal<any[]>([]);
   posts = signal<any[]>([]);
   reports = signal<any[]>([]);
 
-  // Pagination State (Signal Object)
+  // Pagination State
+  // We group this to keep the namespace clean
   pagination = signal({
     users: { page: 0, size: 20, loading: false, finished: false },
     posts: { page: 0, size: 20, loading: false, finished: false },
     reports: { page: 0, size: 20, loading: false, finished: false },
   });
 
-  // Material Table Column Definitions
+  // Material Table Columns
   userColumns: string[] = ['user', 'role', 'status', 'actions'];
   postColumns: string[] = ['title', 'author', 'date', 'actions'];
   reportColumns: string[] = ['details', 'status', 'actions'];
 
-  private themeObserver: MutationObserver | null = null;
-
-  // --- CHART CONFIGURATION ---
-  // Note: Chart configuration objects themselves are mutable by library design,
-  // but we trigger updates manually.
+  // --- 2. CHART CONFIGURATION ---
+  // Initial empty data structures
   public lineChartData: ChartConfiguration<'line'>['data'] = { labels: [], datasets: [] };
   public postChartData: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [] };
 
@@ -105,8 +102,10 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     },
   };
 
+  private themeObserver: MutationObserver | null = null;
+
   constructor() {
-    // Effect to react to stats changes and update chart data
+    // EFFECT: Update charts when stats data arrives
     effect(() => {
       const currentStats = this.stats();
       if (currentStats) {
@@ -120,27 +119,31 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   ngAfterViewInit() {
-    // Theme observer relies on DOM, so we keep it here
+    // Theme switching logic requires DOM observation
     this.themeObserver = new MutationObserver(() => this.updateChartTheme());
     this.themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
-    // Initial theme update
+    // Run once to set initial theme colors
     setTimeout(() => this.updateChartTheme(), 100);
+
+    // Register cleanup
+    this.destroyRef.onDestroy(() => {
+      this.themeObserver?.disconnect();
+    });
   }
 
-  ngOnDestroy() {
-    if (this.themeObserver) this.themeObserver.disconnect();
-  }
+  // === 3. EVENT LISTENERS ===
 
-  // === SCROLL LISTENER ===
   @HostListener('window:scroll', [])
   onWindowScroll() {
+    // Only load more if not on overview tab
     if (this.activeTab() === 'overview') return;
 
     const pos =
       (document.documentElement.scrollTop || document.body.scrollTop) + window.innerHeight;
     const max = document.documentElement.scrollHeight || document.body.scrollHeight;
 
+    // Load more when user scrolls to bottom (buffer of 100px)
     if (pos > max - 100) {
       const tab = this.activeTab();
       if (tab === 'users') this.loadUsers();
@@ -155,16 +158,17 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
     if (tab === 'overview') {
       this.loadStats();
+      // Re-apply theme after a short delay to allow canvas to render
       setTimeout(() => this.updateChartTheme(), 100);
     }
 
-    // Load data if empty
+    // Lazy load data if empty
     if (tab === 'users' && this.users().length === 0) this.loadUsers();
     if (tab === 'posts' && this.posts().length === 0) this.loadPosts();
     if (tab === 'reports' && this.reports().length === 0) this.loadReports();
   }
 
-  // === LOAD DATA ===
+  // === 4. DATA LOADING ===
 
   loadStats() {
     this.isLoading.set(true);
@@ -174,13 +178,14 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         this.isLoading.set(false);
       },
       error: (err) => {
-        console.error(err);
+        console.error('Stats Error', err);
         this.isLoading.set(false);
       },
     });
   }
 
   setupCharts(stats: DashboardStats) {
+    // Map data from API to Chart.js format
     const userLabels = stats.userGrowth.map((d) => d.label);
     const userValues = stats.userGrowth.map((d) => d.value);
 
@@ -215,12 +220,14 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       ],
     };
 
-    // Force chart update if charts exist
+    // Trigger update on directives
     this.charts?.forEach((c) => c.chart?.update());
   }
 
   updateChartTheme() {
     if (!this.charts) return;
+
+    // Read CSS Variables to make charts match Dark/Light mode
     const styles = getComputedStyle(document.body);
     const textPrimary = styles.getPropertyValue('--text-primary').trim();
     const textSecondary = styles.getPropertyValue('--text-secondary').trim();
@@ -237,6 +244,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       tooltip: { backgroundColor: textPrimary, titleColor: cardBg, bodyColor: cardBg },
     };
 
+    // Apply to options
     this.lineChartOptions = {
       ...this.lineChartOptions,
       scales: scaleOptions,
@@ -248,24 +256,24 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       plugins: pluginOptions,
     };
 
-    this.charts.forEach((chart) => {
-      if (chart.chart) chart.chart.update();
-    });
+    this.charts.forEach((chart) => chart.chart?.update());
   }
 
-  // === PAGINATED LOADERS ===
+  // === 5. PAGINATED DATA LOGIC ===
 
   loadUsers() {
     const pag = this.pagination();
     if (pag.users.loading || pag.users.finished) return;
 
-    // Set loading
+    // Set Loading State
     this.pagination.update((p) => ({ ...p, users: { ...p.users, loading: true } }));
 
     this.adminService.getAllUsers(pag.users.page, pag.users.size).subscribe({
       next: (res) => {
+        // Append new data
         this.users.update((current) => [...current, ...res.content]);
 
+        // Update pagination cursor
         this.pagination.update((p) => ({
           ...p,
           users: {
@@ -309,12 +317,13 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   loadReports() {
-    // For reports, reusing simple logic or could add pagination if API supports it
-    // assuming here standard fetch all for simplicity based on original code,
-    // or reusing pagination struct if API paginates.
+    const pag = this.pagination();
+    if (pag.reports.loading) return; // Simple loading check (assuming reports are 1 page for now)
+
     this.isLoading.set(true);
     this.adminService.getAllReports().subscribe({
       next: (res: any) => {
+        // Handle varying API responses (Page vs List)
         const data =
           res.content && Array.isArray(res.content) ? res.content : Array.isArray(res) ? res : [];
         this.reports.set(data);
@@ -324,13 +333,15 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     });
   }
 
-  // === ACTIONS ===
+  // === 6. ACTIONS (OPTIMISTIC UPDATES) ===
 
   banUser(id: string) {
     if (!confirm('Are you sure?')) return;
+
     this.adminService.banUser(id).subscribe({
       next: (msg) => {
         this.message.set(msg);
+        // Optimistic update of local array
         this.users.update((list) =>
           list.map((u) => (u.id === id ? { ...u, banned: !u.banned } : u))
         );
@@ -341,6 +352,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
   deleteUser(id: string) {
     if (!confirm('Delete user?')) return;
+
     this.adminService.deleteUser(id).subscribe({
       next: (msg) => {
         this.message.set(msg);
@@ -365,6 +377,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   toggleRole(user: any) {
     const newRole = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
     const action = user.role === 'ADMIN' ? 'Demote' : 'Promote';
+
     if (!confirm(`Are you sure you want to ${action} ${user.username} to ${newRole}?`)) return;
 
     this.adminService.updateUserRole(user.id, newRole).subscribe({

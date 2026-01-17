@@ -1,4 +1,12 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  signal,
+  computed,
+  effect,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop'; // Import this
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { PostService } from '../../services/post.service';
@@ -76,24 +84,33 @@ import { PostService } from '../../services/post.service';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PopularTagsComponent implements OnInit {
+export class PopularTagsComponent {
   private route = inject(ActivatedRoute);
   private postService = inject(PostService);
 
-  // State Signals
+  // 1. ROUTE STATE
+  // Convert Observable params to a Signal.
+  // This automatically handles subscription/unsubscription.
+  private queryParams = toSignal(this.route.queryParams);
+
+  // derive the specific 'tag' string from the queryParams signal
+  currentTag = computed(() => this.queryParams()?.['tag'] || null);
+
+  // 2. DATA STATE
+  // Since PostService is stateless, we hold the data here.
   recommendedTopics = signal<string[]>([]);
 
-  // FIX: Make this a signal so the UI updates when URL changes
-  currentTag = signal<string | null>(null);
-
-  ngOnInit() {
-    // 1. Listen to URL changes to update active state
-    this.route.queryParams.subscribe((params) => {
-      // Since this is a signal, setting it triggers the OnPush view update
-      this.currentTag.set(params['tag'] || null);
+  constructor() {
+    // 3. EFFECT
+    // Trigger data loading when component is created
+    effect(() => {
+      this.loadTags();
     });
+  }
 
-    // 2. Fetch tags
+  private loadTags() {
+    // HTTP Observables complete automatically, so explicit unsubscribe isn't strictly necessary here,
+    // but using first() or take(1) is good practice if logic gets complex.
     this.postService.getPopularTags().subscribe({
       next: (tags) => this.recommendedTopics.set(tags),
       error: (err) => console.error('Failed to load tags', err),

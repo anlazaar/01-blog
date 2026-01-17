@@ -9,12 +9,12 @@
         <mat-form-field appearance="fill" class="full-width">
           <mat-label>What is the issue?</mat-label>
           <mat-select formControlName="reason">
-            <mat-option value="spam">It's spam</mat-option>
-            <mat-option value="harassment">Harassment or bullying</mat-option>
-            <mat-option value="hate-speech">Hate speech</mat-option>
-            <mat-option value="nsfw">Nudity or sexual activity</mat-option>
-            <mat-option value="violence">Violence or dangerous organizations</mat-option>
-            <mat-option value="other">Something else</mat-option>
+            <mat-option value="Spam">It's spam</mat-option>
+            <mat-option value="Harassment">Harassment or bullying</mat-option>
+            <mat-option value="Hate Speech">Hate speech</mat-option>
+            <mat-option value="NSFW">Nudity or sexual activity</mat-option>
+            <mat-option value="Violence">Violence or dangerous organizations</mat-option>
+            <mat-option value="Other">Something else</mat-option>
           </mat-select>
           @if (reportForm.controls.reason.invalid && reportForm.controls.reason.touched) {
           <mat-error>Please select a reason</mat-error>

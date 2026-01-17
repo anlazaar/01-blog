@@ -16,16 +16,23 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [RouterLink, MatMenuModule, MatButtonModule, MatIconModule],
   templateUrl: './post-options-menu.html',
   styleUrls: ['./post-options-menu.css'],
-  encapsulation: ViewEncapsulation.None, // Required to style the popup menu
-  changeDetection: ChangeDetectionStrategy.OnPush, // Performance optimization
+  // encapsulation: ViewEncapsulation.None is often used for MatMenu styling overrides,
+  // but be careful as it makes styles global. If it works for you, keep it.
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PostOptionsMenuComponent {
-  // New Signal Inputs (replaces @Input)
-  postId = input<string | null>(null);
+  // 1. INPUTS
+  // Use input.required() for data that MUST be present.
+  // This removes the need to handle 'null' in the template.
+  postId = input.required<string>();
+
+  // Optional flags with default values
   canEdit = input(false);
   canReport = input(false);
 
-  // New Output API (replaces @Output + EventEmitter)
+  // 2. OUTPUTS
+  // Modern output() API replaces @Output() + EventEmitter
   report = output<void>();
   delete = output<void>();
 }

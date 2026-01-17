@@ -24,7 +24,6 @@ export class AuthCallbackComponent implements OnInit {
         if (this.tokenService.isAdmin()) {
           this.router.navigate(['/admin/dashboard']);
         } else if (isNew && userId) {
-          // Redirect to complete profile if needed
           this.router.navigate(['/profile/complete-profile', userId]);
         } else {
           this.router.navigate(['/']);

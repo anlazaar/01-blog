@@ -1,61 +1,61 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, signal, computed } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class TokenService {
-  // <CHANGE> Add BehaviorSubject for reactive auth state
-  private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
-  isAuthenticated$: Observable<boolean> = this.isAuthenticatedSubject.asObservable();
+  // 1. STATE: Initialize signal directly from LocalStorage
+  // This is the Single Source of Truth for the entire service.
+  private _token = signal<string | null>(localStorage.getItem('token'));
 
-  private hasToken(): boolean {
-    return !!localStorage.getItem('token');
-  }
+  // 2. COMPUTED STATE (Reactive)
+  // These update automatically whenever _token changes.
 
-  getToken(): string | null {
-    return localStorage.getItem('token');
-  }
+  readonly isAuthenticated = computed(() => !!this._token());
 
-  // <CHANGE> Add setToken method
-  setToken(token: string): void {
-    localStorage.setItem('token', token);
-    this.isAuthenticatedSubject.next(true);
-  }
-
-  decodeToken(): any {
-    if (!this.hasToken()) return;
-    const token = this.getToken();
+  private _decodedToken = computed(() => {
+    const token = this._token();
     if (!token) return null;
 
-    const payload = token.split('.')[1];
-    const decoded = atob(payload);
-    return JSON.parse(decoded);
+    try {
+      const payload = token.split('.')[1];
+      const decoded = atob(payload);
+      return JSON.parse(decoded);
+    } catch (e) {
+      console.error('Invalid token format', e);
+      return null;
+    }
+  });
+
+  // Expose specific claims as computed signals
+  readonly userId = computed(() => this._decodedToken()?.sub || null);
+  readonly userRole = computed(() => this._decodedToken()?.role || null);
+  readonly isAdminSignal = computed(() => this.userRole() === 'ADMIN');
+
+  // 3. ACTIONS
+
+  setToken(token: string): void {
+    localStorage.setItem('token', token);
+    this._token.set(token); // Updating this triggers all computed signals above
   }
 
-  getRole(): string | null {
-    if (!this.hasToken()) return null;
-    const decoded = this.decodeToken();
-    return decoded?.role || null;
+  clear(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role'); // Clean up role if you store it separately
+    this._token.set(null);
   }
 
-  setRole(role: string) {
-    localStorage.setItem('role', role);
+  // 4. HELPER METHODS (For imperative usage)
+  // These allow you to get the *current value* without subscribing,
+  // preserving compatibility with your existing logic (e.g., in Guards or Interceptors).
+
+  getToken(): string | null {
+    return this._token();
   }
 
   getUUID(): string | null {
-    if (!this.hasToken()) return null;
-    const decoded = this.decodeToken();
-    console.log(decoded.sub);
-    return decoded?.sub || null; // <CHANGE> Fixed: was returning role instead of UUID
+    return this.userId();
   }
 
   isAdmin(): boolean {
-    if (!this.hasToken()) return false;
-    return this.getRole() === 'ADMIN';
-  }
-
-  // <CHANGE> Update clear to emit false
-  clear(): void {
-    localStorage.removeItem('token');
-    this.isAuthenticatedSubject.next(false);
+    return this.isAdminSignal();
   }
 }

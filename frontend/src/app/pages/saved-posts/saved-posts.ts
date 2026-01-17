@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, effect, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common'; // DatePipe
 import { RouterLink } from '@angular/router';
 import { PostService } from '../../services/post.service';
@@ -196,14 +196,21 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     `,
   ],
 })
-export class SavedPostsComponent implements OnInit {
+export class SavedPostsComponent {
   private postService = inject(PostService);
 
   // State Signals
   posts = signal<PostResponse[]>([]);
   loading = signal(true);
 
-  ngOnInit() {
+  constructor() {
+    // Declarative data loading via effect
+    effect(() => {
+      this.loadSavedPosts();
+    });
+  }
+
+  private loadSavedPosts() {
     this.postService.getSavedPosts().subscribe({
       next: (data) => {
         this.posts.set(data);
@@ -223,7 +230,7 @@ export class SavedPostsComponent implements OnInit {
     // 2. API Call
     this.postService.toggleSavePost(post.id).subscribe({
       error: () => {
-        // 3. Rollback on Error: Add it back if server failed
+        // 3. Rollback on Error: Add it back to top of list
         console.error('Failed to unsave');
         this.posts.update((current) => [post, ...current]);
       },

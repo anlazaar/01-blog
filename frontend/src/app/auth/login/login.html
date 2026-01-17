@@ -22,9 +22,15 @@
 
     <!-- Form -->
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <!-- Email -->
       <div class="input-group">
         <label>Email</label>
-        <input type="email" formControlName="email" placeholder="name@example.com" />
+        <input
+          type="email"
+          formControlName="email"
+          placeholder="name@example.com"
+          [class.error-input]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
+        />
 
         <!-- Error Messages -->
         @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
@@ -38,9 +44,17 @@
         }
       </div>
 
+      <!-- Password -->
       <div class="input-group">
         <label>Password</label>
-        <input type="password" formControlName="password" placeholder="••••••••" />
+        <input
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          [class.error-input]="
+            loginForm.get('password')?.touched && loginForm.get('password')?.invalid
+          "
+        />
 
         @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
         <div class="error-msg">
@@ -51,15 +65,17 @@
         }
       </div>
 
-      <!-- General Error -->
-      @if (errorMessage) {
+      <!-- Global Error from Backend -->
+      @if (errorMessage()) {
       <div class="global-error">
-        {{ errorMessage }}
+        {{ errorMessage() }}
       </div>
       }
 
       <!-- Submit -->
-      <button class="submit-btn" type="submit" [disabled]="loginForm.invalid">Sign in</button>
+      <button class="submit-btn" type="submit" [disabled]="loginForm.invalid || isSubmitting()">
+        {{ isSubmitting() ? 'Signing in...' : 'Sign in' }}
+      </button>
 
       <!-- Footer -->
       <div class="auth-footer">No account? <a routerLink="/auth/register">Create one</a></div>

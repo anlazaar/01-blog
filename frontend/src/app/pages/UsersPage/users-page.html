@@ -5,7 +5,7 @@
       <p class="subtitle">Discover new voices and follow creators.</p>
     </header>
 
-    <!-- LOADING SKELETON (Only for initial load) -->
+    <!-- LOADING SKELETON (Initial) -->
     @if (loading()) {
     <div class="users-grid">
       @for(item of skeletonItems; track $index) {
@@ -24,7 +24,7 @@
     </div>
     }
 
-    <!-- DATA GRID -->
+    <!-- REAL DATA -->
     @else {
     <div class="users-grid">
       @for (user of users(); track user.id) {
@@ -40,9 +40,8 @@
             onerror="this.src='/default-avatar.jpg'"
           />
 
-          <!-- FOLLOW BUTTON LOGIC -->
+          <!-- Follow Button -->
           @if (user.following) {
-          <!-- Already Following -->
           <button
             mat-stroked-button
             color="primary"
@@ -52,7 +51,6 @@
             Following
           </button>
           } @else {
-          <!-- Not Following -->
           <button mat-flat-button color="primary" class="follow-btn" (click)="toggleFollow(user)">
             Follow
           </button>
@@ -67,7 +65,7 @@
       }
     </div>
 
-    <!-- PAGINATION / LOAD MORE -->
+    <!-- LOAD MORE -->
     @if (!isLastPage()) {
     <div class="load-more-container">
       <button
@@ -76,12 +74,13 @@
         (click)="loadMore()"
         [disabled]="loadingMore()"
       >
-        @if (loadingMore()) {
-        <span>Loading...</span>
-        } @else { Load More }
+        {{ loadingMore() ? 'Loading...' : 'Load More' }}
       </button>
     </div>
-    } @if (users().length === 0 && !loading()) {
+    }
+
+    <!-- EMPTY STATE -->
+    @if (users().length === 0 && !loading()) {
     <div class="empty-state">
       <p>No writers found.</p>
     </div>

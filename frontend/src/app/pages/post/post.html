@@ -74,18 +74,16 @@
       <div #scrollAnchor style="height: 20px; width: 100%"></div>
     </section>
 
-    <!-- ================== 3.5 HASHTAGS SECTION (UPDATED) ================== -->
+    <!-- HASHTAGS -->
     @if (postData.tags && postData.tags.length > 0) {
     <section class="article-tags">
       @for (tag of postData.tags; track tag) {
-      <!-- Link to Home Page with ?tag= query param -->
       <a [routerLink]="['/']" [queryParams]="{ tag: tag }" class="tag-chip">
         {{ tag }}
       </a>
       }
     </section>
     }
-    <!-- ==================================================================== -->
 
     <!-- 4. Engagement Bar -->
     @if (!isAdmin()) {
@@ -173,8 +171,6 @@
   <aside class="sidebar-container">
     <div class="sticky-sidebar-wrapper">
       <app-popular-tags></app-popular-tags>
-
-      <!-- 2. WHO TO FOLLOW -->
       <app-suggested-users></app-suggested-users>
     </div>
   </aside>
