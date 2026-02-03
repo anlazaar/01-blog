@@ -20,7 +20,6 @@ public class JwtService {
     private final Key secretKey = Keys.hmacShaKeyFor(secret.getBytes());
     private final long EXPIRATION = 1000 * 60 * 60 * 24;
 
-
     public String generateToken(User user) {
         return Jwts.builder()
                 .setSubject(user.getId().toString())
@@ -53,5 +52,13 @@ public class JwtService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public io.jsonwebtoken.Claims parseClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey) // your existing secretKey
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

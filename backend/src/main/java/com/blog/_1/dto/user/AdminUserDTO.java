@@ -10,12 +10,11 @@ public class AdminUserDTO {
     private UUID id;
     private String username;
     private String email;
-    private Role role;
+    private Role role; 
     private String avatarUrl;
     private boolean banned;
     private boolean completedAccount;
 
-    // Static mapper method (like you did in PostResponse)
     public static AdminUserDTO from(User user) {
         AdminUserDTO dto = new AdminUserDTO();
         dto.setId(user.getId());

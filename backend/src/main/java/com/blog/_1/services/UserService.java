@@ -5,18 +5,22 @@ import java.nio.file.*;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Collections;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import java.util.Collections;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import com.blog._1.dto.post.PostMinimalDTO;
+import com.blog._1.dto.user.ProfilePatchRequest;
+import com.blog._1.dto.user.UserUpdateRequest;
 import com.blog._1.dto.user.UserPublicProfileDTO;
 import com.blog._1.dto.user.UserResponse;
 import com.blog._1.models.Role;
@@ -36,32 +40,63 @@ public class UserService {
     private final SubscriptionRepository subscriptionRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // --- 1. BASIC CRUD (Restored getUserById & updateUser) ---
+    // --- HELPER ---
+    private User getUserOrThrow(UUID id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    }
+
+    private boolean hasText(String s) {
+        return s != null && !s.isBlank();
+    }
+
+    // --- 1. BASIC CRUD ---
 
     public User getUserById(UUID id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        return getUserOrThrow(id);
     }
 
     public User createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already taken");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already taken");
         }
         user.setRole(Role.USER);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
-    // Used for full updates (PUT)
-    public User updateUser(UUID id, User userNewInfo) {
-        User existing = getUserById(id);
-        existing.setUsername(userNewInfo.getUsername());
-        existing.setEmail(userNewInfo.getEmail());
-        // Only update password if actually provided
-        if (userNewInfo.getPassword() != null && !userNewInfo.getPassword().isBlank()) {
-            existing.setPassword(passwordEncoder.encode(userNewInfo.getPassword()));
+    // REFACTORED: Now uses UserUpdateRequest DTO
+    @Transactional
+    public User updateUser(UUID id, UserUpdateRequest request) {
+        User user = getUserOrThrow(id);
+
+        // 1. Business Validation: Email Uniqueness
+        if (!user.getEmail().equals(request.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+            }
+            user.setEmail(request.getEmail());
         }
-        return userRepository.save(existing);
+
+        // 2. Business Validation: Username Uniqueness
+        if (!user.getUsername().equals(request.getUsername())) {
+            if (userRepository.existsByUsername(request.getUsername())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
+            }
+            user.setUsername(request.getUsername());
+        }
+
+        // 3. Update Text Fields
+        user.setFirstname(request.getFirstname());
+        user.setLastname(request.getLastname());
+        user.setBio(request.getBio());
+
+        // 4. Optional Password Update (if allowed in PUT)
+        if (hasText(request.getPassword())) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        return userRepository.save(user);
     }
 
     // --- 2. PUBLIC PROFILES ---
@@ -75,6 +110,10 @@ public class UserService {
         dto.setBio(user.getBio());
         dto.setEmail(user.getEmail());
         dto.setAvatarUrl(user.getAvatarUrl());
+
+       
+        dto.setRole(user.getRole().name());
+
         return dto;
     }
 
@@ -87,7 +126,6 @@ public class UserService {
         dto.setBio(user.getBio());
         dto.setAvatarUrl(user.getAvatarUrl());
 
-        // Follow Status
         var auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof User currentUser
                 && !currentUser.getId().equals(user.getId())) {
@@ -95,7 +133,6 @@ public class UserService {
                     .isPresent());
         }
 
-        // Optimization: Fetch only latest 6 posts
         List<PostMinimalDTO> postDTOs = postRepository.findByAuthorId(user.getId(), PageRequest.of(0, 6))
                 .stream().map(post -> {
                     PostMinimalDTO p = new PostMinimalDTO();
@@ -115,38 +152,21 @@ public class UserService {
         return dto;
     }
 
-    // Restored: getAllPublicUsers (Mapped to DTO)
     public Page<UserPublicProfileDTO> getAllPublicUsers(UUID currentUserId, Pageable pageable) {
-        // 1. Query #1: Fetch Page of DTOs with Counts already calculated by DB
         Page<UserPublicProfileDTO> page = userRepository.findAllUserSummaries(pageable);
+        if (currentUserId == null)
+            return page;
 
-        // 2. Query #2: Batch fetch "Is Following" status
-        // If user is guest, no need to check
-        if (currentUserId == null) {
-            return page; // Returns immediately, no mapping needed
-        }
-
-        // Get all IDs from the current page
-        List<UUID> userIdsOnPage = page.getContent().stream()
-                .map(UserPublicProfileDTO::getId)
-                .toList();
-
+        List<UUID> userIdsOnPage = page.getContent().stream().map(UserPublicProfileDTO::getId).toList();
         if (userIdsOnPage.isEmpty())
             return page;
 
-        // Optimized: Check subscription only for these specific users
-        // Create this method in SubscriptionRepository (see Step 3)
-        Set<UUID> followingIds = subscriptionRepository.findFollowingIdsByFollowerIdAndFollowingIdIn(
-                currentUserId,
+        Set<UUID> followingIds = subscriptionRepository.findFollowingIdsByFollowerIdAndFollowingIdIn(currentUserId,
                 userIdsOnPage);
-
-        // 3. In-Memory Map (No DB calls)
         page.forEach(dto -> {
             dto.setFollowing(followingIds.contains(dto.getId()));
-            // Explicitly ensure posts are empty for the list view to save bandwidth
             dto.setPosts(Collections.emptyList());
         });
-
         return page;
     }
 
@@ -169,81 +189,92 @@ public class UserService {
         }).toList();
     }
 
-    // --- 3. ADMIN METHODS (Restored) ---
+    // --- 3. ADMIN METHODS ---
 
-    // Restored: getAllUsers (Returns Entities for Admin Dashboard)
     public Page<User> getAllUsers(int page, int size) {
         return userRepository.findAll(PageRequest.of(page, size));
     }
 
-    // Restored: banUser
     @Transactional
     public void banUser(UUID id) {
         User user = getUserById(id);
-        user.setBanned(!user.isBanned()); // Toggle ban status
+        user.setBanned(!user.isBanned());
         userRepository.save(user);
     }
 
-    // Restored: deleteUser
     public void deleteUser(UUID id) {
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
         userRepository.deleteById(id);
     }
 
     // --- 4. PROFILE PATCHING ---
 
-    public String patchUser(UUID userId, String firstname, String lastname, String bio, MultipartFile avatar,
-            String email, String password, String oldpassword, String username) throws IOException {
+    // REFACTORED: Now uses ProfilePatchRequest DTO
+    @Transactional
+    public String patchUser(UUID userId, ProfilePatchRequest request) throws IOException {
         User user = getUserById(userId);
-
         boolean isProfileUpdated = false;
 
-        if (hasText(firstname)) {
-            user.setFirstname(firstname);
+        // 1. Text Fields
+        if (hasText(request.getFirstname())) {
+            user.setFirstname(request.getFirstname());
             isProfileUpdated = true;
         }
-        if (hasText(lastname)) {
-            user.setLastname(lastname);
+        if (hasText(request.getLastname())) {
+            user.setLastname(request.getLastname());
             isProfileUpdated = true;
         }
-        if (hasText(bio)) {
-            user.setBio(bio);
+        if (hasText(request.getBio())) {
+            user.setBio(request.getBio());
             isProfileUpdated = true;
         }
 
-        if (avatar != null && !avatar.isEmpty()) {
-            String filename = UUID.randomUUID() + "_" + avatar.getOriginalFilename();
+        // 2. Avatar Upload (With Security Check)
+        if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
+            validateImage(request.getAvatar()); // Check file type
+
+            String filename = UUID.randomUUID() + "_" + request.getAvatar().getOriginalFilename();
             Path uploadPath = Paths.get("uploads/avatars");
             if (!Files.exists(uploadPath))
                 Files.createDirectories(uploadPath);
-            Files.copy(avatar.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(request.getAvatar().getInputStream(), uploadPath.resolve(filename),
+                    StandardCopyOption.REPLACE_EXISTING);
+
             user.setAvatarUrl("/uploads/avatars/" + filename);
             isProfileUpdated = true;
         }
 
+        // 3. Mark Complete if all fields are there
         if (isProfileUpdated && hasText(user.getFirstname()) && hasText(user.getLastname()) && hasText(user.getBio())) {
             user.setCompletedAccount(true);
         }
 
-        if (hasText(email) && !email.equals(user.getEmail())) {
-            if (userRepository.existsByEmail(email))
-                throw new IllegalArgumentException("Email taken");
-            user.setEmail(email);
+        // 4. Email Change
+        if (hasText(request.getEmail()) && !request.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail()))
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email taken");
+            user.setEmail(request.getEmail());
         }
 
-        if (hasText(username) && !username.equals(user.getUsername())) {
-            if (userRepository.existsByUsername(username))
-                throw new IllegalArgumentException("Username taken");
-            user.setUsername(username);
+        // 5. Username Change
+        if (hasText(request.getUsername()) && !request.getUsername().equals(user.getUsername())) {
+            if (userRepository.existsByUsername(request.getUsername()))
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Username taken");
+            user.setUsername(request.getUsername());
         }
 
-        if (hasText(password) && hasText(oldpassword)) {
-            if (!passwordEncoder.matches(oldpassword, user.getPassword())) {
-                throw new IllegalArgumentException("Old password incorrect");
+        // 6. Password Change (Strict)
+        if (hasText(request.getPassword())) {
+            if (!hasText(request.getOldpassword())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Current password is required to set a new password");
             }
-            user.setPassword(passwordEncoder.encode(password));
+            if (!passwordEncoder.matches(request.getOldpassword(), user.getPassword())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password incorrect");
+            }
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
         userRepository.save(user);
@@ -252,16 +283,19 @@ public class UserService {
 
     public void updateUserRole(UUID userId, Role newRole) {
         User user = getUserById(userId);
-
-        if (!newRole.equals(Role.USER) && !newRole.equals(Role.ADMIN)) {
-            throw new IllegalArgumentException("Invalid role");
-        }
-
+        // Note: Enum checking is usually handled by Spring before hitting here,
+        // but extra safety is fine.
         user.setRole(newRole);
         userRepository.save(user);
     }
 
-    private boolean hasText(String s) {
-        return s != null && !s.isBlank();
+    // --- Private Util ---
+    private void validateImage(MultipartFile file) {
+        if (file.getContentType() == null || !file.getContentType().startsWith("image/")) {
+            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Only image files are allowed");
+        }
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "File too large");
+        }
     }
 }

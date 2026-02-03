@@ -3,16 +3,14 @@ package com.blog._1.dto.user;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
 import com.blog._1.dto.post.PostMinimalDTO;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor // Useful for serialization
-@AllArgsConstructor // Keep this for other usages if needed
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserPublicProfileDTO {
     private UUID id;
     private String username;
@@ -25,6 +23,7 @@ public class UserPublicProfileDTO {
     private boolean isFollowing;
     private List<PostMinimalDTO> posts;
 
+    // Constructor for JPQL Queries (Performance Optimization)
     public UserPublicProfileDTO(UUID id, String username, String firstname, String lastname,
             String bio, String avatarUrl, Long followersCount, Long followingCount) {
         this.id = id;
@@ -35,7 +34,6 @@ public class UserPublicProfileDTO {
         this.avatarUrl = avatarUrl;
         this.followersCount = followersCount != null ? followersCount.intValue() : 0;
         this.followingCount = followingCount != null ? followingCount.intValue() : 0;
-
         this.isFollowing = false;
         this.posts = Collections.emptyList();
     }

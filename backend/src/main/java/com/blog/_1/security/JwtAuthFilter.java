@@ -55,8 +55,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         try {
-            final UUID userId = jwtService.extractUserId(token);
-            final String role = jwtService.extractRole(token);
+            var claims = jwtService.parseClaims(token);
+
+            final UUID userId = UUID.fromString(claims.getSubject());
+            final String role = claims.get("role", String.class);
 
             if (userId != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 

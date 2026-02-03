@@ -1,13 +1,19 @@
 package com.blog._1.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+        @Index(name = "idx_users_email", columnList = "email"),
+        @Index(name = "idx_users_username", columnList = "username")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,20 +25,31 @@ public class User extends BaseEntity {
     private UUID id;
 
     @Column(nullable = false, unique = true)
+    @NotBlank
+    @Size(min = 3, max = 20)
     private String username;
 
     @Column(nullable = false, unique = true)
+    @NotBlank
+    @Email
     private String email;
 
     @Column(nullable = false)
+    @JsonIgnore
     private String password;
 
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
 
+    @Size(max = 50)
     private String firstname;
+
+    @Size(max = 50)
     private String lastname;
+
+    @Size(max = 500)
     private String bio;
+
     private String avatarUrl;
 
     @Column(nullable = false)
