@@ -161,7 +161,7 @@ export class Home implements OnInit {
   }
 
   clearFilter() {
-    this.router.navigate(['/']);
+    this.router.navigate(['/home']);
   }
 
   onReport(userId: string) {

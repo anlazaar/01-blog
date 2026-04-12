@@ -6,7 +6,7 @@ import {
   computed,
   effect,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop'; // Import this
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { PostService } from '../../services/post.service';
@@ -22,7 +22,7 @@ import { PostService } from '../../services/post.service';
       <div class="tags-wrapper">
         @for (tag of recommendedTopics(); track tag) {
         <a
-          [routerLink]="['/']"
+          [routerLink]="['/home']"
           [queryParams]="{ tag: tag }"
           class="tag-pill"
           [class.active]="currentTag() === tag"
@@ -88,29 +88,20 @@ export class PopularTagsComponent {
   private route = inject(ActivatedRoute);
   private postService = inject(PostService);
 
-  // 1. ROUTE STATE
-  // Convert Observable params to a Signal.
-  // This automatically handles subscription/unsubscription.
   private queryParams = toSignal(this.route.queryParams);
 
-  // derive the specific 'tag' string from the queryParams signal
   currentTag = computed(() => this.queryParams()?.['tag'] || null);
 
-  // 2. DATA STATE
-  // Since PostService is stateless, we hold the data here.
+
   recommendedTopics = signal<string[]>([]);
 
   constructor() {
-    // 3. EFFECT
-    // Trigger data loading when component is created
     effect(() => {
       this.loadTags();
     });
   }
 
   private loadTags() {
-    // HTTP Observables complete automatically, so explicit unsubscribe isn't strictly necessary here,
-    // but using first() or take(1) is good practice if logic gets complex.
     this.postService.getPopularTags().subscribe({
       next: (tags) => this.recommendedTopics.set(tags),
       error: (err) => console.error('Failed to load tags', err),

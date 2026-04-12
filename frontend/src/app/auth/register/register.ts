@@ -85,7 +85,7 @@ export class Register {
           const uuid = this.tokenService.getUUID();
           this.router.navigate(['profile/complete-profile', uuid]);
         } else {
-          this.router.navigate(['/']);
+          this.router.navigate(['/home']);
         }
       },
       error: (err) => {
@@ -102,10 +102,12 @@ export class Register {
   }
 
   loginWithGithub() {
-    window.location.href = `${this.apiUrl}/oauth2/authorization/github`;
+    const baseUrl = this.apiUrl.replace(/\/api\/?$/, '');
+    window.location.href = `${baseUrl}/oauth2/authorization/github`;
   }
 
   loginWithGoogle() {
-    window.location.href = `${this.apiUrl}/oauth2/authorization/google`;
+    const baseUrl = this.apiUrl.replace(/\/api\/?$/, '');
+    window.location.href = `${baseUrl}/oauth2/authorization/google`;
   }
 }

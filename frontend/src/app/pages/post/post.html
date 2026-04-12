@@ -85,7 +85,7 @@
     </section>
     }
 
-    <!-- 4. Engagement Bar -->
+    <!-- 4. Top Engagement Bar (Kept for desktop structure) -->
     @if (!isAdmin()) {
     <section class="engagement-bar">
       <div class="engagement-left">
@@ -102,7 +102,12 @@
         <span class="count-label">{{ postData.likeCount }}</span>
         }
 
-        <button mat-icon-button class="action-btn comment-trigger" matTooltip="Responses">
+        <button
+          mat-icon-button
+          class="action-btn comment-trigger"
+          matTooltip="Responses"
+          (click)="scrollToComments()"
+        >
           <mat-icon>chat_bubble_outline</mat-icon>
         </button>
         <span class="count-label">{{ postData.comments.length }}</span>
@@ -112,8 +117,8 @@
 
     <div class="separator"></div>
 
-    <!-- 5. Comments Section -->
-    <section class="responses-section">
+    <!-- 5. Comments Section (Added ID for scrolling) -->
+    <section id="comments-section" class="responses-section">
       <h3>Responses ({{ postData.comments.length }})</h3>
 
       @if (currentUserId() && !isAdmin()) {
@@ -176,9 +181,46 @@
   </aside>
   }
 </div>
-} @else {
+
+<!-- NEW: FLOATING ACTION BAR -->
+@if (!isAdmin() && currentUserId()) {
+<div class="floating-action-bar">
+  <div class="floating-actions">
+    <!-- Like Button -->
+    <div class="floating-action-item">
+      <button
+        mat-icon-button
+        class="action-btn like-btn"
+        [class.active]="postData.likedByCurrentUser"
+        (click)="toggleLike(postData)"
+        matTooltip="Like"
+        matTooltipPosition="above"
+      >
+        <mat-icon>{{ postData.likedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
+      </button>
+      <span class="floating-count">{{ postData.likeCount }}</span>
+    </div>
+
+    <div class="vertical-divider"></div>
+
+    <!-- Jump to Comments Button -->
+    <div class="floating-action-item">
+      <button
+        mat-icon-button
+        class="action-btn"
+        (click)="scrollToComments()"
+        matTooltip="Jump to Responses"
+        matTooltipPosition="above"
+      >
+        <mat-icon>chat_bubble_outline</mat-icon>
+      </button>
+      <span class="floating-count">{{ postData.comments.length }}</span>
+    </div>
+  </div>
+</div>
+} } @else {
 <div class="not-found">
   <h1>Post not found</h1>
-  <a mat-button color="primary" routerLink="/">Back to home</a>
+  <a mat-button color="primary" routerLink="/home">Back to home</a>
 </div>
 }

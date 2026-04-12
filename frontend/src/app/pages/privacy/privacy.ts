@@ -83,7 +83,7 @@ import { RouterLink } from '@angular/router';
 
         <!-- Footer / Back Link -->
         <div class="post-footer-actions">
-          <a routerLink="/" class="back-link">← Back to Home</a>
+          <a routerLink="/home" class="back-link">← Back to Home</a>
         </div>
       </article>
     </div>

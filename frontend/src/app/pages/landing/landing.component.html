@@ -1,0 +1,153 @@
+<div class="landing-wrapper">
+  <!-- HERO SECTION -->
+  <header class="hero">
+    <!-- Premium Aurora Background -->
+    <div class="aurora-bg">
+      <div class="aurora-blob a-1"></div>
+      <div class="aurora-blob a-2"></div>
+      <div class="aurora-blob a-3"></div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-text">
+        <div class="pill-badge animate-slide-up">✨ The new standard for publishing</div>
+        <h1 class="animate-slide-up delay-1">
+          Ideas that <br />
+          <span class="italic-serif">shape</span> the future.
+        </h1>
+        <p class="hero-subheadline animate-slide-up delay-2">
+          Discover stories, thinking, and expertise from writers on any topic. Step into a curated
+          world where good ideas find you.
+        </p>
+
+        <div class="hero-actions animate-slide-up delay-3">
+          <button class="hero-btn primary elevate" (click)="getStarted()">
+            Start writing — It's free
+          </button>
+          <button class="hero-btn secondary" (click)="startReading()">Explore stories</button>
+        </div>
+
+        <!-- Social Proof -->
+        <div class="social-proof animate-fade-in delay-4">
+          <div class="avatar-group">
+            <img *ngFor="let avatar of avatars" [src]="avatar" alt="Writer Avatar" class="avatar" />
+            <div class="avatar more-avatar">+</div>
+          </div>
+          <div class="proof-text">
+            <p>Join <strong>50,000+</strong> writers & thinkers.</p>
+            <div class="stars">★★★★★</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating UI Elements (Glassmorphism) -->
+      <div class="hero-visual animate-fade-in delay-3">
+        <div class="glass-card main-ui float-anim">
+          <div class="ui-header">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <div class="ui-title">Draft - The Future of AI</div>
+          </div>
+          <div class="ui-body">
+            <h2>The inevitable shift.</h2>
+            <p>
+              As we move towards a more connected world, the intersection of human creativity and
+              machine logic becomes...
+            </p>
+            <div class="ui-skeleton"></div>
+            <div class="ui-skeleton short"></div>
+          </div>
+        </div>
+
+        <div class="glass-card stat-badge badge-1 float-anim-alt">
+          <div class="stat-icon">📈</div>
+          <div class="stat-info">
+            <span class="stat-val">+12.5k</span>
+            <span class="stat-lbl">Readers this week</span>
+          </div>
+        </div>
+
+        <div class="glass-card stat-badge badge-2 float-anim delay-2">
+          <div class="stat-icon">✨</div>
+          <div class="stat-info">
+            <span class="stat-val">Top Writer</span>
+            <span class="stat-lbl">Technology</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- INFINITE MARQUEE SECTION -->
+  <section class="trending-topics">
+    <div class="marquee-container">
+      <div class="marquee-content">
+        <!-- Using ng-container to cleanly duplicate for infinite scroll -->
+        <ng-container *ngFor="let i of [1, 2]">
+          <ng-container *ngFor="let topic of topics">
+            <span class="topic-pill">{{ topic }}</span>
+            <span class="topic-separator">✦</span>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENTO GRID FEATURES SECTION -->
+  <section class="features">
+    <div class="features-header">
+      <h2 class="animate-on-scroll">A platform built for depth.</h2>
+      <p class="animate-on-scroll">
+        Everything you need to read, write, and grow your audience seamlessly.
+      </p>
+    </div>
+
+    <div class="bento-grid">
+      <!-- Feature 1 (Large) -->
+      <div class="bento-card bento-large">
+        <div class="feat-content">
+          <div class="feat-icon">📖</div>
+          <h3>Uncompromising Reading Experience</h3>
+          <p>
+            No pop-ups. No distractions. Just pure typography and content in a beautiful, minimalist
+            environment designed specifically for deep focus.
+          </p>
+        </div>
+        <div class="bento-visual">
+          <!-- Abstract representation of clean text -->
+          <div class="line"></div>
+          <div class="line"></div>
+          <div class="line short"></div>
+        </div>
+      </div>
+
+      <!-- Feature 2 (Small) -->
+      <div class="bento-card">
+        <div class="feat-icon">💡</div>
+        <h3>Express Effortlessly</h3>
+        <p>A world-class WYSIWYG editor that gets out of your way so your ideas can flow.</p>
+      </div>
+
+      <!-- Feature 3 (Small) -->
+      <div class="bento-card">
+        <div class="feat-icon">🚀</div>
+        <h3>Built-in Distribution</h3>
+        <p>
+          Your stories are algorithmically matched with readers who actually care about your niche.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOTTOM CTA SECTION -->
+  <section class="bottom-cta">
+    <div class="cta-box glass-cta">
+      <div class="cta-glow"></div>
+      <h2>Claim your voice.</h2>
+      <p>Start your free publication today. Set up takes less than 2 minutes.</p>
+      <button class="hero-btn primary large elevate" (click)="getStarted()">
+        Create your account
+      </button>
+      <p class="cta-disclaimer">No credit card required. Cancel anytime.</p>
+    </div>
+  </section>
+</div>

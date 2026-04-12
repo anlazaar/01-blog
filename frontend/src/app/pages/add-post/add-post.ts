@@ -7,14 +7,13 @@ import {
   ViewChild,
   ViewEncapsulation,
   signal,
-  effect,
 } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators, FormControl } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Observable, of, from } from 'rxjs';
 import { concatMap, debounceTime, last, startWith, switchMap, tap } from 'rxjs/operators';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 
 // TipTap Imports
@@ -73,6 +72,10 @@ export class AddPost implements OnInit, OnDestroy {
 
   private readonly BACKEND_URL = 'http://localhost:8080';
 
+  // --- LIMITS ---
+  private readonly MAX_TAGS = 5;
+  private readonly MAX_TAG_LENGTH = 20;
+
   // --- 1. STATE SIGNALS ---
   isSubmitting = signal(false);
   uploadProgress = signal(0);
@@ -86,7 +89,7 @@ export class AddPost implements OnInit, OnDestroy {
   isEditMode = signal(false);
   currentPostId = signal<string | null>(null);
 
-  // Non-signal state (Editor instance needs to be mutable object reference)
+  // Non-signal state
   editor!: Editor;
   existingMediaUrl: string | null = null;
   selectedFile: File | null = null;
@@ -96,7 +99,6 @@ export class AddPost implements OnInit, OnDestroy {
   readonly separatorKeysCodes = [ENTER, COMMA] as const;
   tagCtrl = new FormControl('');
 
-  // Convert RxJS Autocomplete stream to Signal for easy template usage
   filteredTags = toSignal(
     this.tagCtrl.valueChanges.pipe(
       startWith(null),
@@ -116,25 +118,18 @@ export class AddPost implements OnInit, OnDestroy {
   @ViewChild('tagInput') tagInput!: ElementRef<HTMLInputElement>;
   @ViewChild(MatAutocompleteTrigger) autocompleteTrigger!: MatAutocompleteTrigger;
 
+  // Added strict Validators mapped to DTO requirements
   postForm = this.fb.group({
-    title: ['', [Validators.required, Validators.minLength(3)]],
-    description: ['', [Validators.required, Validators.minLength(10)]],
+    title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
+    description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(50000)]], // description holds full body here
     mediaType: ['IMAGE'],
   });
 
   constructor() {
-    // --- 3. EFFECT: Handle Routing / Edit Mode ---
-    effect(() => {
-      // Create a signal from route params just for this effect context if needed,
-      // or simply use the logic below. Since route params are observable,
-      // we usually subscribe. However, here we can wrap it logic cleanly.
-    });
-
-    // We subscribe to route params manually here to trigger the load logic.
-    // (Note: Using toSignal(route.paramMap) is also an option, but this logic
-    // involves an API call chain that fits RxJS well).
+    // Safely subscribe to route params and ensure cleanup using takeUntilDestroyed
     this.route.paramMap
       .pipe(
+        takeUntilDestroyed(),
         switchMap((params) => {
           const id = params.get('id');
           if (id) {
@@ -152,16 +147,16 @@ export class AddPost implements OnInit, OnDestroy {
       });
   }
 
-  // Helper to populate form data
   private populateForm(post: any) {
     this.postForm.patchValue({
       title: post.title,
-      description: '', // Loaded via separate call
+      description: '',
       mediaType: post.mediaType,
     });
 
     if (post.tags) {
-      this.tags.set(Array.from(post.tags));
+      const parsedTags = Array.from(post.tags as string[]);
+      this.tags.set(parsedTags.slice(0, this.MAX_TAGS));
     }
 
     if (post.mediaUrl) {
@@ -169,12 +164,9 @@ export class AddPost implements OnInit, OnDestroy {
       this.coverPreviewUrl = this.BACKEND_URL + post.mediaUrl;
     }
 
-    // Load content separately
     this.loadDraftContent(post.id);
   }
 
-  // --- 4. LIFECYCLE: EDITOR SETUP ---
-  // We keep ngOnInit for Editor init as it relies on DOM presence/timing
   ngOnInit(): void {
     this.editor = new Editor({
       extensions: [
@@ -193,13 +185,15 @@ export class AddPost implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.editor.destroy();
+    if (this.editor) {
+      this.editor.destroy();
+    }
     if (this.coverPreviewUrl && this.coverPreviewUrl.startsWith('blob:')) {
       URL.revokeObjectURL(this.coverPreviewUrl);
     }
   }
 
-  // --- 5. TAG LOGIC (Signal Based) ---
+  // --- 5. TAG LOGIC (With Limits) ---
 
   private normalizeTag(tag: string): string {
     return tag.replace(/#/g, '').trim().toLowerCase();
@@ -211,14 +205,7 @@ export class AddPost implements OnInit, OnDestroy {
     const value = (event.value || '').trim();
     const cleanValue = this.normalizeTag(value);
 
-    if (cleanValue) {
-      this.tags.update((current) => {
-        if (!current.includes(cleanValue)) {
-          return [...current, cleanValue];
-        }
-        return current;
-      });
-    }
+    this.processTagAddition(cleanValue);
 
     event.chipInput!.clear();
     this.tagCtrl.setValue(null);
@@ -228,17 +215,30 @@ export class AddPost implements OnInit, OnDestroy {
     const rawValue = event.option.value;
     const cleanValue = this.normalizeTag(rawValue);
 
-    if (cleanValue) {
-      this.tags.update((current) => {
-        if (!current.includes(cleanValue)) {
-          return [...current, cleanValue];
-        }
-        return current;
-      });
-    }
+    this.processTagAddition(cleanValue);
 
     this.tagInput.nativeElement.value = '';
     this.tagCtrl.setValue(null);
+  }
+
+  private processTagAddition(cleanValue: string) {
+    if (!cleanValue) return;
+
+    if (cleanValue.length > this.MAX_TAG_LENGTH) {
+      this.toast.show(`Tags cannot exceed ${this.MAX_TAG_LENGTH} characters.`, 'error');
+      return;
+    }
+
+    this.tags.update((current) => {
+      if (current.length >= this.MAX_TAGS) {
+        this.toast.show(`You can only add up to ${this.MAX_TAGS} tags.`, 'error');
+        return current;
+      }
+      if (!current.includes(cleanValue)) {
+        return [...current, cleanValue];
+      }
+      return current;
+    });
   }
 
   removeTag(tag: string): void {
@@ -250,7 +250,6 @@ export class AddPost implements OnInit, OnDestroy {
   loadDraftContent(id: string) {
     this.postService.getFullPostContent(id).subscribe((content) => {
       if (this.editor) {
-        // Tiptap needs the queue to be empty or ready, usually safe here
         this.editor.commands.setContent(content);
         this.postForm.patchValue({ description: content });
       }
@@ -261,7 +260,6 @@ export class AddPost implements OnInit, OnDestroy {
     return this.postForm.get('mediaType')?.value === 'VIDEO';
   }
 
-  // ... Editor Actions (Links, Images) ...
   setLink() {
     const previousUrl = this.editor.getAttributes('link')['href'];
     const url = window.prompt('URL', previousUrl);
@@ -300,7 +298,6 @@ export class AddPost implements OnInit, OnDestroy {
     });
   }
 
-  // ... Cover Logic ...
   triggerFileInput() {
     document.getElementById('cover-upload')?.click();
   }
@@ -348,8 +345,20 @@ export class AddPost implements OnInit, OnDestroy {
   }
 
   private handleSave(publish: boolean) {
-    if (this.postForm.invalid || this.editor.isEmpty) {
-      this.toast.show('Please add a title and some content.', 'error');
+    // Validate Form
+    if (this.postForm.invalid) {
+      if (this.postForm.get('title')?.hasError('maxlength')) {
+        this.toast.show('Title is too long (max 150 characters).', 'error');
+      } else if (this.postForm.get('description')?.hasError('maxlength')) {
+        this.toast.show('Content is too long. Please reduce text.', 'error');
+      } else {
+        this.toast.show('Please provide a valid title and content.', 'error');
+      }
+      return;
+    }
+
+    if (this.editor.isEmpty) {
+      this.toast.show('Please add some content to your story.', 'error');
       return;
     }
 
@@ -358,6 +367,7 @@ export class AddPost implements OnInit, OnDestroy {
     this.uploadProgress.set(0);
 
     const fullContent = this.postForm.get('description')?.value || '';
+    // Description in DTO expects a summary. Limit this to 150 to be safe for typical DB limits
     const summary = fullContent.substring(0, 150) + '...';
     const title = this.postForm.get('title')?.value;
     const currentMediaType = this.postForm.get('mediaType')?.value;
@@ -372,7 +382,7 @@ export class AddPost implements OnInit, OnDestroy {
         description: summary,
         mediaType: currentMediaType,
         mediaUrl: this.existingMediaUrl,
-        tags: this.tags(), // Access Signal value
+        tags: this.tags(),
       };
 
       let preUpdateAction: Observable<any> = of(null);
@@ -397,7 +407,6 @@ export class AddPost implements OnInit, OnDestroy {
       formData.append('description', summary);
       formData.append('mediaType', currentMediaType || 'IMAGE');
 
-      // Loop over Signal value
       this.tags().forEach((tag) => {
         formData.append('tags', tag);
       });
@@ -432,7 +441,7 @@ export class AddPost implements OnInit, OnDestroy {
           this.isSubmitting.set(false);
           if (publish) {
             this.toast.show('Story published successfully!', 'success');
-            this.router.navigate(['/']);
+            this.router.navigate(['/home']);
           } else {
             this.isEditMode.set(true);
             this.selectedFile = null;
@@ -451,12 +460,15 @@ export class AddPost implements OnInit, OnDestroy {
     const CHUNK_SIZE = 4000;
     const totalChunks = Math.ceil(content.length / CHUNK_SIZE);
     const chunks: { index: number; content: string }[] = [];
+
     for (let i = 0; i < totalChunks; i++) {
       const start = i * CHUNK_SIZE;
       const end = Math.min(start + CHUNK_SIZE, content.length);
       chunks.push({ index: i, content: content.substring(start, end) });
     }
+
     if (chunks.length === 0) return of(null);
+
     return from(chunks).pipe(
       concatMap((chunk, i) => {
         this.uploadProgress.set(Math.round(((i + 1) / totalChunks) * 100));

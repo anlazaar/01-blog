@@ -36,7 +36,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       <div class="empty-state">
         <mat-icon class="empty-icon">bookmark_border</mat-icon>
         <p>You haven't saved any stories yet.</p>
-        <a mat-button color="primary" routerLink="/" class="go-home">Read stories</a>
+        <a mat-button color="primary" routerLink="/home" class="go-home">Read stories</a>
       </div>
       } @else {
       <div class="posts-list">

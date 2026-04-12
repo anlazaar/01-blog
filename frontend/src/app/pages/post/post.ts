@@ -9,7 +9,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common'; // DatePipe, UpperCasePipe
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { switchMap } from 'rxjs';
 
@@ -49,65 +49,53 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatProgressSpinnerModule,
     MatTooltipModule,
   ],
-  providers: [PostService], // Optional if provided in root
+  providers: [PostService],
   templateUrl: './post.html',
   styleUrl: './post.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PostPage implements OnInit, OnDestroy {
-  // --- INJECTIONS ---
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private postService = inject(PostService);
   private tokenService = inject(TokenService);
   private dialog = inject(MatDialog);
 
-  // --- 1. STATE SIGNALS ---
   post = signal<SinglePostResponse | null>(null);
   loading = signal(true);
 
-  // User Context (Read from Service Signals)
   isAdmin = this.tokenService.isAdminSignal;
   currentUserId = this.tokenService.userId;
 
-  // Content Chunking
   fullContentDisplay = signal('');
   isLoadingChunks = signal(false);
   hasMoreChunks = signal(true);
   private currentPage = 0;
   private readonly CHUNK_PAGE_SIZE = 1;
 
-  // Comments
   newComment = signal('');
 
-  // Intersection Observer
   private observer: IntersectionObserver | null = null;
   @ViewChild('scrollAnchor') scrollAnchorRef!: ElementRef;
 
   ngOnInit(): void {
-    // Route Subscription
     this.route.paramMap
       .pipe(
         switchMap((params) => {
           const id = params.get('id');
           if (!id) throw new Error('Post ID missing');
-
           this.resetState();
           return this.postService.getPostMetadata(id);
         })
       )
       .subscribe({
         next: (res) => {
-          // Normalize data
           const data = { ...res, comments: res.comments || [] };
           this.post.set(data);
           this.loading.set(false);
 
-          // Start Loading Content
-          // Use setTimeout to ensure the view (scroll anchor) exists
           setTimeout(() => {
             this.initObserver();
-            // Initial load
             this.loadNextChunk(res.id);
           }, 0);
         },
@@ -129,15 +117,11 @@ export class PostPage implements OnInit, OnDestroy {
     this.disconnectObserver();
   }
 
-  // --- 2. SCROLL OBSERVER ---
-
   private initObserver() {
-    this.disconnectObserver(); // Safety clear
-
+    this.disconnectObserver();
     if (!this.scrollAnchorRef) return;
 
     const options = { root: null, rootMargin: '200px', threshold: 0.1 };
-
     this.observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         const p = this.post();
@@ -152,7 +136,6 @@ export class PostPage implements OnInit, OnDestroy {
 
   loadNextChunk(postId: string) {
     if (!this.hasMoreChunks() || this.isLoadingChunks()) return;
-
     this.isLoadingChunks.set(true);
 
     this.postService
@@ -160,14 +143,12 @@ export class PostPage implements OnInit, OnDestroy {
       .subscribe({
         next: (chunks) => {
           this.isLoadingChunks.set(false);
-
           if (!chunks || chunks.length === 0) {
             this.hasMoreChunks.set(false);
             this.disconnectObserver();
             return;
           }
 
-          // Append content
           let newContent = '';
           let isLast = false;
           chunks.forEach((chunk) => {
@@ -181,7 +162,6 @@ export class PostPage implements OnInit, OnDestroy {
             this.hasMoreChunks.set(false);
             this.disconnectObserver();
           }
-
           this.currentPage++;
         },
         error: (err) => {
@@ -191,26 +171,20 @@ export class PostPage implements OnInit, OnDestroy {
       });
   }
 
-  // --- 3. ACTIONS ---
-
   toggleLike(postObj: SinglePostResponse) {
-    // 1. Optimistic Update
     const wasLiked = postObj.likedByCurrentUser;
     const newCount = wasLiked ? postObj.likeCount - 1 : postObj.likeCount + 1;
 
-    // Update signal immediately
     this.post.update((p) =>
       p ? { ...p, likedByCurrentUser: !wasLiked, likeCount: newCount } : null
     );
 
-    // 2. API Call
     const action$ = wasLiked
       ? this.postService.unlikePost(postObj.id)
       : this.postService.likePost(postObj.id);
 
     action$.subscribe({
       error: () => {
-        // 3. Revert on error
         this.post.update((p) =>
           p ? { ...p, likedByCurrentUser: wasLiked, likeCount: postObj.likeCount } : null
         );
@@ -225,7 +199,6 @@ export class PostPage implements OnInit, OnDestroy {
 
     this.postService.createComment(p.id, text).subscribe({
       next: (comment) => {
-        // Immutable update to comments array
         this.post.update((current) => {
           if (!current) return null;
           return {
@@ -259,6 +232,14 @@ export class PostPage implements OnInit, OnDestroy {
 
   onReport(userId: string) {
     this.router.navigate(['/report', userId]);
+  }
+
+  // --- NEW: Scroll to comments section ---
+  scrollToComments() {
+    const commentsEl = document.getElementById('comments-section');
+    if (commentsEl) {
+      commentsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   ngOnDestroy() {

@@ -2,7 +2,7 @@
   <!-- Navbar -->
   <nav class="editor-nav">
     <div class="nav-left">
-      <a mat-button routerLink="/" class="back-link">
+      <a mat-button routerLink="/home" class="back-link">
         <mat-icon>arrow_back</mat-icon> Back to feed
       </a>
       <!-- SIGNAL USAGE -->
@@ -75,18 +75,25 @@
         />
       </div>
 
-      <!-- TITLE -->
-      <textarea
-        class="title-input"
-        placeholder="Title"
-        formControlName="title"
-        rows="1"
-        (input)="autoResize($event)"
-      ></textarea>
+      <!-- TITLE (Added maxlength and a character counter) -->
+      <div class="title-wrapper" style="position: relative; margin-bottom: 16px">
+        <textarea
+          class="title-input"
+          placeholder="Title"
+          formControlName="title"
+          rows="1"
+          maxlength="150"
+          (input)="autoResize($event)"
+        ></textarea>
+        <!-- Visual character counter for the title -->
+        <span style="position: absolute; right: 0; bottom: -20px; font-size: 12px; color: #888">
+          {{ postForm.get('title')?.value?.length || 0 }} / 150
+        </span>
+      </div>
 
       <!-- HASHTAGS -->
-      <div class="tags-container">
-        <mat-form-field class="tag-form-field" appearance="fill">
+      <div class="tags-container" style="margin-top: 24px">
+        <mat-form-field class="tag-form-field" appearance="fill" style="width: 100%">
           <mat-chip-grid #chipGrid aria-label="Enter tags">
             <!-- CONTROL FLOW @for -->
             @for (tag of tags(); track tag) {
@@ -98,15 +105,18 @@
             </mat-chip-row>
             }
 
+            <!-- Added maxlength, placeholder logic, and disabled state when max is reached -->
             <input
               #tagInput
-              placeholder="Add a topic..."
+              [placeholder]="tags().length >= 5 ? 'Max 5 tags reached' : 'Add a topic...'"
               [formControl]="tagCtrl"
               [matChipInputFor]="chipGrid"
               [matAutocomplete]="auto"
               [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
               (matChipInputTokenEnd)="addTag($event)"
               class="tag-input"
+              maxlength="20"
+              [disabled]="tags().length >= 5"
             />
           </mat-chip-grid>
 
@@ -116,6 +126,9 @@
             <mat-option [value]="tag"> #{{ tag }} </mat-option>
             }
           </mat-autocomplete>
+
+          <!-- Hint to let the user know the rules -->
+          <mat-hint align="end">{{ tags().length }} / 5 tags (max 20 chars each)</mat-hint>
         </mat-form-field>
       </div>
 
@@ -138,7 +151,6 @@
         >
           <mat-icon>format_bold</mat-icon>
         </button>
-        <!-- (Rest of buttons remain similar, just ensuring template syntax is clean) -->
         <button
           type="button"
           mat-icon-button

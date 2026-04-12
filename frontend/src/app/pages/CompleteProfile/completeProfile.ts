@@ -105,7 +105,7 @@ export class CompleteProfile {
       next: () => {
         this.isSubmitting.set(false);
         this.toastService.show('Profile updated!', 'success');
-        this.router.navigate(['/']);
+        this.router.navigate(['/home']);
       },
       error: (err) => {
         console.error(err);
@@ -116,6 +116,6 @@ export class CompleteProfile {
   }
 
   skip() {
-    this.router.navigate(['/']);
+    this.router.navigate(['/home']);
   }
 }

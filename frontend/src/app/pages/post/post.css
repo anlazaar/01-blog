@@ -372,3 +372,84 @@ textarea {
   background-color: var(--border); /* Slightly darker grey on hover */
   color: var(--text-primary);
 }
+
+/* --- Floating Action Bar --- */
+.floating-action-bar {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  animation: slideUpFloat 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.floating-actions {
+  display: flex;
+  align-items: center;
+  /* Solid fallback using your dynamic theme variable */
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 9999px; /* Pill shape */
+  padding: 4px 16px;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* 
+  Modern transparency: Automatically blends your --background 
+  variable with 15% transparency, guaranteeing it matches 
+  both Light and Dark mode perfectly.
+*/
+@supports (background-color: color-mix(in srgb, black, transparent)) {
+  .floating-actions {
+    background-color: color-mix(in srgb, var(--background) 85%, transparent);
+  }
+}
+
+.floating-action-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vertical-divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--border);
+  margin: 0 12px;
+}
+
+.floating-count {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  margin-right: 4px;
+}
+
+@keyframes slideUpFloat {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 30px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (max-width: 600px) {
+  .floating-action-bar {
+    bottom: 20px;
+    width: 90%;
+    max-width: 300px;
+  }
+  .floating-actions {
+    justify-content: center;
+    width: 100%;
+  }
+  .post-page-layout {
+    padding-bottom: 120px; /* Ensure content clears the floating bar */
+  }
+}

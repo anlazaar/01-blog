@@ -64,7 +64,7 @@ export class Login {
           const uuid = this.tokenService.getUUID();
           this.router.navigate(['profile/complete-profile', uuid]);
         } else {
-          this.router.navigate(['/']);
+          this.router.navigate(['/home']);
         }
 
         // No need to set isSubmitting(false) as we are navigating away
@@ -83,10 +83,12 @@ export class Login {
   }
 
   loginWithGithub() {
-    window.location.href = `${this.apiUrl}/oauth2/authorization/github`;
+    const baseUrl = this.apiUrl.replace(/\/api\/?$/, '');
+    window.location.href = `${baseUrl}/oauth2/authorization/github`;
   }
 
   loginWithGoogle() {
-    window.location.href = `${this.apiUrl}/oauth2/authorization/google`;
+    const baseUrl = this.apiUrl.replace(/\/api\/?$/, '');
+    window.location.href = `${baseUrl}/oauth2/authorization/google`;
   }
 }

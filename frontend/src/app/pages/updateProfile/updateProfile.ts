@@ -90,7 +90,7 @@ export class UpdateProfile implements OnInit {
         error: (err) => {
           console.error(err);
           this.toastService.show('Failed to load profile data', 'error');
-          this.router.navigate(['/']);
+          this.router.navigate(['/home']);
         },
       });
   }
@@ -154,7 +154,7 @@ export class UpdateProfile implements OnInit {
       next: (res) => {
         this.isSubmitting.set(false);
         this.toastService.show('Profile updated successfully!', 'success');
-        this.router.navigate(['/']);
+        this.router.navigate(['/home']);
       },
       error: (err) => {
         this.isSubmitting.set(false);

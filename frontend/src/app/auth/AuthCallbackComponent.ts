@@ -26,7 +26,7 @@ export class AuthCallbackComponent implements OnInit {
         } else if (isNew && userId) {
           this.router.navigate(['/profile/complete-profile', userId]);
         } else {
-          this.router.navigate(['/']);
+          this.router.navigate(['/home']);
         }
       } else {
         this.router.navigate(['/auth/login']);

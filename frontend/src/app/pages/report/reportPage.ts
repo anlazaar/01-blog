@@ -49,7 +49,7 @@ export class ReportPage implements OnInit {
 
     if (!id) {
       this.toastService.show('Invalid request: ID missing', 'error');
-      this.router.navigate(['/']);
+      this.router.navigate(['/home']);
     }
   }
 
@@ -69,7 +69,7 @@ export class ReportPage implements OnInit {
       next: () => {
         this.isSubmitting.set(false);
         this.toastService.show('Report submitted successfully.', 'success');
-        this.router.navigate(['/']);
+        this.router.navigate(['/home']);
       },
       error: (err) => {
         console.error('Report error', err);
