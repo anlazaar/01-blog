@@ -2,6 +2,8 @@ package com.blog._1.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.io.Serializable;
 import java.util.UUID;
 
 @Entity
@@ -11,7 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Hashtag {
+public class Hashtag implements Serializable {
 
     @Id
     @GeneratedValue

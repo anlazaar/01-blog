@@ -1,5 +1,6 @@
 package com.blog._1.dto.post;
 
+import java.io.Serializable;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -11,7 +12,7 @@ import com.blog._1.models.Post;
 import lombok.Data;
 
 @Data
-public class PostResponse {
+public class PostResponse implements Serializable {
     private UUID id;
     private String title;
     private String description;

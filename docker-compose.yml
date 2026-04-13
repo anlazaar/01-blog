@@ -14,6 +14,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  # --- REDIS SERVICE ---
+  redis-cache:
+    image: redis:7-alpine
+    container_name: blog_redis
+    restart: always
+
   backend:
     build:
       context: ./backend
@@ -27,8 +33,12 @@ services:
       SPRING_DATASOURCE_USERNAME: blog_user
       SPRING_DATASOURCE_PASSWORD: blog_password
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # --- REDIS CONNECTION ENV VARS ---
+      SPRING_DATA_REDIS_HOST: redis-cache
+      SPRING_DATA_REDIS_PORT: 6379
     depends_on:
       - postgres-db
+      - redis-cache
 
 volumes:
   postgres_data:

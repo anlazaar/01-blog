@@ -8,6 +8,10 @@ import com.blog._1.repositories.CommentRepository;
 import com.blog._1.repositories.PostRepository;
 import com.blog._1.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -25,9 +29,14 @@ public class CommentService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
+    // Injecting CacheManager for programmatic eviction in the delete method
+    private final CacheManager cacheManager;
+
+    @Caching(evict = {
+            @CacheEvict(value = "single_post", key = "#postId"),
+            @CacheEvict(value = "post_pages", allEntries = true) // Wipes paginated lists so commentCount updates
+    })
     public CommentResponse create(UUID postId, UUID userId, CommentCreateRequest request) {
-        // OPTIMIZATION: getReferenceById creates a proxy.
-        // It doesn't hit the DB if we only need to set the FK relationship.
         var post = postRepository.getReferenceById(postId);
         var author = userRepository.getReferenceById(userId);
 
@@ -40,7 +49,6 @@ public class CommentService {
         return mapToResponse(saved);
     }
 
-    // NEW METHOD: Pagination for comments
     public List<CommentResponse> getComments(UUID postId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return commentRepository.findByPostId(postId, pageable)
@@ -56,7 +64,22 @@ public class CommentService {
         if (!isAdmin && !comment.getAuthor().getId().equals(userId)) {
             throw new RuntimeException("You cannot delete this comment");
         }
+
+        // Capture the postId BEFORE deleting the comment
+        UUID postId = comment.getPost().getId();
+
         commentRepository.delete(comment);
+
+        // Programmatically evict the cache since postId is not a method parameter
+        var singlePostCache = cacheManager.getCache("single_post");
+        if (singlePostCache != null) {
+            singlePostCache.evict(postId);
+        }
+
+        var pagesCache = cacheManager.getCache("post_pages");
+        if (pagesCache != null) {
+            pagesCache.clear(); // Wipes all entries
+        }
     }
 
     private CommentResponse mapToResponse(Comment saved) {
@@ -65,8 +88,6 @@ public class CommentService {
         c.setText(saved.getText());
         c.setCreatedAt(saved.getCreatedAt());
 
-        // Note: This might trigger a fetch for Author if not already loaded,
-        // but it's necessary for the UI.
         UserPublicProfileDTO commentAuthor = new UserPublicProfileDTO();
         commentAuthor.setId(saved.getAuthor().getId());
         commentAuthor.setUsername(saved.getAuthor().getUsername());

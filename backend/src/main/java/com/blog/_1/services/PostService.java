@@ -5,8 +5,14 @@ import com.blog._1.dto.post.*;
 import com.blog._1.models.*;
 import com.blog._1.repositories.*;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -38,6 +44,13 @@ public class PostService {
     private final SubscriptionRepository subscriptionRepository;
     private final SavedPostRepository savedPostRepository;
     private final HashtagRepository hashtagRepository;
+
+    @Autowired
+    private org.springframework.context.ApplicationContext applicationContext;
+
+    private PostService getSelf() {
+        return applicationContext.getBean(PostService.class);
+    }
 
     @Value("${file.upload-dir:uploads}")
     private String uploadDir;
@@ -106,7 +119,10 @@ public class PostService {
 
     // --- POST LOGIC ---
 
-    // Restored: PATCH method
+    @Caching(evict = {
+            @CacheEvict(value = "single_post", key = "#postId"),
+            @CacheEvict(value = "post_pages", allEntries = true) // to enssure wipping pages when content changed
+    })
     public PostResponse patch(UUID postId, UUID userId, PostPatchRequest req) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
@@ -165,6 +181,7 @@ public class PostService {
     }
 
     @Transactional
+    @CacheEvict(value = "post_pages", allEntries = true) // when a new post is created here it enssure to wipe cash
     public PostResponse finalizePost(UUID postId, UUID userId, int expectedTotalChunks) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
         if (!post.getAuthor().getId().equals(userId))
@@ -188,21 +205,34 @@ public class PostService {
         return PostResponse.from(savedPost);
     }
 
-    // --- GETTERS ---
-    public Page<PostResponse> getAll(int page, int size) {
+    @Cacheable(value = "post_pages", key = "'all_' + #page + '_' + #size")
+    public CacheablePage<PostResponse> getBaseAllPosts(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        // 1. Fetch the Page of Entities
         Page<Post> postsPage = postRepository.findByStatus(PostStatus.PUBLISHED, pageable);
 
-        // 2. Convert Page<Post> to Page<PostResponse>
-        // CRITICAL: Use postsPage.map(), DO NOT use .stream()
-        Page<PostResponse> dtoPage = postsPage.map(PostResponse::from);
+        List<PostResponse> content = postsPage.getContent().stream()
+                .map(PostResponse::from)
+                .collect(Collectors.toList());
 
-        // 3. Enrich the content (dtoPage.getContent() returns the modifiable list)
-        enrichWithUserInteraction(dtoPage.getContent());
+        // Return pure DTO, safe for Redis serialization
+        return new CacheablePage<>(content, pageable.getPageNumber(), pageable.getPageSize(),
+                postsPage.getTotalElements());
+    }
 
-        return dtoPage;
+    // --- GETTERS ---
+    public Page<PostResponse> getAll(int page, int size) {
+        // 1. Fetch the safe CacheablePage from Redis
+        CacheablePage<PostResponse> cachedPage = getSelf().getBaseAllPosts(page, size);
+
+        // 2. Enrich with user data (mutating the DTO is now SAFE because Redis
+        // deserializes a fresh copy every time)
+        enrichWithUserInteraction(cachedPage.getContent());
+
+        // 3. Convert back to Spring Data PageImpl to satisfy Controller/Frontend
+        // contract
+        Pageable pageable = PageRequest.of(cachedPage.getPageNumber(), cachedPage.getPageSize());
+        return new PageImpl<>(cachedPage.getContent(), pageable, cachedPage.getTotalElements());
     }
 
     public List<PostResponse> getByUser(UUID userId, int page, int size) {
@@ -285,16 +315,12 @@ public class PostService {
         }
     }
 
-    @Transactional(readOnly = true)
-    public SinglePostResponse get(UUID id) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-
-        // 1. Create the heavy DTO
+    @Cacheable(value = "single_post", key = "#id")
+    public SinglePostResponse getBaseSinglePost(UUID id) {
+        Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
         SinglePostResponse dto = new SinglePostResponse();
-
-        // 2. Manual copy of base fields (since i;m not using a mapper library)
         PostResponse base = PostResponse.from(post);
+
         dto.setId(base.getId());
         dto.setTitle(base.getTitle());
         dto.setDescription(base.getDescription());
@@ -305,28 +331,36 @@ public class PostService {
         dto.setAuthor(base.getAuthor());
         dto.setLikeCount(base.getLikeCount());
         dto.setCommentCount(base.getCommentCount());
-
         dto.setTags(base.getTags());
 
-        // 3. Map Comments explicitly
         if (post.getComments() != null) {
-            List<CommentDTO> commentDTOs = post.getComments().stream()
-                    .map(CommentDTO::from)
-                    .collect(Collectors.toList());
-            dto.setComments(commentDTOs);
-        }
-
-        // 4. Enrich Interaction
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof User u) {
-            dto.setLikedByCurrentUser(likeRepository.existsByPostIdAndUserId(post.getId(), u.getId()));
-            dto.setSavedByCurrentUser(savedPostRepository.existsByUserIdAndPostId(u.getId(), post.getId()));
+            dto.setComments(post.getComments().stream().map(CommentDTO::from).collect(Collectors.toList()));
         }
 
         return dto;
     }
 
+    public SinglePostResponse get(UUID id) {
+        // Since Redis uses Jackson serialization, `cachedBase` is a newly constructed
+        // object in memory.
+        // Modifying it will NOT cause cache poisoning. We no longer need to manually
+        // copy fields!
+        SinglePostResponse cachedBase = getSelf().getBaseSinglePost(id);
+
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof User u) {
+            cachedBase.setLikedByCurrentUser(likeRepository.existsByPostIdAndUserId(id, u.getId()));
+            cachedBase.setSavedByCurrentUser(savedPostRepository.existsByUserIdAndPostId(u.getId(), id));
+        } else {
+            cachedBase.setLikedByCurrentUser(false);
+            cachedBase.setSavedByCurrentUser(false);
+        }
+
+        return cachedBase;
+    }
+
     @Transactional
+    @CacheEvict(value = "post_chunks", allEntries = true)
     public void clearPostContent(UUID postId, UUID userId) {
         Post post = postRepository.findById(postId).orElseThrow();
         if (!post.getAuthor().getId().equals(userId))
@@ -347,6 +381,7 @@ public class PostService {
         }
     }
 
+    @Cacheable(value = "post_chunks", key = "#postId.toString() + '_' + #page + '_' + #size")
     public List<PostChunkResponse> getContentChunks(UUID postId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         List<PostContentChunk> chunks = chunkRepository.findByPostIdOrderByChunkIndexAsc(postId, pageable);
@@ -359,6 +394,10 @@ public class PostService {
                 .build()).collect(Collectors.toList());
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "single_post", key = "#postId"),
+            @CacheEvict(value = "post_pages", allEntries = true),
+    })
     public void delete(UUID postId, UUID userId, boolean isAdmin) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Not found"));
 
@@ -372,6 +411,10 @@ public class PostService {
         postRepository.delete(post);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "single_post", key = "#postId"),
+            @CacheEvict(value = "post_pages", allEntries = true),
+    })
     public PostResponse update(UUID postId, UUID userId, PostCreateRequest request) {
         Post post = postRepository.findById(postId).orElseThrow();
         if (!post.getAuthor().getId().equals(userId))
@@ -435,5 +478,4 @@ public class PostService {
 
         return dtoPage;
     }
-
 }

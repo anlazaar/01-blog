@@ -2,6 +2,8 @@ package com.blog._1.services;
 
 import java.util.UUID;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,17 +20,18 @@ public class LikeService {
 
     private final LikeRepository likeRepository;
     private final PostRepository postRepository;
-    private final UserRepository userRepository; // Injected to get User reference
+    private final UserRepository userRepository;
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "single_post", key = "#postId"),
+            @CacheEvict(value = "post_pages", allEntries = true) // Wipes the paginated lists so the likeCount updates
+    })
     public void like(UUID postId, UUID userId) {
-        // 1. Check if already liked (Fast index scan)
         if (likeRepository.existsByPostIdAndUserId(postId, userId)) {
             return;
         }
 
-        // 2. Optimization: Get Proxy References (No DB Selects occurred here)
-        // This links the IDs without fetching the full User/Post objects
         var postRef = postRepository.getReferenceById(postId);
         var userRef = userRepository.getReferenceById(userId);
 
@@ -40,9 +43,11 @@ public class LikeService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "single_post", key = "#postId"),
+            @CacheEvict(value = "post_pages", allEntries = true)
+    })
     public void unlike(UUID postId, UUID userId) {
-        // Optimization: Delete directly by ID combination (1 Query)
-        // No need to fetch the Like entity first
         likeRepository.deleteByPostIdAndUserId(postId, userId);
     }
 
