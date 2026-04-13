@@ -7,7 +7,13 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.Collections;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
+import com.blog._1.dto.post.CacheablePage;
 import com.blog._1.dto.post.PostMinimalDTO;
 import com.blog._1.dto.user.ProfilePatchRequest;
 import com.blog._1.dto.user.UserUpdateRequest;
@@ -39,6 +46,13 @@ public class UserService {
     private final PostRepository postRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    private UserService getSelf() {
+        return applicationContext.getBean(UserService.class);
+    }
 
     // --- HELPER ---
     private User getUserOrThrow(UUID id) {
@@ -65,12 +79,14 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    // REFACTORED: Now uses UserUpdateRequest DTO
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "single_user", key = "#id"),
+            @CacheEvict(value = "user_pages", allEntries = true)
+    })
     public User updateUser(UUID id, UserUpdateRequest request) {
         User user = getUserOrThrow(id);
 
-        // 1. Business Validation: Email Uniqueness
         if (!user.getEmail().equals(request.getEmail())) {
             if (userRepository.existsByEmail(request.getEmail())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
@@ -78,7 +94,6 @@ public class UserService {
             user.setEmail(request.getEmail());
         }
 
-        // 2. Business Validation: Username Uniqueness
         if (!user.getUsername().equals(request.getUsername())) {
             if (userRepository.existsByUsername(request.getUsername())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
@@ -86,12 +101,10 @@ public class UserService {
             user.setUsername(request.getUsername());
         }
 
-        // 3. Update Text Fields
         user.setFirstname(request.getFirstname());
         user.setLastname(request.getLastname());
         user.setBio(request.getBio());
 
-        // 4. Optional Password Update (if allowed in PUT)
         if (hasText(request.getPassword())) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
@@ -110,28 +123,26 @@ public class UserService {
         dto.setBio(user.getBio());
         dto.setEmail(user.getEmail());
         dto.setAvatarUrl(user.getAvatarUrl());
-
-       
         dto.setRole(user.getRole().name());
-
         return dto;
     }
 
-    public UserPublicProfileDTO getPublicProfile(User user) {
+    // CACHED BASE PROFILE
+    @Transactional(readOnly = true)
+    @Cacheable(value = "single_user", key = "#userId")
+    public UserPublicProfileDTO getBasePublicProfile(UUID userId) {
+        User user = getUserOrThrow(userId);
         UserPublicProfileDTO dto = new UserPublicProfileDTO();
+
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setFirstname(user.getFirstname());
         dto.setLastname(user.getLastname());
         dto.setBio(user.getBio());
         dto.setAvatarUrl(user.getAvatarUrl());
-
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof User currentUser
-                && !currentUser.getId().equals(user.getId())) {
-            dto.setFollowing(subscriptionRepository.findByFollowerIdAndFollowingId(currentUser.getId(), user.getId())
-                    .isPresent());
-        }
+        dto.setFollowersCount((int) subscriptionRepository.countByFollowingId(user.getId()));
+        dto.setFollowingCount((int) subscriptionRepository.countByFollowerId(user.getId()));
+        dto.setFollowing(false); // Default to false for Cache
 
         List<PostMinimalDTO> postDTOs = postRepository.findByAuthorId(user.getId(), PageRequest.of(0, 6))
                 .stream().map(post -> {
@@ -146,28 +157,56 @@ public class UserService {
                 }).toList();
 
         dto.setPosts(postDTOs);
-        dto.setFollowersCount((int) subscriptionRepository.countByFollowingId(user.getId()));
-        dto.setFollowingCount((int) subscriptionRepository.countByFollowerId(user.getId()));
-
         return dto;
     }
 
+    // NOTE: Changed signature from (User user) to (UUID userId) to optimize caching
+    // layer
+    public UserPublicProfileDTO getPublicProfile(UUID userId) {
+        // 1. Get Cache-safe base DTO
+        UserPublicProfileDTO cachedDto = getSelf().getBasePublicProfile(userId);
+
+        // 2. Enrich with specific user connection status
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof User currentUser
+                && !currentUser.getId().equals(userId)) {
+
+            cachedDto.setFollowing(
+                    subscriptionRepository.findByFollowerIdAndFollowingId(currentUser.getId(), userId).isPresent());
+        }
+
+        return cachedDto;
+    }
+
+    // CACHED ALL USERS PAGE
+    @Cacheable(value = "user_pages", key = "'all_' + #page + '_' + #size")
+    public CacheablePage<UserPublicProfileDTO> getBaseAllPublicUsers(int page, int size) {
+        Page<UserPublicProfileDTO> pageData = userRepository.findAllUserSummaries(PageRequest.of(page, size));
+        return new CacheablePage<>(pageData.getContent(), page, size, pageData.getTotalElements());
+    }
+
     public Page<UserPublicProfileDTO> getAllPublicUsers(UUID currentUserId, Pageable pageable) {
-        Page<UserPublicProfileDTO> page = userRepository.findAllUserSummaries(pageable);
-        if (currentUserId == null)
-            return page;
+        // 1. Fetch from Cache using CacheablePage
+        CacheablePage<UserPublicProfileDTO> cachedPage = getSelf().getBaseAllPublicUsers(
+                pageable.getPageNumber(),
+                pageable.getPageSize());
 
-        List<UUID> userIdsOnPage = page.getContent().stream().map(UserPublicProfileDTO::getId).toList();
-        if (userIdsOnPage.isEmpty())
-            return page;
+        List<UserPublicProfileDTO> content = cachedPage.getContent();
 
-        Set<UUID> followingIds = subscriptionRepository.findFollowingIdsByFollowerIdAndFollowingIdIn(currentUserId,
-                userIdsOnPage);
-        page.forEach(dto -> {
-            dto.setFollowing(followingIds.contains(dto.getId()));
-            dto.setPosts(Collections.emptyList());
-        });
-        return page;
+        // 2. Enrich with Following interactions
+        if (currentUserId != null && !content.isEmpty()) {
+            List<UUID> userIdsOnPage = content.stream().map(UserPublicProfileDTO::getId).toList();
+            Set<UUID> followingIds = subscriptionRepository.findFollowingIdsByFollowerIdAndFollowingIdIn(
+                    currentUserId, userIdsOnPage);
+
+            content.forEach(dto -> {
+                dto.setFollowing(followingIds.contains(dto.getId()));
+                dto.setPosts(Collections.emptyList());
+            });
+        }
+
+        // 3. Map back to Spring PageImpl
+        return new PageImpl<>(content, pageable, cachedPage.getTotalElements());
     }
 
     public List<UserPublicProfileDTO> getSuggestedUsers(UUID currentUserId) {
@@ -196,12 +235,20 @@ public class UserService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "single_user", key = "#id"),
+            @CacheEvict(value = "user_pages", allEntries = true)
+    })
     public void banUser(UUID id) {
         User user = getUserById(id);
         user.setBanned(!user.isBanned());
         userRepository.save(user);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "single_user", key = "#id"),
+            @CacheEvict(value = "user_pages", allEntries = true)
+    })
     public void deleteUser(UUID id) {
         if (!userRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
@@ -211,13 +258,15 @@ public class UserService {
 
     // --- 4. PROFILE PATCHING ---
 
-    // REFACTORED: Now uses ProfilePatchRequest DTO
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "single_user", key = "#userId"),
+            @CacheEvict(value = "user_pages", allEntries = true)
+    })
     public String patchUser(UUID userId, ProfilePatchRequest request) throws IOException {
         User user = getUserById(userId);
         boolean isProfileUpdated = false;
 
-        // 1. Text Fields
         if (hasText(request.getFirstname())) {
             user.setFirstname(request.getFirstname());
             isProfileUpdated = true;
@@ -231,9 +280,8 @@ public class UserService {
             isProfileUpdated = true;
         }
 
-        // 2. Avatar Upload (With Security Check)
         if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
-            validateImage(request.getAvatar()); // Check file type
+            validateImage(request.getAvatar());
 
             String filename = UUID.randomUUID() + "_" + request.getAvatar().getOriginalFilename();
             Path uploadPath = Paths.get("uploads/avatars");
@@ -246,26 +294,22 @@ public class UserService {
             isProfileUpdated = true;
         }
 
-        // 3. Mark Complete if all fields are there
         if (isProfileUpdated && hasText(user.getFirstname()) && hasText(user.getLastname()) && hasText(user.getBio())) {
             user.setCompletedAccount(true);
         }
 
-        // 4. Email Change
         if (hasText(request.getEmail()) && !request.getEmail().equals(user.getEmail())) {
             if (userRepository.existsByEmail(request.getEmail()))
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Email taken");
             user.setEmail(request.getEmail());
         }
 
-        // 5. Username Change
         if (hasText(request.getUsername()) && !request.getUsername().equals(user.getUsername())) {
             if (userRepository.existsByUsername(request.getUsername()))
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Username taken");
             user.setUsername(request.getUsername());
         }
 
-        // 6. Password Change (Strict)
         if (hasText(request.getPassword())) {
             if (!hasText(request.getOldpassword())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -281,15 +325,16 @@ public class UserService {
         return "User updated successfully";
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "single_user", key = "#userId"),
+            @CacheEvict(value = "user_pages", allEntries = true)
+    })
     public void updateUserRole(UUID userId, Role newRole) {
         User user = getUserById(userId);
-        // Note: Enum checking is usually handled by Spring before hitting here,
-        // but extra safety is fine.
         user.setRole(newRole);
         userRepository.save(user);
     }
 
-    // --- Private Util ---
     private void validateImage(MultipartFile file) {
         if (file.getContentType() == null || !file.getContentType().startsWith("image/")) {
             throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Only image files are allowed");

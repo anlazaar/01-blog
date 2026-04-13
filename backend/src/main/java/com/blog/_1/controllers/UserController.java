@@ -49,11 +49,10 @@ public class UserController {
             @PathVariable UUID id,
             @AuthenticationPrincipal User currentUser) {
 
-        User targetUser = (currentUser != null && currentUser.getId().equals(id))
-                ? currentUser
-                : userService.getUserById(id);
-
-        return ResponseEntity.ok(userService.getPublicProfile(targetUser));
+        // We no longer need to manually check if it's the current user or fetch the
+        // user entity.
+        // The UserService now intelligently loads from Redis using just the UUID!
+        return ResponseEntity.ok(userService.getPublicProfile(id));
     }
 
     @PutMapping("/{id}")
