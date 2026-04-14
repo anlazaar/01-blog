@@ -478,4 +478,29 @@ public class PostService {
 
         return dtoPage;
     }
+
+    public Page<PostResponse> searchPosts(String keyword, String author, List<String> tags,
+            Boolean liked, Boolean followed, UUID currentUserId,
+            int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        // 1. Build the dynamic SQL query
+        var spec = com.blog._1.specifications.PostSpecification.buildSearchSpec(
+                keyword, author, tags, liked, followed, currentUserId);
+
+        // 2. Fetch from DB
+        Page<Post> postsPage = postRepository.findAll(spec, pageable);
+
+        // 3. Map to DTOs
+        List<PostResponse> content = postsPage.getContent().stream()
+                .map(PostResponse::from)
+                .collect(Collectors.toList());
+
+        // 4. Enrich with Like/Save status (Reusing your highly optimized enrichment
+        // method!)
+        enrichWithUserInteraction(content);
+
+        return new org.springframework.data.domain.PageImpl<>(content, pageable, postsPage.getTotalElements());
+    }
 }

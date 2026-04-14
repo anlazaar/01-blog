@@ -9,6 +9,10 @@
     <!-- 2. DESKTOP ACTIONS -->
     <div class="navbar-desktop">
       <div class="navbar-actions">
+        <a mat-icon-button routerLink="/search" matTooltip="Search" class="action-icon">
+          <mat-icon>search</mat-icon>
+        </a>
+
         <app-theme-toggle></app-theme-toggle>
 
         <!-- A) GUEST VIEW -->
@@ -27,7 +31,12 @@
 
         <!-- USER ACTIONS (Non-Admin) -->
         @if (!isAdmin()) {
-        <a mat-icon-button routerLink="/me/drafts" matTooltip="Your Draft Stories" class="action-icon">
+        <a
+          mat-icon-button
+          routerLink="/me/drafts"
+          matTooltip="Your Draft Stories"
+          class="action-icon"
+        >
           <mat-icon>description</mat-icon>
         </a>
 

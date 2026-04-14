@@ -109,4 +109,15 @@ public class UserController {
         UUID currentUserId = (currentUser != null) ? currentUser.getId() : null;
         return ResponseEntity.ok(userService.getAllPublicUsers(currentUserId, PageRequest.of(page, size)));
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<UserPublicProfileDTO>> searchUsers(
+            @RequestParam(required = false) String q,
+            @AuthenticationPrincipal User currentUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        UUID currentUserId = (currentUser != null) ? currentUser.getId() : null;
+        return ResponseEntity.ok(userService.searchUsers(q, currentUserId, page, size));
+    }
 }

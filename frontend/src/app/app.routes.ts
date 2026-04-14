@@ -29,6 +29,10 @@ export const routes: Routes = [
 
   { path: 'auth/login', component: Login, canActivate: [AuthGuard] },
   { path: 'auth/register', component: Register, canActivate: [AuthGuard] },
+  {
+    path: 'search',
+    loadComponent: () => import('./pages/search/search.component').then((m) => m.SearchComponent),
+  },
 
   { path: 'posts/:id', component: PostPage, canActivate: [RequireAuthGuard] },
   { path: 'profile/:id', component: ProfilePage, canActivate: [RequireAuthGuard] },

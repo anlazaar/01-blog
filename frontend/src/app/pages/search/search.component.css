@@ -1,0 +1,312 @@
+.search-layout {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 100px 24px 40px 24px;
+  min-height: 100vh;
+}
+
+/* GIANT SEARCH INPUT */
+.search-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.search-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  color: var(--text-muted);
+}
+
+.massive-input {
+  flex: 1;
+  font-size: 42px;
+  font-weight: 700;
+  font-family: 'Charter', 'Georgia', serif;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  outline: none;
+  padding: 0;
+  caret-color: var(--text-primary);
+}
+
+.massive-input::placeholder {
+  color: var(--border);
+}
+
+@media (max-width: 768px) {
+  .massive-input {
+    font-size: 28px;
+  }
+  .search-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* TABS */
+.search-tabs {
+  display: flex;
+  gap: 32px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 0;
+  cursor: pointer;
+  position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: color 0.2s;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  color: var(--text-primary);
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--text-primary);
+}
+
+/* FILTERS */
+.search-filters {
+  margin-bottom: 32px;
+}
+
+/* Material Chips dark mode overrides */
+/* =========================================================
+   BULLETPROOF MATERIAL CHIPS OVERRIDE (Light & Dark Mode)
+   ========================================================= */
+
+/* 1. Unselected (Resting) State */
+::ng-deep .mat-mdc-chip-option {
+  background-color: var(--secondary) !important;
+  border: 1px solid var(--border) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Force text color for unselected */
+::ng-deep .mat-mdc-chip-option .mdc-evolution-chip__text-label {
+  color: var(--text-primary) !important;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-weight: 500 !important;
+}
+
+/* 2. Hover State */
+::ng-deep .mat-mdc-chip-option:hover {
+  background-color: var(--border) !important;
+}
+
+/* 3. Selected State (Reverses the colors) */
+::ng-deep .mat-mdc-chip-option.mat-mdc-chip-selected {
+  background-color: var(--text-primary) !important;
+  border-color: var(--text-primary) !important;
+}
+
+/* Force text color for selected (Text becomes the background color) */
+::ng-deep .mat-mdc-chip-option.mat-mdc-chip-selected .mdc-evolution-chip__text-label {
+  color: var(--background) !important;
+}
+
+/* 4. Fix the checkmark icon color when selected */
+::ng-deep .mat-mdc-chip-option.mat-mdc-chip-selected .mdc-evolution-chip__icon--primary,
+::ng-deep .mat-mdc-chip-option.mat-mdc-chip-selected .mdc-evolution-chip__checkmark-svg {
+  color: var(--background) !important;
+  fill: var(--background) !important;
+}
+
+/* 5. Remove the ugly Material ripple overlay that darkens chips incorrectly */
+::ng-deep .mat-mdc-chip-option .mdc-evolution-chip__ripple {
+  opacity: 0 !important;
+}
+
+/* RESULTS LISTS */
+.empty-state,
+.loading-state {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--text-secondary);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.empty-state h2 {
+  font-size: 24px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+/* --- REUSED POST CARDS (From Home) --- */
+.post-item {
+  margin-bottom: 32px;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+}
+
+.post-meta-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+}
+
+.avatar-img,
+.author-avatar-placeholder {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.author-avatar-placeholder {
+  background: var(--secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.post-content {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.post-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.post-preview {
+  font-family: 'Charter', serif;
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.post-media {
+  width: 112px;
+  height: 112px;
+  flex-shrink: 0;
+}
+.post-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.post-divider {
+  margin-top: 32px;
+  height: 1px;
+  background-color: var(--border);
+}
+
+/* --- USERS LIST --- */
+.users-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.user-card:hover {
+  opacity: 0.8;
+}
+
+.user-card-left {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.large-avatar,
+.large-avatar-placeholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.large-avatar-placeholder {
+  background: var(--secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.user-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.user-handle {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.user-bio {
+  margin: 8px 0 0 0;
+  font-size: 15px;
+  color: var(--text-secondary);
+  font-family: 'Charter', serif;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* LOAD MORE */
+.load-more-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+.load-more-btn {
+  border-radius: 9999px !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border) !important;
+}

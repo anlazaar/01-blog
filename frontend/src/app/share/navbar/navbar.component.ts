@@ -26,6 +26,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { SearchComponent } from "../../pages/search/search.component";
 
 @Component({
   selector: 'app-navbar',
@@ -41,7 +42,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatBadgeModule,
     MatDividerModule,
     MatTooltipModule,
-  ],
+    SearchComponent
+],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css'],
   encapsulation: ViewEncapsulation.None,

@@ -143,4 +143,24 @@ export class PostService {
   searchTags(query: string): Observable<string[]> {
     return this.http.get<string[]>(`${environment.apiUrl}/hashtags/search?query=${query}`);
   }
+
+  searchPosts(
+    query?: string,
+    author?: string,
+    tags?: string[],
+    liked?: boolean,
+    followed?: boolean,
+    page: number = 0,
+    size: number = 10
+  ): Observable<Page<PostResponse>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+
+    if (query) params = params.set('q', query);
+    if (author) params = params.set('author', author);
+    if (tags && tags.length > 0) params = params.set('tags', tags.join(','));
+    if (liked) params = params.set('liked', 'true');
+    if (followed) params = params.set('followed', 'true');
+
+    return this.http.get<Page<PostResponse>>(`${this.POSTS_URL}/search`, { params });
+  }
 }

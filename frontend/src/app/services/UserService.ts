@@ -96,4 +96,12 @@ export class UserService {
     let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     return this.http.get<Page<any>>(`${this.usersUrl}/explore`, { params });
   }
+
+  searchUsers(query: string, page: number = 0, size: number = 10): Observable<Page<any>> {
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+
+    if (query) params = params.set('q', query);
+
+    return this.http.get<Page<any>>(`${this.usersUrl}/search`, { params });
+  }
 }

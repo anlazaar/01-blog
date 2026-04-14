@@ -1,0 +1,133 @@
+<div class="search-layout">
+  <!-- GIANT SEARCH INPUT -->
+  <div class="search-header">
+    <mat-icon class="search-icon">search</mat-icon>
+    <input
+      type="text"
+      class="massive-input"
+      placeholder="Search for articles or people..."
+      [value]="searchQuery()"
+      (input)="onSearchInput($event)"
+      autofocus
+    />
+  </div>
+
+  <!-- TABS -->
+  <div class="search-tabs">
+    <button class="tab-btn" [class.active]="activeTab() === 'posts'" (click)="setTab('posts')">
+      Stories
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'users'" (click)="setTab('users')">
+      People
+    </button>
+  </div>
+
+  <!-- FILTERS (Only visible on Stories tab if logged in) -->
+  @if (activeTab() === 'posts' && tokenService.isAuthenticated()) {
+  <div class="search-filters">
+    <mat-chip-listbox multiple>
+      <mat-chip-option [selected]="filterLiked()" (click)="toggleFilter('liked')">
+        Liked by me
+      </mat-chip-option>
+      <mat-chip-option [selected]="filterFollowed()" (click)="toggleFilter('followed')">
+        From authors I follow
+      </mat-chip-option>
+    </mat-chip-listbox>
+  </div>
+  }
+
+  <!-- RESULTS SECTION -->
+  <div class="search-results">
+    <!-- LOADING SPINNER / SKELETON -->
+    @if (loading() && page === 0) {
+    <div class="loading-state">
+      <p>Searching...</p>
+    </div>
+    }
+
+    <!-- STORIES RESULTS -->
+    @if (!loading() && activeTab() === 'posts') { @if (posts().length === 0) {
+    <div class="empty-state">
+      <h2>No stories found.</h2>
+      <p>Try adjusting your search or filters.</p>
+    </div>
+    } @else {
+    <div class="posts-list">
+      @for (p of posts(); track p.id) {
+      <!-- REUSED POST CARD FROM YOUR HOME FEED -->
+      <article class="post-item" [routerLink]="['/posts', p.id]">
+        <div class="post-meta-header">
+          <div class="author-info">
+            @if(p.author.avatarUrl) {
+            <img [src]="'http://localhost:8080' + p.author.avatarUrl" class="avatar-img" />
+            } @else {
+            <div class="author-avatar-placeholder">
+              {{ p.author.username.charAt(0) | uppercase }}
+            </div>
+            }
+            <span class="author-name">{{ p.author.username }}</span>
+            <span class="separator">·</span>
+            <span class="post-date">{{ p.createdAt | date : 'MMM d' }}</span>
+          </div>
+        </div>
+
+        <div class="post-content">
+          <div class="post-text">
+            <h2 class="post-title">{{ p.title }}</h2>
+            <p class="post-preview">{{ p.description }}</p>
+          </div>
+          @if (p.mediaUrl) {
+          <div class="post-media">
+            <img [src]="'http://localhost:8080' + p.mediaUrl" alt="Cover" />
+          </div>
+          }
+        </div>
+        <div class="post-divider"></div>
+      </article>
+      }
+    </div>
+    } }
+
+    <!-- PEOPLE RESULTS -->
+    @if (!loading() && activeTab() === 'users') { @if (users().length === 0) {
+    <div class="empty-state">
+      <h2>No people found.</h2>
+    </div>
+    } @else {
+    <div class="users-list">
+      @for (u of users(); track u.id) {
+      <div class="user-card" [routerLink]="['/profile', u.id]">
+        <div class="user-card-left">
+          @if(u.avatarUrl) {
+          <img [src]="'http://localhost:8080' + u.avatarUrl" class="large-avatar" />
+          } @else {
+          <div class="large-avatar-placeholder">
+            {{ u.username.charAt(0) | uppercase }}
+          </div>
+          }
+          <div class="user-details">
+            <h3 class="user-name">{{ u.firstname }} {{ u.lastname }}</h3>
+            <span class="user-handle">{{ '@' + u.username }}</span>
+            <p class="user-bio">{{ u.bio || 'No bio available.' }}</p>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    } }
+
+    <!-- LOAD MORE BUTTON -->
+    @if (hasMore()) {
+    <div class="load-more-container">
+      <button
+        mat-stroked-button
+        class="load-more-btn"
+        (click)="loadMore()"
+        [disabled]="loadingMore()"
+      >
+        {{ loadingMore() ? 'Loading...' : 'Show more results' }}
+      </button>
+    </div>
+    }
+  </div>
+</div>

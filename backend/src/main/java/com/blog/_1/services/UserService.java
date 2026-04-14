@@ -343,4 +343,36 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "File too large");
         }
     }
+
+    public Page<UserPublicProfileDTO> searchUsers(String keyword, UUID currentUserId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        // 1. Build dynamic search query
+        var spec = com.blog._1.specifications.UserSpecification.searchUsers(keyword);
+        Page<User> usersPage = userRepository.findAll(spec, pageable);
+
+        // 2. Map to DTOs
+        List<UserPublicProfileDTO> dtos = usersPage.getContent().stream().map(u -> {
+            UserPublicProfileDTO dto = new UserPublicProfileDTO();
+            dto.setId(u.getId());
+            dto.setUsername(u.getUsername());
+            dto.setFirstname(u.getFirstname());
+            dto.setLastname(u.getLastname());
+            dto.setAvatarUrl(u.getAvatarUrl());
+            dto.setBio(u.getBio());
+            dto.setFollowersCount((int) subscriptionRepository.countByFollowingId(u.getId()));
+            dto.setFollowingCount((int) subscriptionRepository.countByFollowerId(u.getId()));
+            return dto;
+        }).toList();
+
+        // 3. Enrich Following status for current user
+        if (currentUserId != null && !dtos.isEmpty()) {
+            List<UUID> userIds = dtos.stream().map(UserPublicProfileDTO::getId).toList();
+            Set<UUID> followingIds = subscriptionRepository.findFollowingIdsByFollowerIdAndFollowingIdIn(
+                    currentUserId, userIds);
+            dtos.forEach(d -> d.setFollowing(followingIds.contains(d.getId())));
+        }
+
+        return new org.springframework.data.domain.PageImpl<>(dtos, pageable, usersPage.getTotalElements());
+    }
 }
