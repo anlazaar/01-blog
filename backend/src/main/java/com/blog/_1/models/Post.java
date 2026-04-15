@@ -59,6 +59,10 @@ public class Post extends BaseEntity {
     @JoinTable(name = "post_hashtags", joinColumns = @JoinColumn(name = "post_id"), inverseJoinColumns = @JoinColumn(name = "hashtag_id"))
     private Set<Hashtag> hashtags = new HashSet<>();
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<SavedPost> savedPosts = new ArrayList<>();
+
     // Helper method to add tag
     public void addHashtag(Hashtag hashtag) {
         this.hashtags.add(hashtag);
