@@ -3,7 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators, FormControl } from '@angu
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../../services/UserService';
-import { ToastService } from '../../services/toast.service'; // Added Toast for better UX
+import { ToastService } from '../../services/toast.service';
 
 // Angular Material Imports
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -28,7 +28,6 @@ import { MatIconModule } from '@angular/material/icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CompleteProfile {
-  // Dependencies
   private userService = inject(UserService);
   private toastService = inject(ToastService);
   private fb = inject(FormBuilder);
@@ -38,16 +37,30 @@ export class CompleteProfile {
   // State Signals
   avatarPreview = signal<string | ArrayBuffer | null>(null);
   fileError = signal<string | null>(null);
+  serverError = signal<string | null>(null); // Added backend error signal
   isSubmitting = signal(false);
 
-  // Internal
   private selectedFile: File | null = null;
 
-  // Typed Form
+  // Name Regex: Allows letters (including accents), spaces, hyphens, and apostrophes.
+  private namePattern = /^[a-zA-ZÀ-ÿ\s\-']+$/;
+
+  // Typed Form with enhanced validators
   publicInfoForm = this.fb.group({
-    firstname: new FormControl('', [Validators.minLength(2)]),
-    lastname: new FormControl('', [Validators.minLength(2)]),
-    bio: new FormControl('', [Validators.minLength(10)]),
+    firstname: new FormControl('', [
+      Validators.minLength(2),
+      Validators.maxLength(50), // Length verification
+      Validators.pattern(this.namePattern), // Type verification
+    ]),
+    lastname: new FormControl('', [
+      Validators.minLength(2),
+      Validators.maxLength(50), // Length verification
+      Validators.pattern(this.namePattern), // Type verification
+    ]),
+    bio: new FormControl('', [
+      Validators.minLength(10),
+      Validators.maxLength(500), // Length verification
+    ]),
   });
 
   onFileSelected(event: Event) {
@@ -79,7 +92,12 @@ export class CompleteProfile {
   }
 
   onSubmit() {
-    if (this.publicInfoForm.invalid) return;
+    this.serverError.set(null); // Reset backend errors on new submit
+
+    if (this.publicInfoForm.invalid) {
+      this.publicInfoForm.markAllAsTouched(); // Ensure frontend errors show up
+      return;
+    }
 
     const userId = this.route.snapshot.paramMap.get('id');
     if (!userId) {
@@ -92,10 +110,10 @@ export class CompleteProfile {
     const formData = new FormData();
     const { firstname, lastname, bio } = this.publicInfoForm.getRawValue();
 
-    // Append fields only if they have values
-    if (firstname) formData.append('firstname', firstname);
-    if (lastname) formData.append('lastname', lastname);
-    if (bio) formData.append('bio', bio);
+    // Append fields only if they have values (removes unnecessary spaces)
+    if (firstname?.trim()) formData.append('firstname', firstname.trim());
+    if (lastname?.trim()) formData.append('lastname', lastname.trim());
+    if (bio?.trim()) formData.append('bio', bio.trim());
 
     if (this.selectedFile) {
       formData.append('avatar', this.selectedFile, this.selectedFile.name);
@@ -110,6 +128,14 @@ export class CompleteProfile {
       error: (err) => {
         console.error(err);
         this.isSubmitting.set(false);
+
+        // Extract backend error message (adjust based on your API structure)
+        const errorMessage =
+          err.error?.message ||
+          err.error?.error ||
+          'An unexpected error occurred while saving your profile.';
+
+        this.serverError.set(errorMessage);
         this.toastService.show('Failed to update profile.', 'error');
       },
     });

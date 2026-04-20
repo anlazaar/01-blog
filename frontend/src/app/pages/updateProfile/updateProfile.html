@@ -1,5 +1,5 @@
-<div class="login-page settings-page">
-  <div class="login-container">
+<div class="auth-page settings-page">
+  <div class="auth-card">
     <form [formGroup]="publicInfoForm" (ngSubmit)="onSubmit()">
       <!-- Header -->
       <div class="title">
@@ -41,17 +41,25 @@
       <div class="form-row">
         <mat-form-field appearance="fill" class="half-width">
           <mat-label>First name</mat-label>
-          <input matInput formControlName="firstname" />
-          @if(publicInfoForm.controls.firstname.invalid) {
+          <input matInput formControlName="firstname" maxlength="50" />
+          @if(publicInfoForm.controls.firstname.hasError('required')) {
           <mat-error>First name is required</mat-error>
+          } @if (publicInfoForm.controls.firstname.hasError('minlength')) {
+          <mat-error>Min 2 chars</mat-error>
+          } @if (publicInfoForm.controls.firstname.hasError('pattern')) {
+          <mat-error>Only letters allowed</mat-error>
           }
         </mat-form-field>
 
         <mat-form-field appearance="fill" class="half-width">
           <mat-label>Last name</mat-label>
-          <input matInput formControlName="lastname" />
-          @if(publicInfoForm.controls.lastname.invalid) {
+          <input matInput formControlName="lastname" maxlength="50" />
+          @if(publicInfoForm.controls.lastname.hasError('required')) {
           <mat-error>Last name is required</mat-error>
+          } @if (publicInfoForm.controls.lastname.hasError('minlength')) {
+          <mat-error>Min 2 chars</mat-error>
+          } @if (publicInfoForm.controls.lastname.hasError('pattern')) {
+          <mat-error>Only letters allowed</mat-error>
           }
         </mat-form-field>
       </div>
@@ -67,9 +75,13 @@
 
         <mat-form-field appearance="fill" class="full-width">
           <mat-label>Username</mat-label>
-          <input matInput formControlName="username" />
-          @if(publicInfoForm.controls.username.invalid) {
+          <input matInput formControlName="username" maxlength="20" />
+          @if(publicInfoForm.controls.username.hasError('required')) {
           <mat-error>Username is required</mat-error>
+          } @if (publicInfoForm.controls.username.hasError('minlength')) {
+          <mat-error>Min 3 chars</mat-error>
+          } @if (publicInfoForm.controls.username.hasError('pattern')) {
+          <mat-error>Invalid format</mat-error>
           }
         </mat-form-field>
 
@@ -80,7 +92,9 @@
             formControlName="bio"
             rows="3"
             placeholder="Tell your story..."
+            maxlength="500"
           ></textarea>
+          <mat-hint align="end">{{ publicInfoForm.controls.bio.value?.length || 0 }} / 500</mat-hint>
           @if (publicInfoForm.controls.bio.invalid) {
           <mat-error>Bio is too long.</mat-error>
           }

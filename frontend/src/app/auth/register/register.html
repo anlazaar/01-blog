@@ -1,5 +1,5 @@
 <div class="auth-page">
-  <div class="auth-container">
+  <div class="auth-card">
     <!-- Header -->
     <div class="auth-header">
       <h1>Join the community.</h1>
@@ -18,7 +18,7 @@
       </button>
     </div>
 
-    <div class="divider">or</div>
+    <div class="auth-divider">or</div>
 
     <!-- Form -->
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
@@ -52,6 +52,7 @@
           type="text"
           formControlName="username"
           placeholder="Your Name"
+          maxlength="20"
           [class.error-input]="
             registerForm.get('username')?.touched && registerForm.get('username')?.invalid
           "
@@ -63,6 +64,10 @@
           <small>Username is required.</small>
           } @if (registerForm.get('username')?.errors?.['minlength']) {
           <small>At least 3 characters.</small>
+          } @if (registerForm.get('username')?.errors?.['maxlength']) {
+          <small>Maximum 20 characters.</small>
+          } @if (registerForm.get('username')?.errors?.['pattern']) {
+          <small>Only letters, numbers, dots, and hyphens allowed.</small>
           }
         </div>
         }

@@ -1,482 +1,297 @@
-/* =========================================================
-   1. ANGULAR MATERIAL CORE THEME
-   (Required because we are not using a standard theme file)
-   ========================================================= */
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 
-/* =========================================================
-   2. YOUR CUSTOM VARIABLES & STYLES
-   ========================================================= */
 :root {
-  /* --- Medium-like Color Palette --- */
-
-  /* Base - Clean White & Dark Grey */
-  --background: oklch(1 0 0); /* Pure White */
-  --foreground: oklch(0.145 0 0); /* Near Black for text */
-
-  /* UI Elements */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-
-  /* Brand/Accent - Medium uses Black or a specific Green (#1a8917) */
-  --primary: oklch(0.145 0 0); /* Black for primary buttons */
-  --primary-foreground: oklch(1 0 0);
-
-  --secondary: oklch(0.96 0 0); /* Very light grey for backgrounds */
-  --secondary-foreground: oklch(0.145 0 0);
-
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.45 0 0); /* Medium Grey for meta text */
-
-  --accent: oklch(0.96 0 0); /* Hover states */
-  --accent-foreground: oklch(0.145 0 0);
-
-  --destructive: oklch(0.6 0.2 20);
-  --destructive-foreground: oklch(0.98 0 0);
-
-  --border: oklch(0.92 0 0); /* Very subtle borders */
-  --input: oklch(0.92 0 0);
-  --ring: oklch(0.145 0 0);
-
-  --radius: 0.25rem; /* Small radius for inputs, rounded-full for buttons */
-
-  /* --- Mapped Custom Variables --- */
-  --secondary-elevated: #ffffff;
-  --secondary-sunken: #f9f9f9;
-
-  /* Typography Colors */
-  --text-primary: #242424;
+  /* Colors - Light Mode */
+  --bg-main: #ffffff;
+  --bg-secondary: #f9f9f9;
+  --bg-elevated: #ffffff;
+  --text-main: #242424;
   --text-secondary: #6b6b6b;
   --text-muted: #757575;
   --text-inverse: #ffffff;
+  --border-color: #e5e5e5;
+  --brand-color: #1a8917; /* Medium green */
+  --brand-hover: #156d12;
+  --error-color: #dc2626;
+  --success-color: #16a34a;
 
-  /* Interactive */
-  --focus-ring: rgba(0, 0, 0, 0.1);
-  --hover-overlay: rgba(0, 0, 0, 0.05);
+  /* Backward Compatibility Tokens (to ensure components don't break immediately) */
+  --background: var(--bg-main);
+  --foreground: var(--text-main);
+  --primary: var(--text-main);
+  --secondary: var(--bg-secondary);
+  --muted: var(--text-muted);
+  --border: var(--border-color);
+  --text-primary: var(--text-main);
+  --destructive: var(--error-color);
 
-  /* Shadows - Minimal/None */
-  --shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Layout */
+  --max-width: 1040px;
+  --feed-width: 680px;
+  --sidebar-width: 368px;
+
+  /* Other */
+  --radius: 4px;
+  --radius-pill: 9999px;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.08);
-
-  /* Transitions */
-  --transition-normal: 0.2s ease;
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --transition: 0.2s ease;
 }
 
-.dark {
-  /* Dark Mode - Medium Style */
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.2 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.2 0 0);
-  --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.2 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --border: oklch(0.25 0 0);
-  --input: oklch(0.25 0 0);
-  --ring: oklch(0.8 0 0);
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
 
-  /* Custom Mappings Dark */
-  --secondary-elevated: #1a1a1a;
-  --secondary-sunken: #121212;
-  --text-primary: #e5e5e5;
+body.dark {
+  --bg-main: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-elevated: #1a1a1a;
+  --text-main: #e5e5e5;
   --text-secondary: #a3a3a3;
   --text-muted: #737373;
   --text-inverse: #121212;
+  --border-color: #333333;
+
+  /* Re-declare backwards compatibility tokens so they resolve with the new dark mode variables */
+  --background: var(--bg-main);
+  --foreground: var(--text-main);
+  --primary: var(--text-main);
+  --secondary: var(--bg-secondary);
+  --muted: var(--text-muted);
+  --border: var(--border-color);
+  --text-primary: var(--text-main);
 }
 
-/* Base Layer - Converted from Tailwind @apply to Standard CSS */
-@layer base {
-  * {
-    border-color: var(--border);
-    outline-color: rgba(0, 0, 0, 0.5); /* fallback for ring/50 */
-  }
-  body {
-    background-color: var(--background);
-    color: var(--foreground);
-  }
-}
-
-/* --- Reset & Base Styles --- */
+/* =========================================================
+   RESET & BASE STYLES
+   ========================================================= */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html,
-body {
+html, body {
   height: 100%;
 }
 
 body {
-  /* Medium Typography: Serif for reading, Sans for UI */
-  font-family: 'Charter', 'Georgia', 'Times New Roman', serif;
-  background-color: var(--background);
-  color: var(--text-primary);
+  font-family: 'Charter', 'Georgia', serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  padding-bottom: 100px;
-  padding-top: 10px;
 }
 
-/* Headings - Sans Serif for Modern Clean Look */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  color: var(--text-primary);
+h1, h2, h3, h4, h5, h6 {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text-main);
   font-weight: 700;
-  letter-spacing: -0.02em; /* Tight tracking */
+  letter-spacing: -0.02em;
 }
 
-h1 {
-  font-size: 42px;
-  line-height: 1.1;
-  margin-bottom: 24px;
+/* =========================================================
+   GLOBAL COMPONENTS
+   ========================================================= */
+
+/* Buttons */
+.btn-primary,
+.main-btn,
+.submit-btn {
+  width: 100%;
+  padding: 12px 24px;
+  background-color: var(--text-main);
+  color: var(--bg-main);
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: opacity var(--transition);
+  text-align: center;
+  display: inline-block;
+  text-decoration: none;
+}
+.btn-primary:hover, .main-btn:hover, .submit-btn:hover {
+  opacity: 0.85;
+}
+.btn-primary:disabled, .main-btn:disabled, .submit-btn:disabled {
+  background-color: var(--border-color);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
-/* --- Component: Login Page --- */
-.login-page {
+.btn-secondary {
+  background-color: var(--brand-color);
+  color: white;
+}
+.btn-secondary:hover {
+  background-color: var(--brand-hover);
+}
+
+/* Auth Layouts */
+.auth-page {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: var(--background);
+  padding: 60px 20px;
+  background-color: var(--bg-main);
 }
-
-.login-container {
+.auth-card {
   width: 100%;
-  max-width: 400px; /* Slimmer container */
-  border: none;
-  padding: 0;
-  background-color: transparent;
-  box-shadow: none;
-  position: relative;
+  max-width: 360px;
+  padding: 20px;
   text-align: center;
 }
-
-.login-container::before {
-  display: none;
-}
-
-.login-container h1 {
-  text-align: center;
-  font-size: 32px;
+.auth-header {
   margin-bottom: 40px;
+}
+.auth-header h1 {
+  font-size: 32px;
+  margin-bottom: 8px;
   font-family: 'Charter', serif;
 }
-
-/* --- Form Elements --- */
-.input-group {
-  margin-bottom: 20px;
-  text-align: left;
-}
-
-label {
-  display: block;
-  margin-bottom: 8px;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 500;
-  color: var(--text-primary);
-  font-size: 13px;
-  text-transform: none;
-  letter-spacing: normal;
-}
-
-input {
-  width: 100%;
-  padding: 12px 0;
-  border: none;
-  border-bottom: 1px solid var(--border);
-  background-color: transparent;
-  color: var(--text-primary);
+.auth-header p {
+  color: var(--text-secondary);
+  font-family: -apple-system, sans-serif;
   font-size: 16px;
-  font-family: inherit;
-  outline: none;
-  transition: border-color var(--transition-normal);
-  border-radius: 0;
 }
-
-input::placeholder {
-  color: var(--text-muted);
-}
-
-input:hover {
-  background-color: transparent;
-  border-bottom-color: var(--text-secondary);
-}
-
-input:focus {
-  box-shadow: none;
-  background-color: transparent;
-  border-bottom-color: var(--text-primary);
-}
-
-input:focus-visible {
-  outline: none;
-}
-
-/* --- Buttons --- */
-.main-btn {
-  width: 100%;
-  padding: 12px 24px;
-  background-color: var(--text-primary); /* Solid Black */
-  color: var(--background);
-  border: none;
-  font-size: 14px;
-  font-weight: 500;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  text-transform: none;
-  letter-spacing: normal;
-  cursor: pointer;
-  margin-top: 20px;
-  border-radius: 9999px; /* Pill Shape */
-  transition: opacity 0.2s ease;
-}
-
-.main-btn:hover {
-  background-color: var(--text-primary);
-  opacity: 0.8;
-  transform: none;
-  box-shadow: none;
-}
-
-.main-btn:disabled {
-  background-color: var(--muted-foreground);
-  cursor: not-allowed;
-}
-
-/* --- Divider --- */
-.divider {
-  display: flex;
-  align-items: center;
-  margin: 30px 0;
-  color: var(--text-muted);
-  font-weight: 400;
-  font-size: 12px;
-  text-transform: uppercase;
-  font-family: sans-serif;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid var(--border);
-  margin: 0 12px;
-}
-
-/* --- Social Login --- */
 .social-login {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-
 .social-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--text-primary);
-  background-color: transparent;
-  color: var(--text-primary);
-  padding: 10px 20px;
-  cursor: pointer;
-  font-weight: 400;
-  font-size: 14px;
-  font-family: sans-serif;
   gap: 10px;
-  border-radius: 9999px; /* Pill shape */
-  min-width: 100%;
-  transition: background-color 0.2s ease;
-}
-
-.social-btn:hover {
-  background-color: var(--secondary);
-  box-shadow: none;
-  transform: none;
-}
-
-.social-btn.google,
-.social-btn.github {
-  border-color: var(--border);
-  color: var(--text-primary);
-}
-
-.social-btn.google:hover,
-.social-btn.github:hover {
-  background-color: var(--secondary);
-  box-shadow: none;
-}
-
-/* --- Footer --- */
-.footer {
-  text-align: center;
-  margin-top: 32px;
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-family: sans-serif;
-}
-
-.footer-persistent {
-  background-color: var(--background);
-  border-top: 1px solid var(--border);
-}
-
-.footer a {
-  color: var(--text-primary);
-  text-decoration: underline;
-  text-decoration-color: var(--border);
-  border-bottom: none;
-}
-
-.footer a:hover {
-  color: var(--text-secondary);
-}
-
-/* --- Blog Grid --- */
-.blogs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 48px;
   width: 100%;
-  max-width: 1000px;
-  margin: 40px auto;
-  padding: 0 20px;
-}
-
-/* --- Blog Card --- */
-.blog-card {
+  padding: 10px;
   background-color: transparent;
-  border: none;
-  box-shadow: none;
+  border: 1px solid var(--text-main);
+  border-radius: var(--radius-pill);
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.2s ease;
-  display: flex;
-  flex-direction: column;
+  transition: background-color var(--transition);
 }
-
-.blog-card:hover {
-  transform: none;
-  box-shadow: none;
-  opacity: 0.9;
+.social-btn:hover {
+  background-color: var(--bg-secondary);
 }
-
-.blog-image {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 4px;
-  border: none;
-  margin-bottom: 16px;
-  order: -1;
-}
-
-.blog-info {
-  padding: 0;
-}
-
-.meta {
-  font-size: 13px;
-  font-family: sans-serif;
+.auth-divider {
+  margin: 24px 0;
   color: var(--text-secondary);
-  margin-bottom: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
 }
-
-.blog-title {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 22px;
-  font-weight: 700;
-  margin: 0 0 8px 0;
-  color: var(--text-primary);
-  line-height: 1.2;
+.auth-divider::before, .auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--border-color);
 }
+.auth-divider::before { margin-right: 12px; }
+.auth-divider::after { margin-left: 12px; }
 
-.blog-desc {
-  font-family: 'Charter', 'Georgia', serif;
-  font-size: 16px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* Global Inputs */
+.input-group {
+  margin-bottom: 20px;
+  text-align: left;
 }
-
-/* --- Post Header --- */
-.post-header {
-  max-width: 680px;
-  margin: 0 auto 30px auto;
+.input-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+  margin-bottom: 6px;
+  font-family: -apple-system, sans-serif;
 }
-
-.post-header h1 {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 42px;
-}
-
-/* --- Banned / Alerts --- */
-.banned-message {
-  text-align: center;
-  background-color: var(--secondary);
+.input-group input {
+  width: 100%;
+  padding: 10px 0;
   border: none;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: none;
+  border-bottom: 1px solid var(--border-color);
+  background: transparent;
+  font-size: 16px;
+  color: var(--text-main);
+  outline: none;
+  transition: border-color var(--transition);
+}
+.input-group input:focus {
+  border-bottom-color: var(--text-main);
+}
+.input-group input.has-error {
+  border-bottom-color: var(--error-color);
 }
 
-.banned-message h1 {
-  color: var(--destructive);
-  font-size: 24px;
-  font-family: sans-serif;
+.error-msg {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--error-color);
+  text-align: left;
+}
+.global-error {
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 10px;
+  background-color: rgba(220, 38, 38, 0.1);
+  color: var(--error-color);
+  border-radius: var(--radius);
+  font-size: 14px;
 }
 
-/* --- Utilities --- */
-.error {
-  color: var(--destructive);
-  font-family: sans-serif;
+/* Shared Page Layouts */
+.page-layout {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2xl);
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 100px 24px 80px 24px;
 }
-.success {
-  color: #1a8917;
-  font-family: sans-serif;
+.main-content {
+  width: 100%;
+  max-width: var(--feed-width);
+  min-width: 0;
+}
+.sidebar-container {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  display: none;
+  border-left: 1px solid var(--border-color);
+  padding-left: var(--space-xl);
+}
+@media (min-width: 1080px) {
+  .sidebar-container { display: block; }
 }
 
-input.has-error {
-  border-bottom-color: var(--destructive);
-}
-input.has-success {
-  border-bottom-color: #1a8917;
-}
-
-/* --- Article Content Styles --- */
-.article-content {
+/* Post Body / Editor Global Styling */
+.post-body, .ProseMirror {
   font-family: 'Charter', 'Georgia', serif;
   font-size: 20px;
   line-height: 1.58;
-  color: var(--text-primary);
-  margin-bottom: 48px;
+  color: var(--text-main);
+  word-break: break-word;
 }
-
-/* Use ::ng-deep to style the innerHTML content */
-::ng-deep .post-body p {
-  margin-bottom: 24px;
-  font-weight: 400;
-}
-
-::ng-deep .post-body h2 {
+.post-body p, .ProseMirror p { margin-bottom: 24px; font-weight: 400; }
+.post-body h2, .ProseMirror h2 {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 30px;
   font-weight: 700;
@@ -484,239 +299,171 @@ input.has-success {
   margin-bottom: 12px;
   line-height: 1.2;
 }
-
-::ng-deep .post-body h3 {
+.post-body h3, .ProseMirror h3 {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 24px;
   font-weight: 600;
   margin-top: 36px;
   margin-bottom: 10px;
 }
-
-::ng-deep .post-body blockquote {
-  border-left: 3px solid var(--text-primary);
+.post-body blockquote, .ProseMirror blockquote {
+  border-left: 3px solid var(--text-main);
   padding-left: 20px;
   margin: 32px 0;
   font-style: italic;
   font-size: 22px;
   color: var(--text-secondary);
 }
-
-::ng-deep .post-body strong {
-  font-weight: 700;
-}
-
-::ng-deep .post-body em {
-  font-style: italic;
-}
-
-::ng-deep .post-body pre {
-  background: var(--secondary);
+.post-body pre, .ProseMirror pre {
+  background: var(--bg-secondary);
   padding: 24px;
-  border-radius: 4px;
+  border-radius: var(--radius);
   overflow-x: auto;
   margin: 32px 0;
   font-family: 'Courier New', Courier, monospace;
   font-size: 16px;
 }
-
-::ng-deep .post-body ul,
-::ng-deep .post-body ol {
-  margin-bottom: 24px;
-  padding-left: 32px;
+.post-body img, .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  margin: 32px 0;
+  display: block;
 }
 
-::ng-deep .post-body li {
-  margin-bottom: 8px;
+/* Editor Placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--text-muted);
+  pointer-events: none;
+  height: 0;
+  font-style: italic;
 }
-
-::ng-deep .post-body a {
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: var(--text-secondary);
-  transition: all 0.2s;
-}
-
-::ng-deep .post-body a:hover {
-  color: var(--text-secondary);
-}
+.ProseMirror { outline: none; }
+.ProseMirror .ProseMirror-selectednode { outline: 3px solid var(--brand-color); }
 
 /* =========================================================
-   3. ANGULAR MATERIAL UI OVERRIDES
-   Force Material Components to match the Pure CSS look
+   CENTRALIZED ANGULAR MATERIAL OVERRIDES
+   No ::ng-deep needed here because styles.css is global.
    ========================================================= */
 
-/* A. Typography Override */
+/* Typography Override */
 .mat-typography {
-  font-family: 'Charter', 'Georgia', 'Times New Roman', serif !important;
+  font-family: 'Charter', 'Georgia', serif !important;
 }
 
-/* B. Buttons (mat-flat-button)
-   Force them to look like your .main-btn (Pill shape, Black) */
-.mat-mdc-flat-button.mat-primary {
-  --mdc-filled-button-container-color: var(--primary) !important;
-  --mdc-filled-button-label-text-color: var(--background) !important;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
-  border-radius: 9999px !important; /* Pill shape */
-  font-weight: 500 !important;
-  font-size: 14px !important;
-  letter-spacing: normal !important;
-  height: 48px !important; /* Matches standard padding */
-}
-
-/* C. Form Fields (mat-form-field)
-   Strip the gray box, make it look like an underline only */
-
-/* 1. Remove the gray background/fill */
-.mat-mdc-form-field.mat-form-field-appearance-fill .mat-mdc-text-field-wrapper {
-  background-color: transparent !important;
-}
-
-/* 2. Remove the focus ripple/overlay */
-.mat-mdc-form-field-focus-overlay {
-  background-color: transparent !important;
-  opacity: 0 !important;
-}
-
-/* 3. Style the Bottom Border/Underline */
-/* Resting state */
-.mat-mdc-form-field-bottom-align::before {
-  background-color: var(--border) !important;
-  height: 1px !important;
-}
-
-/* Focused state (Black) */
-.mat-mdc-form-field.mat-focused .mat-mdc-form-field-bottom-align::after {
-  background-color: var(--text-primary) !important;
-  height: 1px !important;
-}
-
-/* 4. Input Text Color */
-.mat-mdc-input-element {
-  caret-color: var(--text-primary) !important;
-  color: var(--text-primary) !important;
-}
-
-/* 5. Label Styling */
-.mat-mdc-form-field-label {
-  color: var(--text-muted) !important;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
-  font-size: 13px !important;
-}
-.mat-mdc-form-field.mat-focused .mat-mdc-form-field-label {
-  color: var(--text-primary) !important;
-}
-
-/* 6. Spacing cleanup */
-.mat-mdc-form-field-subscript-wrapper {
-  height: auto !important;
-  padding-bottom: 0 !important;
-}
-
-.sidebar-container {
-  width: 368px;
-  min-width: 368px;
-  display: none;
-  border-left: 1px solid var(--border);
-  padding-left: 40px;
-  /* Remove sticky from here if it exists */
-}
-
-/* --- NEW STICKY WRAPPER --- */
-.sticky-sidebar-wrapper {
-  position: sticky;
-  top: 100px; /* The distance from the top of the browser */
-  display: flex;
-  flex-direction: column;
-  gap: 40px; /* Space between Tags and Suggested Users */
-}
-
-/* ==============================================================
-   GLOBAL OVERLAY STYLES (Fixes Dark Mode Menus)
-   ============================================================== */
-
-/* 1. Menu Panel & Content Background */
-body.dark .custom-menu.mat-mdc-menu-panel,
-body.dark .custom-menu .mat-mdc-menu-content {
-  background-color: var(--background) !important;
-  border: 1px solid var(--border) !important;
+/* Menus */
+.custom-menu.mat-mdc-menu-panel,
+.custom-menu .mat-mdc-menu-content {
+  background-color: var(--bg-elevated) !important;
+  border: 1px solid var(--border-color) !important;
   padding: 0 !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: var(--shadow-md) !important;
 }
-
-/* 2. Individual Menu Items */
-body.dark .custom-menu .mat-mdc-menu-item {
-  background-color: var(--background) !important;
-  color: var(--text-primary) !important;
+.custom-menu .mat-mdc-menu-item {
+  background-color: var(--bg-elevated) !important;
+  transition: background-color var(--transition);
+  color: var(--text-main) !important;
 }
-
-/* 3. Icons and Text inside Menu Items */
-body.dark .custom-menu .mat-mdc-menu-item .mat-mdc-menu-item-text,
-body.dark .custom-menu .mat-mdc-menu-item .mat-icon:not(.mat-warn) {
-  color: var(--text-primary) !important;
+.custom-menu .mat-mdc-menu-item:hover:not([disabled]) {
+  background-color: var(--bg-secondary) !important;
 }
-
-body.dark .custom-menu .mat-mdc-menu-item .mat-icon {
+.custom-menu .mat-mdc-menu-item .mat-mdc-menu-item-text,
+.custom-menu .mat-mdc-menu-item .mat-icon {
+  color: var(--text-main) !important;
+}
+.custom-menu .mat-icon {
+  color: var(--text-secondary) !important;
   margin-right: 12px;
 }
-
-/* 4. Hover States */
-body.dark .custom-menu .mat-mdc-menu-item:hover:not([disabled]) {
-  background-color: var(--secondary) !important;
+.custom-menu .mat-mdc-menu-item:hover .mat-icon {
+  color: var(--text-main) !important;
+}
+.custom-menu .mat-divider {
+  border-top-color: var(--border-color) !important;
+}
+.custom-menu button[color='warn'],
+.custom-menu button[color='warn'] .mat-mdc-menu-item-text,
+.custom-menu button[color='warn'] .mat-icon {
+  color: var(--error-color) !important;
+}
+.notif-item {
+  background-color: var(--bg-elevated) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+.notif-item.unread {
+  background-color: var(--bg-secondary) !important;
+  border-left: 3px solid var(--brand-color) !important;
 }
 
-/* 5. User Info Header (Inside Profile Menu) */
-body.dark .user-info-header {
-  padding: 16px;
-  background-color: var(--background) !important;
-}
-body.dark .u-name {
-  font-weight: 700;
-  color: var(--text-primary) !important;
-  font-size: 15px;
-  margin: 0;
-}
-body.dark .u-handle {
-  color: var(--text-secondary) !important;
-  font-size: 13px;
-  margin: 0;
+/* Form Fields */
+.mat-mdc-form-field {
+  --mdc-filled-text-field-container-color: transparent !important;
+  --mdc-filled-text-field-focus-active-indicator-color: var(--text-main) !important;
+  --mdc-filled-text-field-hover-active-indicator-color: var(--text-main) !important;
+  --mdc-filled-text-field-active-indicator-color: var(--border-color) !important;
+  --mdc-filled-text-field-label-text-color: var(--text-muted) !important;
+  --mdc-filled-text-field-focus-label-text-color: var(--text-main) !important;
+  --mdc-filled-text-field-hover-label-text-color: var(--text-muted) !important;
+  --mdc-filled-text-field-input-text-color: var(--text-main) !important;
+  --mdc-filled-text-field-caret-color: var(--text-main) !important;
+  --mat-form-field-error-text-color: var(--error-color) !important;
 }
 
-/* 6. Notification Menu Specifics */
-body.dark .notif-menu {
-  max-width: 360px !important;
-  width: 360px;
+.mdc-text-field--filled:not(.mdc-text-field--disabled) {
+  background-color: transparent !important;
 }
-body.dark .menu-header {
-  padding: 16px;
-  background-color: var(--background);
-  color: var(--text-primary) !important;
-  border-bottom: 1px solid var(--border);
+.mdc-line-ripple::before {
+  border-bottom-color: var(--border-color) !important;
 }
-body.dark .notif-item {
-  background-color: var(--background) !important;
-  border-bottom: 1px solid var(--border) !important;
-  color: var(--text-primary) !important;
+.mdc-line-ripple::after {
+  border-bottom-color: var(--text-main) !important;
 }
-body.dark .notif-item.unread {
-  background-color: var(--secondary) !important;
-  border-left: 3px solid var(--primary);
+.mdc-text-field__input {
+  color: var(--text-main) !important;
+  caret-color: var(--text-main) !important;
 }
-body.dark .notif-msg {
-  color: var(--text-primary) !important;
-}
-body.dark .empty-state {
+.mdc-floating-label {
   color: var(--text-muted) !important;
-  background-color: var(--background);
+}
+.mat-focused .mdc-floating-label {
+  color: var(--text-main) !important;
+}
+.mat-mdc-form-field-error {
+  color: var(--error-color) !important;
 }
 
-/* 7. General Overrides */
-body.dark .mat-divider {
-  border-top-color: var(--border) !important;
+/* Buttons */
+.mat-mdc-flat-button.mat-primary {
+  --mdc-filled-button-container-color: var(--text-main) !important;
+  --mdc-filled-button-label-text-color: var(--bg-main) !important;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+  border-radius: var(--radius-pill) !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  height: 40px !important;
 }
 
-/* 8. Sign Out / Warn buttons */
-body.dark .custom-menu button[color='warn'] .mat-mdc-menu-item-text,
-body.dark .custom-menu button[color='warn'] .mat-icon {
-  color: var(--destructive) !important;
+/* Chips */
+.mat-mdc-standard-chip {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-pill) !important;
+}
+.mat-mdc-standard-chip .mdc-evolution-chip__text-label {
+  color: var(--text-main) !important;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+.mat-mdc-standard-chip .mat-mdc-chip-remove {
+  color: var(--text-muted) !important;
+}
+.mat-mdc-standard-chip .mat-mdc-chip-remove:hover {
+  color: var(--error-color) !important;
+}
+
+/* Progress Bar */
+.mat-mdc-progress-bar .mdc-linear-progress__bar-inner {
+  border-color: var(--brand-color) !important;
 }

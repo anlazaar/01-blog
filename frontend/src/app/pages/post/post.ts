@@ -195,7 +195,7 @@ export class PostPage implements OnInit, OnDestroy {
   sendComment() {
     const text = this.newComment().trim();
     const p = this.post();
-    if (!text || !p) return;
+    if (!text || text.length > 500 || !p) return;
 
     this.postService.createComment(p.id, text).subscribe({
       next: (comment) => {

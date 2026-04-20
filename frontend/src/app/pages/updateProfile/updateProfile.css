@@ -1,36 +1,33 @@
-/* Inherits .login-page and .login-container from Global CSS */
-
-/* --- Page Specific Layout --- */
+/* Layout Specifics overriding .auth-card */
 .settings-page {
   padding-top: 40px;
   align-items: flex-start;
 }
 
-.settings-page .login-container {
+.settings-page .auth-card {
   max-width: 680px;
   text-align: left;
 }
 
-/* Header */
 .title {
   margin-bottom: 40px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 20px;
 }
 
 .title h1 {
   font-size: 32px;
   margin-bottom: 8px;
-  color: var(--text-primary);
+  color: var(--text-main) !important;
 }
 
 .title p {
-  color: var(--text-secondary);
+  color: var(--text-secondary) !important;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
 }
 
-/* --- Profile Image Section --- */
+/* Avatar Upload Section */
 .profile-upload-section {
   display: flex;
   align-items: center;
@@ -43,9 +40,9 @@
   height: 80px;
   border-radius: 50%;
   overflow: hidden;
-  background-color: var(--secondary);
+  background-color: var(--bg-secondary);
   flex-shrink: 0;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-color);
 }
 
 .avatar-wrapper img {
@@ -62,7 +59,7 @@
   justify-content: center;
   font-size: 32px;
   color: var(--text-secondary);
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: -apple-system, sans-serif;
 }
 
 .upload-actions {
@@ -77,16 +74,11 @@
   color: var(--text-muted);
 }
 
-.error-msg {
-  color: var(--destructive);
-  font-size: 12px;
-}
-
-/* --- Form Layout (Material) --- */
+/* Form Layout */
 .form-row {
   display: flex;
   gap: 24px;
-  margin-bottom: 0; /* Material fields handle their own spacing */
+  margin-bottom: 0;
 }
 
 .single-col {
@@ -102,52 +94,38 @@
   width: 100%;
 }
 
-/* Section Divider */
 .section-divider {
   margin: 40px 0 20px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 10px;
 }
 
 .section-divider span {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: -apple-system, sans-serif;
   font-size: 18px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-main);
 }
 
-/* --- Actions --- */
 .actions {
   display: flex;
   justify-content: flex-end;
   margin-top: 40px;
 }
 
-/* Save Button Override (Green) */
 .save-btn {
-  background-color: #1a8917 !important; /* Green */
+  background-color: var(--brand-color) !important;
   color: white !important;
-  border-radius: 9999px !important;
+  border-radius: var(--radius-pill) !important;
   padding: 0 32px !important;
   height: 40px !important;
 }
 
 .save-btn:disabled {
-  background-color: var(--border) !important;
+  background-color: var(--border-color) !important;
   color: var(--text-muted) !important;
 }
 
-.error-banner {
-  margin-top: 20px;
-  padding: 12px;
-  background-color: rgba(220, 38, 38, 0.1);
-  color: var(--destructive);
-  font-size: 14px;
-  border-radius: 4px;
-  text-align: center;
-}
-
-/* Responsive */
 @media (max-width: 600px) {
   .form-row {
     flex-direction: column;

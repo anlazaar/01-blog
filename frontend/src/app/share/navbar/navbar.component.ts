@@ -26,7 +26,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { SearchComponent } from "../../pages/search/search.component";
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-navbar',
@@ -42,8 +42,7 @@ import { SearchComponent } from "../../pages/search/search.component";
     MatBadgeModule,
     MatDividerModule,
     MatTooltipModule,
-    SearchComponent
-],
+  ],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css'],
   encapsulation: ViewEncapsulation.None,
@@ -82,18 +81,42 @@ export class NavbarComponent {
   userId = this.tokenService.userId;
 
   constructor() {
-    // --- 3. EFFECTS ---
-    // React to Login/Logout automatically
+    // Effect 1: when login/logout happens, load or clear profile
     effect(() => {
       const uid = this.userId();
 
       if (uid) {
-        // User Logged In
-        this.loadProfileData(uid);
+        this.userService.refreshCurrentUserProfile(uid).subscribe({
+          error: (err) => console.error('Error refreshing current user profile', err),
+        });
+
+        if (!this.isAdmin()) {
+          this.notificationService.loadNotifications();
+          this.subscribeToRealTimeNotifications();
+        }
       } else {
-        // User Logged Out
+        this.userService.clearCurrentUserProfile();
         this.resetState();
       }
+    });
+
+    // Effect 2: whenever profile/avatar changes, update navbar immediately
+    effect(() => {
+      const profile = this.userService.currentUserProfile();
+
+      if (!profile) {
+        this.username.set(null);
+        this.avatarUrl.set(null);
+        return;
+      }
+
+      this.username.set(profile.username);
+
+      const avatar = profile.avatarUrl
+        ? `${environment.apiUrl.replace('/api', '')}${profile.avatarUrl}?v=${Date.now()}`
+        : '/default-avatar.jpg';
+
+      this.avatarUrl.set(avatar);
     });
   }
 

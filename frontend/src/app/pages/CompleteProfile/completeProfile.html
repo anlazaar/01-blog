@@ -1,5 +1,5 @@
-<div class="login-page onboarding-page">
-  <div class="login-container">
+<div class="auth-page onboarding-page">
+  <div class="auth-card">
     <form [formGroup]="publicInfoForm" (ngSubmit)="onSubmit()">
       <!-- Header -->
       <div class="title">
@@ -7,21 +7,25 @@
         <p>Help readers know who you are.</p>
       </div>
 
+      <!-- Backend Server Error Display -->
+      @if (serverError()) {
+      <div class="server-error-banner">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ serverError() }}</span>
+      </div>
+      }
+
       <!-- 1. Avatar Section -->
       <div class="avatar-upload-section">
         <div class="avatar-wrapper" (click)="fileInput.click()">
-          <!-- Preview or Placeholder -->
           <div class="avatar-circle">
             @if (avatarPreview()) {
             <img [src]="avatarPreview()" alt="Preview" />
             } @else {
             <div class="placeholder">
-              <!-- Safe access: first char of firstname or '?' -->
               {{ (publicInfoForm.controls.firstname.value || '?').charAt(0) | uppercase }}
             </div>
             }
-
-            <!-- Overlay Icon on Hover -->
             <div class="avatar-overlay">
               <mat-icon>photo_camera</mat-icon>
             </div>
@@ -32,32 +36,37 @@
           <button type="button" mat-button color="primary" (click)="fileInput.click()">
             Add a photo
           </button>
-
           <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden />
 
           @if (fileError()) {
-          <span class="error-msg">{{ fileError() }}</span>
+          <span class="error-msg text-red-500">{{ fileError() }}</span>
           }
         </div>
       </div>
 
-      <!-- 2. Name Fields (Side by Side) -->
+      <!-- 2. Name Fields -->
       <div class="form-row">
         <!-- First Name -->
         <mat-form-field appearance="fill" class="half-width">
           <mat-label>First Name</mat-label>
-          <input matInput formControlName="firstname" placeholder="Jane" />
+          <input matInput formControlName="firstname" placeholder="Jane" maxlength="50" />
+
           @if (publicInfoForm.controls.firstname.hasError('minlength')) {
-          <mat-error>Name is too short</mat-error>
+          <mat-error>Minimum 2 characters required.</mat-error>
+          } @if (publicInfoForm.controls.firstname.hasError('pattern')) {
+          <mat-error>Only letters, spaces, hyphens, and apostrophes allowed.</mat-error>
           }
         </mat-form-field>
 
         <!-- Last Name -->
         <mat-form-field appearance="fill" class="half-width">
           <mat-label>Last Name</mat-label>
-          <input matInput formControlName="lastname" placeholder="Doe" />
+          <input matInput formControlName="lastname" placeholder="Doe" maxlength="50" />
+
           @if (publicInfoForm.controls.lastname.hasError('minlength')) {
-          <mat-error>Name is too short</mat-error>
+          <mat-error>Minimum 2 characters required.</mat-error>
+          } @if (publicInfoForm.controls.lastname.hasError('pattern')) {
+          <mat-error>Only letters, spaces, hyphens, and apostrophes allowed.</mat-error>
           }
         </mat-form-field>
       </div>
@@ -71,11 +80,12 @@
             formControlName="bio"
             placeholder="Tell your story..."
             rows="3"
-            cdkTextareaAutosize
+            maxlength="500"
           ></textarea>
 
+          <!-- Character Counter updated with MAX length -->
           <mat-hint align="end">
-            {{ publicInfoForm.controls.bio.value?.length || 0 }} chars
+            {{ publicInfoForm.controls.bio.value?.length || 0 }} / 500
           </mat-hint>
 
           @if (publicInfoForm.controls.bio.hasError('minlength')) {
@@ -86,7 +96,6 @@
 
       <!-- 4. Actions -->
       <div class="actions">
-        <!-- Continue -->
         <button
           mat-flat-button
           color="primary"
@@ -97,7 +106,6 @@
           {{ isSubmitting() ? 'Saving...' : 'Continue' }}
         </button>
 
-        <!-- Skip -->
         <button
           mat-button
           type="button"

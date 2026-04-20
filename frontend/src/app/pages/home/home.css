@@ -1,24 +1,7 @@
-/* --- Global Layout Wrapper --- */
-.home-layout {
-  display: flex;
-  justify-content: center;
-  gap: 64px;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 100px 24px 40px 24px;
-}
-
-/* --- Feed Layout (Left Column) --- */
-.feed-container {
-  width: 100%;
-  max-width: 680px;
-  min-width: 0;
-}
-
 /* --- Header --- */
 .feed-header {
   margin-bottom: 48px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 16px;
 }
 
@@ -34,28 +17,6 @@
   gap: 16px;
 }
 
-.search-input {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-primary);
-  padding: 8px 0;
-  font-size: 14px;
-  width: 160px;
-  outline: none;
-  transition: width 0.3s ease, border-color 0.3s ease;
-}
-
-/* MATERIAL BUTTON OVERRIDE: "Write" */
-.write-btn {
-  border-radius: 9999px !important; /* Force pill shape */
-  padding: 0 20px !important;
-  height: 36px !important;
-  font-size: 14px !important;
-  letter-spacing: normal !important;
-  /* Colors handled by MatButton color="primary", which maps to your theme vars via global css */
-}
-
 /* --- Post Item --- */
 .post-item {
   margin-bottom: 48px;
@@ -67,7 +28,7 @@
 .post-meta-header {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Push options menu to right */
+  justify-content: space-between;
   margin-bottom: 4px;
   font-size: 13px;
 }
@@ -84,7 +45,7 @@
 .author-avatar-placeholder {
   width: 24px;
   height: 24px;
-  background: #eee;
+  background: var(--bg-secondary);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -119,7 +80,7 @@
 .post-title {
   font-size: 20px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-main);
   line-height: 1.2;
   margin-bottom: 8px;
   display: -webkit-box;
@@ -145,8 +106,8 @@
   width: 112px;
   height: 112px;
   flex-shrink: 0;
-  background-color: var(--secondary);
-  border-radius: 4px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
@@ -161,29 +122,16 @@
 /* --- Footer Actions --- */
 .post-actions-footer {
   display: flex;
-  justify-content: flex-end; /* Align to right */
+  justify-content: flex-end;
   align-items: center;
   margin-top: 12px;
   padding-bottom: 8px;
 }
 
-/* MATERIAL BUTTON OVERRIDE: "Save" */
-.save-btn {
-  color: var(--text-secondary) !important;
-}
-
-.save-btn:hover {
-  color: var(--text-primary) !important;
-}
-
-.save-btn.active {
-  color: var(--text-primary) !important; /* Black when saved */
-}
-
 .post-divider {
   margin-top: 32px;
   height: 1px;
-  background-color: var(--border);
+  background-color: var(--border-color);
   width: 100%;
 }
 
@@ -195,18 +143,6 @@
   margin-bottom: 48px;
 }
 
-/* MATERIAL BUTTON OVERRIDE: "Load More" */
-.load-more-btn {
-  border-radius: 9999px !important;
-  color: var(--text-secondary) !important;
-  border-color: var(--border) !important;
-}
-
-.load-more-btn:hover {
-  color: var(--text-primary) !important;
-  border-color: var(--text-primary) !important;
-}
-
 .end-of-feed {
   text-align: center;
   color: var(--text-secondary);
@@ -216,25 +152,7 @@
   font-style: italic;
 }
 
-/* --- Sidebar (Right Column) --- */
-.sidebar-container {
-  width: 368px;
-  min-width: 368px;
-  display: none;
-  border-left: 1px solid var(--border);
-  padding-left: 40px;
-}
-
-@media (min-width: 1080px) {
-  .sidebar-container {
-    display: block;
-  }
-  .home-layout {
-    justify-content: flex-start;
-  }
-}
-
-.feed-container.full-width {
+.main-content.full-width {
   margin: 0 auto;
   max-width: 800px;
   border-right: none;
@@ -259,7 +177,7 @@
   }
 }
 
-/* --- Skeleton Styles (Preserved for loading state) --- */
+/* --- Skeleton Styles --- */
 .skeleton-list {
   display: flex;
   flex-direction: column;
@@ -283,7 +201,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: var(--secondary);
+  background-color: var(--bg-secondary);
 }
 
 .skeleton-content {
@@ -301,46 +219,29 @@
 
 .skeleton-line {
   height: 12px;
-  background-color: var(--secondary);
-  border-radius: 4px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius);
 }
 
-.skeleton-line.short {
-  width: 120px;
-}
-.skeleton-line.title {
-  height: 20px;
-  width: 80%;
-  margin-bottom: 4px;
-}
-.skeleton-line.body {
-  width: 100%;
-}
-.skeleton-line.body.short {
-  width: 60%;
-}
+.skeleton-line.short { width: 120px; }
+.skeleton-line.title { height: 20px; width: 80%; margin-bottom: 4px; }
+.skeleton-line.body { width: 100%; }
+.skeleton-line.body.short { width: 60%; }
 
 .skeleton-image {
   width: 112px;
   height: 112px;
-  background-color: var(--secondary);
-  border-radius: 4px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius);
   flex-shrink: 0;
 }
 
 @keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-  100% {
-    opacity: 1;
-  }
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 }
 
-/* Responsive Skeleton */
 @media (max-width: 768px) {
   .skeleton-image {
     width: 80px;
@@ -357,13 +258,11 @@
   align-items: center;
   gap: 8px;
 }
-
 .topic-title {
   font-size: 32px;
   font-weight: 700;
   margin: 0;
 }
-
 .topic-label {
   font-size: 16px;
   color: var(--text-secondary);
@@ -371,19 +270,18 @@
   vertical-align: middle;
 }
 
-/* Feed Tags (Mini tags inside the post card) */
+/* Feed Tags */
 .feed-tags {
   display: flex;
   gap: 8px;
   margin-top: 8px;
 }
-
 .mini-tag {
   font-size: 12px;
   color: var(--text-secondary);
-  background: var(--secondary);
+  background: var(--bg-secondary);
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius);
 }
 
 /* Empty State */
@@ -392,11 +290,10 @@
   padding: 60px 0;
   color: var(--text-secondary);
 }
-
 .empty-icon {
   font-size: 48px;
   width: 48px;
   height: 48px;
   margin-bottom: 16px;
-  color: var(--border);
+  color: var(--border-color);
 }

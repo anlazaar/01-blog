@@ -47,12 +47,30 @@ export class UpdateProfile implements OnInit {
   private userId = '';
   private selectedFile: File | null = null;
 
+  // Name Regex: Allows letters (including accents), spaces, hyphens, and apostrophes.
+  private namePattern = /^[a-zA-ZÀ-ÿ\s\-']+$/;
+
   // Typed Form
   publicInfoForm = this.fb.group({
-    bio: new FormControl('', [Validators.maxLength(160)]),
-    firstname: new FormControl('', [Validators.required]),
-    lastname: new FormControl('', [Validators.required]),
-    username: new FormControl('', [Validators.required]),
+    bio: new FormControl('', [Validators.maxLength(500)]),
+    firstname: new FormControl('', [
+      Validators.required,
+      Validators.minLength(2),
+      Validators.maxLength(50),
+      Validators.pattern(this.namePattern),
+    ]),
+    lastname: new FormControl('', [
+      Validators.required,
+      Validators.minLength(2),
+      Validators.maxLength(50),
+      Validators.pattern(this.namePattern),
+    ]),
+    username: new FormControl('', [
+      Validators.required,
+      Validators.minLength(3),
+      Validators.maxLength(20),
+      Validators.pattern(/^[a-zA-Z0-9._-]+$/),
+    ]),
     email: new FormControl('', [Validators.required, Validators.email]),
     // Password fields are optional
     oldpassword: new FormControl(''),

@@ -1,31 +1,3 @@
-.post-page-layout {
-  display: flex;
-  justify-content: center;
-  gap: 64px;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding-bottom: 80px;
-}
-
-.article-container {
-  width: 100%;
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 80px 24px 40px 24px;
-  background-color: var(--background);
-  overflow-wrap: break-word;
-  min-width: 0;
-}
-
-.sidebar-container {
-  width: 368px;
-  min-width: 368px;
-  display: none;
-  border-left: 1px solid var(--border);
-  padding-left: 40px;
-  padding-top: 80px;
-}
-
 /* --- Header --- */
 .article-header {
   margin-bottom: 32px;
@@ -37,7 +9,7 @@
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.015em;
-  color: var(--text-primary);
+  color: var(--text-main);
   margin-bottom: 24px;
 }
 
@@ -57,7 +29,7 @@
   height: 44px;
   border-radius: 50%;
   overflow: hidden;
-  background-color: var(--secondary);
+  background-color: var(--bg-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,7 +46,7 @@
 }
 .author-name {
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-main);
   font-size: 16px;
   cursor: pointer;
 }
@@ -96,7 +68,7 @@
   width: 100%;
   height: auto;
   display: block;
-  border-radius: 2px;
+  border-radius: var(--radius);
 }
 
 /* --- Content Body --- */
@@ -104,67 +76,13 @@
   margin-bottom: 48px;
 }
 
-/* Typography Overrides for Markdown */
-::ng-deep .post-body {
-  font-family: 'Charter', 'Georgia', serif;
-  font-size: 20px;
-  line-height: 1.58;
-  color: var(--text-primary);
-  word-break: break-word;
-}
-::ng-deep .post-body p {
-  margin-bottom: 24px;
-  font-weight: 400;
-}
-::ng-deep .post-body h2 {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 30px;
-  font-weight: 700;
-  margin-top: 56px;
-  margin-bottom: 14px;
-  line-height: 1.2;
-}
-::ng-deep .post-body h3 {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 24px;
-  font-weight: 600;
-  margin-top: 36px;
-  margin-bottom: 12px;
-}
-::ng-deep .post-body blockquote {
-  border-left: 3px solid var(--text-primary);
-  padding-left: 20px;
-  margin: 32px 0;
-  font-style: italic;
-  font-size: 21px;
-  color: var(--text-secondary);
-}
-::ng-deep .post-body strong {
-  font-weight: 700;
-  color: var(--text-primary);
-}
-::ng-deep .post-body pre {
-  background: var(--secondary);
-  padding: 24px;
-  border-radius: 4px;
-  overflow-x: auto;
-  margin: 32px 0;
-}
-::ng-deep .post-body img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 4px;
-  margin: 32px 0;
-  display: block;
-}
-
 /* --- Engagement Bar --- */
 .engagement-bar {
   display: flex;
   align-items: center;
   padding: 12px 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: 40px;
 }
 .engagement-left {
@@ -173,23 +91,23 @@
   gap: 8px; /* Gap between icon groups */
 }
 
-/* Action Buttons (Material Icon Button overrides) */
+/* Action Buttons */
 .action-btn {
   color: var(--text-secondary) !important;
 }
 .action-btn:hover {
-  color: var(--text-primary) !important;
+  color: var(--text-main) !important;
 }
 
 /* Like Active State */
 .like-btn.active {
-  color: #ff3c3c !important; /* Red heart */
+  color: var(--error-color) !important; /* Red heart */
 }
 
 .count-label {
   font-size: 14px;
   color: var(--text-secondary);
-  margin-right: 16px; /* Spacing after the number */
+  margin-right: 16px;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -199,14 +117,14 @@
   font-weight: 700;
   font-size: 20px;
   margin-bottom: 24px;
-  color: var(--text-primary);
+  color: var(--text-main);
 }
 
 .add-response-box {
-  background: var(--secondary-elevated);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
   padding: 16px;
-  border-radius: 4px;
+  border-radius: var(--radius);
   margin-bottom: 32px;
   display: flex;
   gap: 12px;
@@ -216,8 +134,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--text-primary);
-  color: var(--background);
+  background: var(--text-main);
+  color: var(--bg-main);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -241,7 +159,7 @@ textarea {
   font-size: 15px;
   outline: none;
   min-height: 24px;
-  color: var(--text-primary);
+  color: var(--text-main);
 }
 
 .input-actions {
@@ -257,15 +175,14 @@ textarea {
   font-weight: 400 !important;
 }
 
-/* Submit Button (Pill shape) */
+/* Submit Button */
 .submit-btn {
-  border-radius: 9999px !important;
+  border-radius: var(--radius-pill) !important;
   font-weight: 500 !important;
-  /* Color handled by MatButton primary */
 }
 
 .response-item {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-color);
   padding: 24px 0;
 }
 .response-header {
@@ -288,7 +205,7 @@ textarea {
 }
 .response-name {
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-main);
 }
 .response-date {
   color: var(--text-secondary);
@@ -297,7 +214,7 @@ textarea {
 .response-body {
   font-size: 15px;
   line-height: 1.5;
-  color: var(--text-primary);
+  color: var(--text-main);
   font-family: 'Georgia', serif;
 }
 
@@ -322,27 +239,9 @@ textarea {
   padding-top: 150px;
 }
 
-@media (min-width: 1080px) {
-  .sidebar-container {
-    display: block;
-  }
-  .post-page-layout {
-    justify-content: flex-start;
-    padding-left: 24px;
-    padding-right: 24px;
-  }
-  .article-container {
-    margin: 0;
-  }
-}
-
 @media (max-width: 600px) {
   .article-title {
     font-size: 32px;
-  }
-  .article-container {
-    padding-left: 20px;
-    padding-right: 20px;
   }
 }
 
@@ -355,22 +254,22 @@ textarea {
 }
 
 .tag-chip {
-  background-color: var(--secondary); /* Light grey (or dark grey in dark mode) */
+  background-color: var(--bg-secondary);
   color: var(--text-secondary);
   padding: 8px 16px;
-  border-radius: 9999px; /* Pill shape */
+  border-radius: var(--radius-pill);
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
   font-weight: 400;
   text-decoration: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 1px solid transparent; /* Prepare for border on hover if needed */
+  border: 1px solid transparent;
 }
 
 .tag-chip:hover {
-  background-color: var(--border); /* Slightly darker grey on hover */
-  color: var(--text-primary);
+  background-color: var(--border-color);
+  color: var(--text-main);
 }
 
 /* --- Floating Action Bar --- */
@@ -386,24 +285,18 @@ textarea {
 .floating-actions {
   display: flex;
   align-items: center;
-  /* Solid fallback using your dynamic theme variable */
-  background-color: var(--background);
-  border: 1px solid var(--border);
-  border-radius: 9999px; /* Pill shape */
+  background-color: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-pill);
   padding: 4px 16px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
-/* 
-  Modern transparency: Automatically blends your --background 
-  variable with 15% transparency, guaranteeing it matches 
-  both Light and Dark mode perfectly.
-*/
 @supports (background-color: color-mix(in srgb, black, transparent)) {
   .floating-actions {
-    background-color: color-mix(in srgb, var(--background) 85%, transparent);
+    background-color: color-mix(in srgb, var(--bg-main) 85%, transparent);
   }
 }
 
@@ -416,7 +309,7 @@ textarea {
 .vertical-divider {
   width: 1px;
   height: 24px;
-  background-color: var(--border);
+  background-color: var(--border-color);
   margin: 0 12px;
 }
 
@@ -448,8 +341,5 @@ textarea {
   .floating-actions {
     justify-content: center;
     width: 100%;
-  }
-  .post-page-layout {
-    padding-bottom: 120px; /* Ensure content clears the floating bar */
   }
 }

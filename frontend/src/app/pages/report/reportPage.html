@@ -31,7 +31,12 @@
             placeholder="Please provide any specific details..."
             formControlName="description"
             rows="5"
+            maxlength="450"
           ></textarea>
+          <mat-hint align="end">{{ reportForm.controls.description.value?.length || 0 }} / 450</mat-hint>
+          @if (reportForm.controls.description.invalid) {
+          <mat-error>Description is too long.</mat-error>
+          }
         </mat-form-field>
       </div>
 

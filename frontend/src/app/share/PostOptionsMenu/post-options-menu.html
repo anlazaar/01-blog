@@ -9,13 +9,13 @@
 </button>
 
 <!-- Menu Definition -->
-<mat-menu #optionsMenu="matMenu" xPosition="before" class="post-options-panel">
+<mat-menu #optionsMenu="matMenu" xPosition="before" class="custom-menu">
   @if (canReport()) {
   <button mat-menu-item (click)="report.emit()">Report user</button>
   } @if (canEdit() && postId()) {
   <!-- Note: postId() is a signal, so we call it -->
   <a mat-menu-item [routerLink]="['/p', postId(), 'edit']"> Edit story </a>
 
-  <button mat-menu-item class="destructive-item" (click)="delete.emit()">Delete story</button>
+  <button mat-menu-item color="warn" (click)="delete.emit()">Delete story</button>
   }
 </mat-menu>

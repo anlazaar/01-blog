@@ -1,7 +1,5 @@
-/* Inherits .login-page and .login-container from Global CSS */
-
-/* --- Layout Specifics --- */
-.onboarding-page .login-container {
+/* Layout Specifics overriding .auth-card */
+.onboarding-page .auth-card {
   margin-top: 80px;
   max-width: 600px;
   text-align: left;
@@ -19,16 +17,16 @@
   font-family: 'Charter', serif;
   font-size: 32px;
   margin-bottom: 8px;
-  color: var(--text-primary); /* Ensures White in Dark Mode */
+  color: var(--text-main) !important;
 }
 
 .title p {
-  color: var(--text-secondary);
+  color: var(--text-secondary) !important;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 16px;
 }
 
-/* --- Avatar Section --- */
+/* Avatar Section */
 .avatar-upload-section {
   display: flex;
   flex-direction: column;
@@ -46,14 +44,14 @@
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background-color: var(--secondary); /* Grey background */
+  background-color: var(--bg-secondary);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   transition: opacity 0.2s;
-  border: 2px solid var(--border); /* Subtle border for visibility */
+  border: 2px solid var(--border-color);
 }
 
 .avatar-circle img {
@@ -64,12 +62,11 @@
 
 .placeholder {
   font-size: 40px;
-  color: var(--text-primary); /* Visible text */
+  color: var(--text-main);
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 500;
 }
 
-/* Hover Overlay */
 .avatar-overlay {
   position: absolute;
   inset: 0;
@@ -92,20 +89,19 @@
   opacity: 1;
 }
 
-/* Upload Trigger Button */
 .upload-trigger button {
-  color: #1a8917 !important; /* Green text for "Add Photo" */
+  color: var(--brand-color) !important;
 }
 
 .error-msg {
   display: block;
-  color: var(--destructive);
+  color: var(--error-color);
   font-size: 12px;
   margin-top: 4px;
   text-align: center;
 }
 
-/* --- Form Layout --- */
+/* Form Layout */
 .form-row {
   display: flex;
   gap: 24px;
@@ -125,48 +121,7 @@
   width: 100%;
 }
 
-/* =========================================================
-   MATERIAL FORM FIELD OVERRIDES (The Visibility Fix)
-   ========================================================= */
-
-/* 1. Input Text Color */
-::ng-deep .mat-mdc-input-element {
-  color: var(--text-primary) !important; /* Black in Light, White in Dark */
-  caret-color: var(--text-primary) !important;
-}
-
-/* 2. Placeholder/Label Color */
-::ng-deep .mat-mdc-form-field .mat-mdc-floating-label.mdc-floating-label {
-  color: var(--text-secondary) !important; /* Grey by default */
-}
-
-/* 3. Label Color When Focused (Active) */
-::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-floating-label.mdc-floating-label {
-  color: var(--text-primary) !important; /* High contrast when typing */
-}
-
-/* 4. Underline Color */
-::ng-deep .mat-mdc-form-field-bottom-align::before {
-  background-color: var(--border) !important; /* Subtle grey line */
-}
-
-::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-form-field-bottom-align::after {
-  background-color: var(--text-primary) !important; /* Bold line when focused */
-}
-
-/* 5. Error Message Color */
-::ng-deep .mat-mdc-form-field-error {
-  color: var(--destructive) !important;
-}
-
-/* 6. Hint Color */
-::ng-deep .mat-mdc-form-field-hint {
-  color: var(--text-muted) !important;
-}
-
-/* =========================================================
-   ACTIONS & BUTTONS
-   ========================================================= */
+/* Actions */
 .actions {
   display: flex;
   flex-direction: column;
@@ -174,28 +129,22 @@
   margin-top: 32px;
 }
 
-/* Continue Button - Normal State */
 .action-btn {
   width: 100%;
   height: 48px !important;
   font-size: 15px !important;
   letter-spacing: normal !important;
-  border-radius: 99px !important;
-
-  /* Use Theme Variables explicitly */
-  background-color: var(--text-primary) !important; /* Black in Light, White in Dark */
-  color: var(--background) !important; /* White in Light, Black in Dark */
+  border-radius: var(--radius-pill) !important;
+  background-color: var(--text-main) !important;
+  color: var(--bg-main) !important;
 }
 
-/* Continue Button - Disabled State (The Invisible Button Fix) */
 .action-btn:disabled {
-  /* Visible grey in dark mode */
-  background-color: var(--border) !important;
+  background-color: var(--border-color) !important;
   color: var(--text-muted) !important;
   opacity: 0.5;
 }
 
-/* Skip Button */
 .skip-btn {
   color: var(--text-secondary) !important;
   font-weight: 400 !important;
@@ -203,11 +152,10 @@
 }
 
 .skip-btn:hover {
-  color: var(--text-primary) !important;
+  color: var(--text-main) !important;
   background: transparent !important;
 }
 
-/* Responsive */
 @media (max-width: 600px) {
   .form-row {
     flex-direction: column;

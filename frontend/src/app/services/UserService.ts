@@ -1,12 +1,11 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { UserPublicProfileDTO } from '../models/USER/UserPublicProfileDTO';
 import { UserResponse } from '../models/USER/UserResponse';
 import { Page } from '../models/Page';
 import { environment } from '../../environments/environment';
 
-// Define the interface here so it can be shared with components
 export interface SuggestedUser {
   id: string;
   username: string;
@@ -20,18 +19,37 @@ export class UserService {
   private usersUrl = `${environment.apiUrl}/users`;
   private subscriptionsUrl = `${environment.apiUrl}/subscriptions`;
 
-  // --- 1. STATE MANAGEMENT (SIGNALS) ---
-  // Private writable signal holds the actual data
-  private _suggestedUsers = signal<SuggestedUser[]>([]);
+  // --- 1. STATE MANAGEMENT ---
 
-  // Public read-only signal for components to consume
+  private _suggestedUsers = signal<SuggestedUser[]>([]);
   readonly suggestedUsers = this._suggestedUsers.asReadonly();
+
+  // ✅ ADD THIS: shared logged-in user profile state
+  private _currentUserProfile = signal<UserPublicProfileDTO | null>(null);
+  readonly currentUserProfile = this._currentUserProfile.asReadonly();
 
   constructor(private http: HttpClient) {}
 
-  // --- 2. SIGNAL-BASED ACTIONS ---
+  // --- 2. CURRENT USER PROFILE ACTIONS ---
 
-  // Loads data and updates the signal (Components just call this, they don't subscribe)
+  refreshCurrentUserProfile(id: string): Observable<UserPublicProfileDTO> {
+    return this.getUserPublicProfile(id).pipe(
+      tap((profile) => {
+        this._currentUserProfile.set(profile);
+      })
+    );
+  }
+
+  setCurrentUserProfile(profile: UserPublicProfileDTO | null): void {
+    this._currentUserProfile.set(profile);
+  }
+
+  clearCurrentUserProfile(): void {
+    this._currentUserProfile.set(null);
+  }
+
+  // --- 3. SUGGESTED USERS ACTIONS ---
+
   loadSuggestedUsers(): void {
     this.getSuggestedUsers().subscribe({
       next: (data) => this._suggestedUsers.set(data),
@@ -39,23 +57,19 @@ export class UserService {
     });
   }
 
-  // Handles optimistic UI updates + API calls
   toggleFollowState(user: SuggestedUser): void {
     const isFollowingNow = !user.following;
 
-    // A. Optimistic Update: Update the signal IMMEDIATELY (UI updates instantly)
     this._suggestedUsers.update((users) =>
       users.map((u) => (u.id === user.id ? { ...u, following: isFollowingNow } : u))
     );
 
-    // B. Determine which API call to make
     const action$ = isFollowingNow ? this.followUser(user.id) : this.unfollowUser(user.id);
 
-    // C. Execute API call in background
     action$.subscribe({
       error: (err) => {
         console.error('Follow action failed', err);
-        // D. Rollback: If API fails, revert the signal to previous state
+
         this._suggestedUsers.update((users) =>
           users.map((u) => (u.id === user.id ? { ...u, following: !isFollowingNow } : u))
         );
@@ -63,23 +77,24 @@ export class UserService {
     });
   }
 
-  // --- 3. EXISTING API METHODS (Keep these as they were) ---
+  // --- 4. API METHODS ---
 
   getUserPublicProfile(id: string): Observable<UserPublicProfileDTO> {
-    return this.http.get<any>(`${this.usersUrl}/${id}/block`);
+    return this.http.get<UserPublicProfileDTO>(`${this.usersUrl}/${id}/block`);
   }
 
   getUserFullData(id: string): Observable<UserResponse> {
-    return this.http.get<any>(`${this.usersUrl}/${id}`);
+    return this.http.get<UserResponse>(`${this.usersUrl}/${id}`);
   }
 
-  patchUser(req: FormData, id: String) {
-    console.log('REQUEST: ', req);
-    return this.http.patch<any>(`${this.usersUrl}/profile/update/${id}`, req);
+  patchUser(req: FormData, id: string): Observable<UserPublicProfileDTO> {
+    return this.http.patch<UserPublicProfileDTO>(`${this.usersUrl}/profile/update/${id}`, req).pipe(
+      tap((updatedProfile) => {
+        this._currentUserProfile.set(updatedProfile);
+      })
+    );
   }
 
-  // Modified to return Observable<any> to match usage above,
-  // but kept public for other components if needed.
   followUser(id: string) {
     return this.http.post(`${this.subscriptionsUrl}/${id}/follow`, {});
   }

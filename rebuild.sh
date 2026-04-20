@@ -1,8 +1,11 @@
 #!/bin/bash
 
-echo "Rebuilding and restarting the backend container ..."
+echo "Stopping container and deleting database volume..."
+docker compose down --volumes --remove-orphans
 
-docker compose up -d --build backend
+echo "Rebuilding and restarting containers..."
+docker compose up -d --build
 
-echo "Backend updated and started! Tailing logs..."
+
+echo "App restarted with a fresh database. Tailing backend logs..."
 docker compose logs -f backend

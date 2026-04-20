@@ -40,7 +40,7 @@ export class ReportPage implements OnInit {
   // Form Definition
   reportForm = this.fb.group({
     reason: new FormControl('', [Validators.required]),
-    description: new FormControl(''),
+    description: new FormControl('', [Validators.maxLength(450)]),
   });
 
   ngOnInit() {

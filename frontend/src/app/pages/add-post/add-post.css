@@ -6,7 +6,7 @@
   width: 100%;
   height: 100vh;
   z-index: 10000;
-  background-color: var(--background);
+  background-color: var(--bg-main);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -19,11 +19,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 24px;
-  background-color: var(--background);
+  background-color: var(--bg-main);
   position: sticky;
   top: 0;
   z-index: 50;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .nav-left {
@@ -34,7 +34,7 @@
 .nav-left .draft-status::before {
   content: '|';
   margin: 0 12px;
-  color: var(--border);
+  color: var(--border-color);
   font-weight: 200;
 }
 
@@ -51,8 +51,8 @@
 }
 
 .back-link:hover {
-  color: var(--text-primary) !important;
-  background-color: transparent !important; /* Keep it clean without the grey box */
+  color: var(--text-main) !important;
+  background-color: transparent !important;
 }
 
 .back-link mat-icon {
@@ -60,7 +60,6 @@
   width: 18px !important;
   height: 18px !important;
   margin-right: 6px;
-  /* Ensure the icon doesn't shift when text scales */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -83,15 +82,14 @@
   font-weight: 400 !important;
 }
 .draft-btn:hover {
-  color: var(--text-primary) !important;
+  color: var(--text-main) !important;
 }
 
 /* Publish Button (Pill) */
 .publish-btn {
-  border-radius: 9999px !important;
+  border-radius: var(--radius-pill) !important;
   height: 32px !important;
   font-size: 13px !important;
-  /* Colors handled by color="primary" via global CSS */
 }
 
 /* --- Container --- */
@@ -116,7 +114,7 @@
   width: 100%;
   max-height: 400px;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: var(--radius);
 }
 
 .cover-media {
@@ -142,7 +140,7 @@
   resize: none;
   overflow: hidden;
   display: block;
-  color: var(--text-primary);
+  color: var(--text-main);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 42px;
   font-weight: 700;
@@ -160,11 +158,11 @@
   align-items: center;
   gap: 4px;
   padding: 8px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: 20px;
   position: sticky;
   top: 65px;
-  background: var(--background);
+  background: var(--bg-main);
   z-index: 40;
   flex-wrap: wrap;
 }
@@ -176,14 +174,14 @@
 
 /* Active State */
 .tiptap-toolbar button.is-active {
-  color: var(--text-primary) !important;
-  background-color: var(--secondary) !important;
+  color: var(--text-main) !important;
+  background-color: var(--bg-secondary) !important;
 }
 
 .separator {
   width: 1px;
   height: 24px;
-  background: var(--border);
+  background: var(--border-color);
   margin: 0 8px;
 }
 
@@ -196,69 +194,6 @@
 .tiptap-container.loading {
   opacity: 0.5;
   pointer-events: none;
-}
-
-/* ProseMirror Styles (The Text Content) */
-.ProseMirror {
-  outline: none;
-  font-family: 'Charter', 'Georgia', serif;
-  font-size: 21px;
-  line-height: 1.58;
-  color: var(--text-primary);
-}
-
-.ProseMirror p {
-  margin-bottom: 24px;
-}
-
-/* Placeholder */
-.ProseMirror p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  float: left;
-  color: var(--text-muted);
-  pointer-events: none;
-  height: 0;
-  font-style: italic;
-}
-
-/* Headings */
-.ProseMirror h2 {
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 28px;
-  font-weight: 700;
-  margin-top: 48px;
-  margin-bottom: 12px;
-  color: var(--text-primary);
-}
-
-.ProseMirror blockquote {
-  border-left: 3px solid var(--text-primary);
-  padding-left: 20px;
-  margin-left: 0;
-  font-style: italic;
-  color: var(--text-secondary);
-}
-
-.ProseMirror pre {
-  background: var(--secondary);
-  border-radius: 4px;
-  color: var(--text-primary);
-  font-family: 'Courier New', Courier, monospace;
-  padding: 16px;
-  overflow-x: auto;
-}
-
-/* Images inside Editor */
-.ProseMirror img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 4px;
-  margin: 24px 0;
-  display: block;
-}
-
-.ProseMirror .ProseMirror-selectednode {
-  outline: 3px solid #1a8917;
 }
 
 /* --- Progress Bar --- */
@@ -276,27 +211,19 @@
   text-align: right;
 }
 
-/* Override MatProgressBar color */
-::ng-deep .mat-mdc-progress-bar .mdc-linear-progress__bar-inner {
-  border-color: #1a8917 !important;
-}
-
 /* --- TAGS INPUT CUSTOMIZATION --- */
 .tags-container {
   margin-bottom: 24px;
 }
 
-/* 1. RESET FORM FIELD (Remove gray box, underline, and ripple) */
+/* 1. RESET FORM FIELD */
 .tag-form-field {
   width: 100%;
 }
-
 .tag-form-field .mat-mdc-text-field-wrapper {
   background-color: transparent !important;
   padding: 0 !important;
 }
-
-/* Hide the bottom underline/ripple completely */
 .tag-form-field .mat-mdc-form-field-subscript-wrapper,
 .tag-form-field .mat-mdc-line-ripple,
 .tag-form-field .mat-mdc-form-field-bottom-align::before,
@@ -305,75 +232,36 @@
   opacity: 0 !important;
 }
 
-/* 2. INPUT STYLING (Fixing Placeholder & Text Color) */
+/* 2. INPUT STYLING */
 .tag-input {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
   font-size: 15px !important;
-  /* Ensure the cursor and typed text are visible (White in dark mode) */
-  color: var(--text-primary) !important;
-  caret-color: var(--text-primary) !important;
+  color: var(--text-main) !important;
+  caret-color: var(--text-main) !important;
 }
-
-/* Force Placeholder Visibility */
 .tag-input::placeholder {
   color: var(--text-muted) !important;
-  opacity: 1 !important; /* Required for Firefox/Material overrides */
+  opacity: 1 !important;
   -webkit-text-fill-color: var(--text-muted) !important;
 }
 
-/* 3. CHIP CUSTOMIZATION (The Bubbles) */
 .mat-mdc-chip-set {
   gap: 8px;
 }
 
-.mat-mdc-standard-chip {
-  /* Background: Use a slightly lighter grey than background, or specific border */
-  background-color: var(--secondary) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 9999px !important; /* Pill shape */
-  min-height: 32px !important;
-}
-
-/* Fix Tag Text Visibility (Targeting internal MDC label) */
-.mat-mdc-standard-chip .mdc-evolution-chip__text-label {
-  color: var(--text-primary) !important; /* Make tag text White/Dark */
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
-  font-size: 13px !important;
-  font-weight: 400 !important;
-}
-
-/* Fix "X" Icon Visibility */
-.mat-mdc-standard-chip .mat-mdc-chip-remove {
-  color: var(--text-muted) !important;
-  opacity: 0.7;
-}
-
-.mat-mdc-standard-chip .mat-mdc-chip-remove:hover {
-  opacity: 1;
-  color: var(--destructive) !important;
-}
-
-/* Remove Material's default focus/hover overlays */
-.mat-mdc-standard-chip::after {
-  opacity: 0 !important;
-}
-.mat-mdc-standard-chip:hover::after {
-  opacity: 0 !important;
-}
-
 .mat-mdc-autocomplete-panel {
-  background-color: var(--background) !important;
-  border: 1px solid var(--border) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  background-color: var(--bg-elevated) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 .mat-mdc-option {
-  color: var(--text-primary) !important;
+  color: var(--text-main) !important;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 .mat-mdc-option:hover,
 .mat-mdc-option.mat-mdc-option-active {
-  background-color: var(--secondary) !important;
+  background-color: var(--bg-secondary) !important;
 }
 
 .cdk-overlay-container {
