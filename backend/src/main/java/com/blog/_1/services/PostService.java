@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -44,6 +45,7 @@ public class PostService {
     private final SubscriptionRepository subscriptionRepository;
     private final SavedPostRepository savedPostRepository;
     private final HashtagRepository hashtagRepository;
+    private final CacheManager casheManager;
 
     @Autowired
     private org.springframework.context.ApplicationContext applicationContext;
@@ -121,7 +123,8 @@ public class PostService {
 
     @Caching(evict = {
             @CacheEvict(value = "single_post", key = "#postId"),
-            @CacheEvict(value = "post_pages", allEntries = true) // to enssure wipping pages when content changed
+            @CacheEvict(value = "post_pages", allEntries = true),
+            @CacheEvict(value = "single_user", key = "#userId")
     })
     public PostResponse patch(UUID postId, UUID userId, PostPatchRequest req) {
         Post post = postRepository.findById(postId)
@@ -181,7 +184,11 @@ public class PostService {
     }
 
     @Transactional
-    @CacheEvict(value = "post_pages", allEntries = true) // when a new post is created here it enssure to wipe cash
+    @Caching(evict = {
+            @CacheEvict(value = "post_pages", allEntries = true),
+            @CacheEvict(value = "single_user", key = "#userId")
+    }) // when a new post is created here it enssure to wipe cash
+
     public PostResponse finalizePost(UUID postId, UUID userId, int expectedTotalChunks) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
         if (!post.getAuthor().getId().equals(userId))
@@ -277,37 +284,32 @@ public class PostService {
         }).collect(Collectors.toList());
     }
 
-    // Used later ...
-    private void enrichPostResponse(PostResponse response, UUID userId) {
-        // Legacy single item enricher if needed
-        if (userId != null) {
-            response.setSavedByCurrentUser(savedPostRepository.existsByUserIdAndPostId(userId, response.getId()));
-            response.setLikedByCurrentUser(likeRepository.existsByPostIdAndUserId(response.getId(), userId));
-        }
-    }
+    // Used later or never...
+    // private void enrichPostResponse(PostResponse response, UUID userId) {
+    // // Legacy single item enricher if needed
+    // if (userId != null) {
+    // response.setSavedByCurrentUser(savedPostRepository.existsByUserIdAndPostId(userId,
+    // response.getId()));
+    // response.setLikedByCurrentUser(likeRepository.existsByPostIdAndUserId(response.getId(),
+    // userId));
+    // }
+    // }
 
-    // --- OPTIMIZED ENRICHMENT ---
     private void enrichWithUserInteraction(List<PostResponse> posts) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof User currentUser) {
             UUID userId = currentUser.getId();
 
-            // 1. Extract all Post IDs from the current page
             List<UUID> postIds = posts.stream().map(PostResponse::getId).toList();
 
             if (postIds.isEmpty())
                 return;
 
-            // 2. Batch Query: Find all "Saved" entries for these posts by this user
-            // You need to add this method to SavedPostRepository (see below)
             Set<UUID> savedPostIds = savedPostRepository.findPostIdsByUserIdAndPostIdIn(userId, postIds);
 
-            // 3. Batch Query: Find all "Liked" entries for these posts by this user
-            // You need to add this method to LikeRepository (see below)
             Set<UUID> likedPostIds = likeRepository.findPostIdsByUserIdAndPostIdIn(userId, postIds);
 
-            // 4. Map the results in Memory (Fast Java operation, no DB calls)
             for (PostResponse post : posts) {
                 post.setSavedByCurrentUser(savedPostIds.contains(post.getId()));
                 post.setLikedByCurrentUser(likedPostIds.contains(post.getId()));
@@ -414,6 +416,7 @@ public class PostService {
     @Caching(evict = {
             @CacheEvict(value = "single_post", key = "#postId"),
             @CacheEvict(value = "post_pages", allEntries = true),
+            @CacheEvict(value = "single_user", key = "#userId"),
     })
     public PostResponse update(UUID postId, UUID userId, PostCreateRequest request) {
         Post post = postRepository.findById(postId).orElseThrow();
@@ -485,20 +488,15 @@ public class PostService {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        // 1. Build the dynamic SQL query
         var spec = com.blog._1.specifications.PostSpecification.buildSearchSpec(
                 keyword, author, tags, liked, followed, currentUserId);
 
-        // 2. Fetch from DB
         Page<Post> postsPage = postRepository.findAll(spec, pageable);
 
-        // 3. Map to DTOs
         List<PostResponse> content = postsPage.getContent().stream()
                 .map(PostResponse::from)
                 .collect(Collectors.toList());
 
-        // 4. Enrich with Like/Save status (Reusing your highly optimized enrichment
-        // method!)
         enrichWithUserInteraction(content);
 
         return new org.springframework.data.domain.PageImpl<>(content, pageable, postsPage.getTotalElements());
