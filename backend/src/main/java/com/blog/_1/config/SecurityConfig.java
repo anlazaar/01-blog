@@ -56,9 +56,9 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
 
                         // USER ONLY ROUTES (Creation)
-                        .requestMatchers(HttpMethod.POST, "/api/posts/media/upload").hasRole("USER")
-                        .requestMatchers(HttpMethod.GET, "/api/users/{id}").hasRole("USER")
-                        .requestMatchers(HttpMethod.POST, "/api/posts").hasRole("USER")
+                        .requestMatchers(HttpMethod.POST, "/api/posts/media/upload").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/users/{id}").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/posts").hasAnyRole("USER", "ADMIN")
 
                         // SHARED ROUTES (USER + ADMIN)
                         .requestMatchers(HttpMethod.POST, "/api/posts/{id}/save").hasAnyRole("USER", "ADMIN")

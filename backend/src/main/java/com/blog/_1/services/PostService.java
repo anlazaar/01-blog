@@ -45,7 +45,6 @@ public class PostService {
     private final SubscriptionRepository subscriptionRepository;
     private final SavedPostRepository savedPostRepository;
     private final HashtagRepository hashtagRepository;
-    private final CacheManager casheManager;
 
     @Autowired
     private org.springframework.context.ApplicationContext applicationContext;
@@ -446,7 +445,7 @@ public class PostService {
             return hashtags;
 
         for (String name : tagNames) {
-            String cleanName = name.trim().replace("#", "").toLowerCase();
+            String cleanName = name.replaceAll("\\s+", "").replace("#", "_").toLowerCase();
 
             if (cleanName.isBlank())
                 continue;

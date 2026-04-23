@@ -13,4 +13,8 @@ public class UserLoginRequest {
 
     @NotBlank(message = "Password cannot be empty")
     private String password;
+
+    public void setEmail(String email) {
+        this.email = email != null ? email.replaceAll("\\s+", "") : null;
+    }
 }

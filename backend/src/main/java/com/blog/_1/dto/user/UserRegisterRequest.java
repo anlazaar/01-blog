@@ -18,4 +18,12 @@ public class UserRegisterRequest {
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
+
+    public void setUsername(String username) {
+        this.username = username != null ? username.replaceAll("\\s+", "") : null;
+    }
+
+    public void setEmail(String email) {
+        this.email = email != null ? email.replaceAll("\\s+", "") : null;
+    }
 }

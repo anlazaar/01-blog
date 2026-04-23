@@ -29,4 +29,20 @@ public class ProfilePatchRequest {
     private String bio;
 
     private MultipartFile avatar;
+
+    public void setUsername(String username) {
+        this.username = username != null ? username.replaceAll("\\s+", "") : null;
+    }
+
+    public void setEmail(String email) {
+        this.email = email != null ? email.replaceAll("\\s+", "") : null;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname != null ? firstname.trim() : null;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname != null ? lastname.trim() : null;
+    }
 }
