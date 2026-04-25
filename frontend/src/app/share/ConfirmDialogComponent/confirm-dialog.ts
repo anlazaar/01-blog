@@ -1,4 +1,4 @@
-import { Component, Inject, ViewEncapsulation } from '@angular/core';
+import { Component, ViewEncapsulation, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -8,21 +8,19 @@ import { MatButtonModule } from '@angular/material/button';
   imports: [MatDialogModule, MatButtonModule],
   templateUrl: './confirm-dialog.html',
   styleUrls: ['./confirm-dialog.css'],
-  // We need None to style the backdrop and the panel wrapper globally
   encapsulation: ViewEncapsulation.None 
 })
 export class ConfirmDialogComponent {
-  
-  constructor(
-    public dialogRef: MatDialogRef<ConfirmDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { message: string }
-  ) {}
+  public dialogRef = inject(MatDialogRef<ConfirmDialogComponent>);
+  public data = inject<{ message: string }>(MAT_DIALOG_DATA);
+
+
 
   onConfirm(): void {
-    this.dialogRef.close(true); // Return 'true' when confirmed
+    this.dialogRef.close(true);
   }
 
   onCancel(): void {
-    this.dialogRef.close(false); // Return 'false' when cancelled
+    this.dialogRef.close(false);
   }
 }

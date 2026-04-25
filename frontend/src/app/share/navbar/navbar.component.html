@@ -92,10 +92,13 @@
       <!-- User Info Mobile -->
       <div
         class="mobile-user-profile"
+        tabindex="0"
         [routerLink]="['/profile', userId()]"
         (click)="closeMobileMenu()"
+        (keydown.enter)="closeMobileMenu()"
+        (keydown.space)="closeMobileMenu()"
       >
-        <img [src]="avatarUrl() || '/default-avatar.jpg'" class="mobile-avatar" />
+        <img [src]="avatarUrl() || '/default-avatar.jpg'" [alt]="username()" class="mobile-avatar" />
         <span class="mobile-username">{{ username() }}</span>
       </div>
 
@@ -122,8 +125,11 @@
 
   <div
     class="mobile-overlay"
+    tabindex="0"
     [class.visible]="isMobileMenuOpen()"
     (click)="closeMobileMenu()"
+    (keydown.enter)="closeMobileMenu()"
+    (keydown.space)="closeMobileMenu()"
   ></div>
 
   <!-- ============================================================== -->

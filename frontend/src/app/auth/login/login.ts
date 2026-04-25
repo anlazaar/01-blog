@@ -49,7 +49,8 @@ export class Login {
     this.errorMessage.set('');
 
     this.auth.apiCommunicator('/login', this.loginForm.value).subscribe({
-      next: (res) => {
+      next: (response) => {
+        const res = response as { token: string; isCompleted: boolean; };
         // 1. Save Token (Triggers Signal updates in TokenService)
         this.tokenService.setToken(res.token);
 

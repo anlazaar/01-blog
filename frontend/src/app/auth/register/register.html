@@ -24,8 +24,9 @@
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
       <!-- Email -->
       <div class="input-group">
-        <label>Email</label>
+        <label for="email">Email</label>
         <input
+          id="email"
           type="email"
           formControlName="email"
           placeholder="name@example.com"
@@ -47,8 +48,9 @@
 
       <!-- Username -->
       <div class="input-group">
-        <label>Username</label>
+        <label for="username">Username</label>
         <input
+          id="username"
           type="text"
           formControlName="username"
           placeholder="Your Name"
@@ -75,8 +77,9 @@
 
       <!-- Password -->
       <div class="input-group">
-        <label>Password</label>
+        <label for="password">Password</label>
         <input
+          id="password"
           type="password"
           formControlName="password"
           placeholder="••••••••"
@@ -98,8 +101,9 @@
 
       <!-- Repeat Password -->
       <div class="input-group">
-        <label>Confirm Password</label>
+        <label for="repeatPassword">Confirm Password</label>
         <input
+          id="repeatPassword"
           type="password"
           formControlName="repeatPassword"
           placeholder="••••••••"

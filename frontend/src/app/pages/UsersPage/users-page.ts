@@ -68,7 +68,8 @@ export class UsersPageComponent {
         // Filter out myself
         const myId = this.currentUserId();
         console.log(data);
-        const newUsers = data.content.filter((u: any) => u.id !== myId);
+        const content = data.content as UserProfile[];
+        const newUsers = content.filter((u) => u.id !== myId);
 
         if (isFirstLoad) {
           this.users.set(newUsers);

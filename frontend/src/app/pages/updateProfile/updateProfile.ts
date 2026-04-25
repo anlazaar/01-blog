@@ -169,7 +169,7 @@ export class UpdateProfile implements OnInit {
     }
 
     this.userService.patchUser(formData, this.userId).subscribe({
-      next: (res) => {
+      next: () => {
         this.isSubmitting.set(false);
         this.toastService.show('Profile updated successfully!', 'success');
         this.router.navigate(['/home']);

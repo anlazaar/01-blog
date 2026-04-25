@@ -9,7 +9,7 @@ import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 // Third-party libraries
-import { provideMarkdown } from 'ngx-markdown';
+import { provideMarkdown, SANITIZE } from 'ngx-markdown';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 // Local imports
@@ -33,7 +33,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
 
     provideMarkdown({
-      sanitize: SecurityContext.NONE,
+      sanitize: { provide: SANITIZE, useValue: SecurityContext.NONE },
     }),
     provideCharts(withDefaultRegisterables()),
   ],

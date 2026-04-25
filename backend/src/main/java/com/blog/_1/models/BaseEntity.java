@@ -5,7 +5,6 @@ import lombok.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
 @MappedSuperclass
 @Getter
 @Setter

@@ -17,7 +17,7 @@
 
       <!-- 1. Avatar Section -->
       <div class="avatar-upload-section">
-        <div class="avatar-wrapper" (click)="fileInput.click()">
+        <div class="avatar-wrapper" tabindex="0" (click)="fileInput.click()" (keydown.enter)="fileInput.click()" (keydown.space)="fileInput.click()">
           <div class="avatar-circle">
             @if (avatarPreview()) {
             <img [src]="avatarPreview()" alt="Preview" />

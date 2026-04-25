@@ -116,7 +116,7 @@ export class Home implements OnInit {
     this.loadingMore.set(false);
   }
 
-  private handleError(err: any) {
+  private handleError(err: unknown) {
     console.error(err);
     this.loading.set(false);
     this.loadingMore.set(false);

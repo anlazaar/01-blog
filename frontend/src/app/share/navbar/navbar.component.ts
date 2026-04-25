@@ -12,13 +12,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
-// Services
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle';
 import { TokenService } from '../../services/token.service';
 import { UserService } from '../../services/UserService';
 import { Notification, NotificationService } from '../../services/notification.service';
 
-// --- ANGULAR MATERIAL IMPORTS ---
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -50,7 +48,7 @@ import { environment } from '../../../environments/environment';
 })
 export class NavbarComponent {
   private router = inject(Router);
-  private destroyRef = inject(DestroyRef); // For cleaning up SSE
+  private destroyRef = inject(DestroyRef);
 
   // Services
   public tokenService = inject(TokenService);
@@ -198,7 +196,7 @@ export class NavbarComponent {
 
   private playNotificationSound() {
     this.notificationAudio.currentTime = 0;
-    this.notificationAudio.play().catch(() => {});
+    this.notificationAudio.play().catch((e) => console.error('Audio prevented', e));
   }
 
   @HostListener('window:resize')

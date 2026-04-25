@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { UserPublicProfileDTO } from '../models/USER/UserPublicProfileDTO';
@@ -28,7 +28,7 @@ export class UserService {
   private _currentUserProfile = signal<UserPublicProfileDTO | null>(null);
   readonly currentUserProfile = this._currentUserProfile.asReadonly();
 
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
 
   // --- 2. CURRENT USER PROFILE ACTIONS ---
 
@@ -107,16 +107,16 @@ export class UserService {
     return this.http.get<SuggestedUser[]>(`${this.usersUrl}/suggested`);
   }
 
-  getAllUsers(page: number = 0, size: number = 10): Observable<Page<any>> {
-    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
-    return this.http.get<Page<any>>(`${this.usersUrl}/explore`, { params });
+  getAllUsers(page = 0, size = 10): Observable<Page<unknown>> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<Page<unknown>>(`${this.usersUrl}/explore`, { params });
   }
 
-  searchUsers(query: string, page: number = 0, size: number = 10): Observable<Page<any>> {
+  searchUsers(query: string, page = 0, size = 10): Observable<Page<unknown>> {
     let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
 
     if (query) params = params.set('q', query);
 
-    return this.http.get<Page<any>>(`${this.usersUrl}/search`, { params });
+    return this.http.get<Page<unknown>>(`${this.usersUrl}/search`, { params });
   }
 }

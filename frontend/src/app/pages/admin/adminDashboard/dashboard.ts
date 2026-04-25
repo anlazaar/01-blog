@@ -24,6 +24,10 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
+export interface DashboardUser { id: string; username: string; email: string; role: string; banned: boolean; avatarUrl?: string; }
+export interface DashboardPost { id: string; title: string; author: { id: string; username: string }; createdAt: string; }
+export interface DashboardReport { id: string; reason: string; resolved: boolean; reporter: { username: string }; reportedUser: { id: string; username: string }; }
+
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
@@ -57,9 +61,9 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
   isLoading = signal(false);
 
   // Data Lists
-  users = signal<any[]>([]);
-  posts = signal<any[]>([]);
-  reports = signal<any[]>([]);
+  users = signal<DashboardUser[]>([]);
+  posts = signal<DashboardPost[]>([]);
+  reports = signal<DashboardReport[]>([]);
 
   // Pagination State
   // We group this to keep the namespace clean
@@ -271,7 +275,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     this.adminService.getAllUsers(pag.users.page, pag.users.size).subscribe({
       next: (res) => {
         // Append new data
-        this.users.update((current) => [...current, ...res.content]);
+        this.users.update((current) => [...current, ...(res.content as DashboardUser[])]);
 
         // Update pagination cursor
         this.pagination.update((p) => ({
@@ -298,7 +302,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
 
     this.adminService.getAllPosts(pag.posts.page, pag.posts.size).subscribe({
       next: (res) => {
-        this.posts.update((current) => [...current, ...res.content]);
+        this.posts.update((current) => [...current, ...(res.content as DashboardPost[])]);
 
         this.pagination.update((p) => ({
           ...p,
@@ -322,11 +326,12 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
 
     this.isLoading.set(true);
     this.adminService.getAllReports().subscribe({
-      next: (res: any) => {
+      next: (res: unknown) => {
         // Handle varying API responses (Page vs List)
+        const typedRes = res as { content?: DashboardReport[] } | DashboardReport[];
         const data =
-          res.content && Array.isArray(res.content) ? res.content : Array.isArray(res) ? res : [];
-        this.reports.set(data);
+          'content' in typedRes && Array.isArray(typedRes.content) ? typedRes.content : Array.isArray(typedRes) ? typedRes : [];
+        this.reports.set(data as DashboardReport[]);
         this.isLoading.set(false);
       },
       error: () => this.isLoading.set(false),
@@ -374,7 +379,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     });
   }
 
-  toggleRole(user: any) {
+  toggleRole(user: DashboardUser) {
     const newRole = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
     const action = user.role === 'ADMIN' ? 'Demote' : 'Promote';
 

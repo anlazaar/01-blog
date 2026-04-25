@@ -81,10 +81,12 @@ export class Register {
     this.errorMessage.set('');
 
     // Exclude repeatPassword from payload
-    const { repeatPassword, ...dataToSend } = this.registerForm.value;
+    const dataToSend = { ...this.registerForm.value };
+    delete dataToSend.repeatPassword;
 
     this.auth.apiCommunicator('/register', dataToSend).subscribe({
-      next: (res) => {
+      next: (response) => {
+        const res = response as { token: string; isCompleted: boolean; };
         // 1. Save Token
         this.tokenService.setToken(res.token);
 

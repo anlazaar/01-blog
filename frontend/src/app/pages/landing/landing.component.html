@@ -30,7 +30,9 @@
         <!-- Social Proof -->
         <div class="social-proof animate-fade-in delay-4">
           <div class="avatar-group">
-            <img *ngFor="let avatar of avatars" [src]="avatar" alt="Writer Avatar" class="avatar" />
+            @for (avatar of avatars; track avatar) {
+              <img [src]="avatar" alt="Writer Avatar" class="avatar" />
+            }
             <div class="avatar more-avatar">+</div>
           </div>
           <div class="proof-text">
@@ -81,13 +83,13 @@
   <section class="trending-topics">
     <div class="marquee-container">
       <div class="marquee-content">
-        <!-- Using ng-container to cleanly duplicate for infinite scroll -->
-        <ng-container *ngFor="let i of [1, 2]">
-          <ng-container *ngFor="let topic of topics">
+        <!-- Using @for to cleanly duplicate for infinite scroll -->
+        @for (i of [1, 2]; track i) {
+          @for (topic of topics; track topic) {
             <span class="topic-pill">{{ topic }}</span>
             <span class="topic-separator">✦</span>
-          </ng-container>
-        </ng-container>
+          }
+        }
       </div>
     </div>
   </section>

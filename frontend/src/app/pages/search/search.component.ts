@@ -1,4 +1,6 @@
 import { Component, inject, OnInit, signal, DestroyRef } from '@angular/core';
+
+export interface SearchUser { id: string; username: string; firstname: string; lastname: string; avatarUrl?: string; bio?: string; }
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -48,7 +50,7 @@ export class SearchComponent implements OnInit {
 
   // --- DATA SIGNALS ---
   posts = signal<PostResponse[]>([]);
-  users = signal<any[]>([]);
+  users = signal<SearchUser[]>([]);
 
   // --- PAGINATION ---
   page = 0;
@@ -126,8 +128,8 @@ export class SearchComponent implements OnInit {
     } else {
       this.userService.searchUsers(this.searchQuery(), this.page, this.SIZE).subscribe({
         next: (res) => {
-          if (this.page === 0) this.users.set(res.content);
-          else this.users.update((prev) => [...prev, ...res.content]);
+          if (this.page === 0) this.users.set(res.content as SearchUser[]);
+          else this.users.update((prev) => [...prev, ...(res.content as SearchUser[])]);
 
           this.hasMore.set(res.page.number < res.page.totalPages - 1);
           this.loading.set(false);

@@ -1,5 +1,5 @@
 // 1. THIS MUST BE THE FIRST LINE
-(window as any).global = window;
+(window as typeof window & { global: Window }).global = window;
 
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';

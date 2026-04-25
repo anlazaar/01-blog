@@ -147,7 +147,7 @@ export class AddPost implements OnInit, OnDestroy {
       });
   }
 
-  private populateForm(post: any) {
+  private populateForm(post: { title: string; mediaType: string; tags?: string[]; mediaUrl?: string; id: string }) {
     this.postForm.patchValue({
       title: post.title,
       description: '',
@@ -178,7 +178,7 @@ export class AddPost implements OnInit, OnDestroy {
       ],
       editorProps: { attributes: { class: 'medium-editor-content' } },
       onUpdate: ({ editor }) => {
-        const markdown = (editor.storage as any).markdown.getMarkdown();
+        const markdown = (editor.storage as unknown as { markdown: { getMarkdown: () => string } }).markdown.getMarkdown();
         this.postForm.patchValue({ description: markdown });
       },
     });
@@ -372,12 +372,12 @@ export class AddPost implements OnInit, OnDestroy {
     const title = this.postForm.get('title')?.value;
     const currentMediaType = this.postForm.get('mediaType')?.value;
 
-    let saveObservable: Observable<any>;
+    let saveObservable: Observable<unknown>;
     const currentId = this.currentPostId();
 
     if (this.isEditMode() && currentId) {
       // --- Update ---
-      const updatePayload: any = {
+      const updatePayload: Record<string, unknown> = {
         title: title,
         description: summary,
         mediaType: currentMediaType,
@@ -385,12 +385,12 @@ export class AddPost implements OnInit, OnDestroy {
         tags: this.tags(),
       };
 
-      let preUpdateAction: Observable<any> = of(null);
+      let preUpdateAction: Observable<unknown> = of(null);
 
       if (this.selectedFile) {
         preUpdateAction = this.postService.uploadEditorMedia(this.selectedFile).pipe(
-          tap((res) => {
-            updatePayload.mediaUrl = res.url;
+          tap((res: { url: string }) => {
+            updatePayload['mediaUrl'] = res.url;
             this.existingMediaUrl = res.url;
           })
         );
@@ -416,10 +416,11 @@ export class AddPost implements OnInit, OnDestroy {
       }
 
       saveObservable = this.postService.initPost(formData).pipe(
-        tap((res: any) => {
-          this.currentPostId.set(res.id);
-          if (res.mediaUrl) {
-            this.existingMediaUrl = res.mediaUrl;
+        tap((res: unknown) => {
+          const r = res as { id: string; mediaUrl?: string };
+          this.currentPostId.set(r.id);
+          if (r.mediaUrl) {
+            this.existingMediaUrl = r.mediaUrl;
           }
         })
       );
@@ -456,7 +457,7 @@ export class AddPost implements OnInit, OnDestroy {
       });
   }
 
-  private uploadChunksSequentially(postId: string, content: string): Observable<any> {
+  private uploadChunksSequentially(postId: string, content: string): Observable<unknown> {
     const CHUNK_SIZE = 4000;
     const totalChunks = Math.ceil(content.length / CHUNK_SIZE);
     const chunks: { index: number; content: string }[] = [];

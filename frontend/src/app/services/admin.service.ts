@@ -30,9 +30,9 @@ export class AdminService {
   }
 
   // === USERS ===
-  getAllUsers(page: number, size: number): Observable<Page<any>> {
+  getAllUsers(page: number, size: number): Observable<Page<unknown>> {
     const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
-    return this.http.get<Page<any>>(`${this.apiUrl}/users`, { params });
+    return this.http.get<Page<unknown>>(`${this.apiUrl}/users`, { params });
   }
 
   banUser(id: string): Observable<string> {
@@ -44,14 +44,14 @@ export class AdminService {
   }
 
   // === POSTS ===
-  getAllPosts(page: number, size: number): Observable<Page<any>> {
+  getAllPosts(page: number, size: number): Observable<Page<unknown>> {
     const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
-    return this.http.get<Page<any>>(`${this.apiUrl}/posts`, { params });
+    return this.http.get<Page<unknown>>(`${this.apiUrl}/posts`, { params });
   }
 
   // === REPORTS ===
-  getAllReports(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/reports`);
+  getAllReports(): Observable<unknown[]> {
+    return this.http.get<unknown[]>(`${this.apiUrl}/reports`);
   }
 
   resolveReport(id: string): Observable<string> {

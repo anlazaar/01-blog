@@ -27,22 +27,18 @@ public class RedisCacheConfig {
         @Bean
         public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
 
-                // 1. Configure Jackson to embed class types in JSON (required for generic
-                // Lists/Pages)
                 PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
                                 .allowIfBaseType(Object.class)
                                 .build();
 
                 ObjectMapper om = new ObjectMapper();
-                om.registerModule(new JavaTimeModule()); // Fixes Java 8 Date/Time parsing
+                om.registerModule(new JavaTimeModule());
                 om.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
 
-                // 2. Use Jackson2JsonRedisSerializer instead of the deprecated Generic version
                 Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(om, Object.class);
 
-                // 3. Configure Cache behaviors
                 RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                                .entryTtl(Duration.ofHours(2)) // Standard TTL
+                                .entryTtl(Duration.ofHours(2))
                                 .serializeKeysWith(RedisSerializationContext.SerializationPair
                                                 .fromSerializer(new StringRedisSerializer()))
                                 .serializeValuesWith(

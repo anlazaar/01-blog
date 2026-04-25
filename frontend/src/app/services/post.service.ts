@@ -29,7 +29,7 @@ export class PostService {
     return this.http.post<PostResponse>(`${this.POSTS_URL}/init`, formData);
   }
 
-  updatePost(id: string, data: any): Observable<PostResponse> {
+  updatePost(id: string, data: unknown): Observable<PostResponse> {
     return this.http.put<PostResponse>(`${this.POSTS_URL}/${id}`, data);
   }
 
@@ -67,8 +67,8 @@ export class PostService {
     return this.http.get<SinglePostResponse>(`${this.POSTS_URL}/${id}`);
   }
 
-  getAllPosts(page: number = 0, size: number = 4): Observable<Page<PostResponse>> {
-    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+  getAllPosts(page = 0, size = 4): Observable<Page<PostResponse>> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     return this.http.get<Page<PostResponse>>(this.POSTS_URL, { params });
   }
 
@@ -150,8 +150,8 @@ export class PostService {
     tags?: string[],
     liked?: boolean,
     followed?: boolean,
-    page: number = 0,
-    size: number = 10
+    page = 0,
+    size = 10
   ): Observable<Page<PostResponse>> {
     let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
 

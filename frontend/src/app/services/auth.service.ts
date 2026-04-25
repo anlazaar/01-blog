@@ -11,7 +11,7 @@ export class ApiService {
   private baseUrl = `${environment.apiUrl}/auth`;
 
   // Generic poster for auth endpoints (login, register, verify, etc.)
-  apiCommunicator(path: string, data: any): Observable<any> {
+  apiCommunicator(path: string, data: unknown): Observable<unknown> {
     return this.http.post(`${this.baseUrl}${path}`, data);
   }
 }

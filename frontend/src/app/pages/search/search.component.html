@@ -8,7 +8,7 @@
       placeholder="Search for articles or people..."
       [value]="searchQuery()"
       (input)="onSearchInput($event)"
-      autofocus
+     
     />
   </div>
 
@@ -59,7 +59,7 @@
         <div class="post-meta-header">
           <div class="author-info">
             @if(p.author.avatarUrl) {
-            <img [src]="'http://localhost:8080' + p.author.avatarUrl" class="avatar-img" />
+            <img [src]="'http://localhost:8080' + p.author.avatarUrl" alt="Author avatar" class="avatar-img" />
             } @else {
             <div class="author-avatar-placeholder">
               {{ p.author.username.charAt(0) | uppercase }}
@@ -99,7 +99,7 @@
       <div class="user-card" [routerLink]="['/profile', u.id]">
         <div class="user-card-left">
           @if(u.avatarUrl) {
-          <img [src]="'http://localhost:8080' + u.avatarUrl" class="large-avatar" />
+          <img [src]="'http://localhost:8080' + u.avatarUrl" alt="User avatar" class="large-avatar" />
           } @else {
           <div class="large-avatar-placeholder">
             {{ u.username.charAt(0) | uppercase }}

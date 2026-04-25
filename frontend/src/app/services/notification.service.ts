@@ -86,7 +86,7 @@ export class NotificationService {
 
       eventSource.onopen = () => console.log('SSE Connection Opened');
 
-      eventSource.addEventListener('notification', (event: any) => {
+      eventSource.addEventListener('notification', (event: MessageEvent) => {
         // Run inside Angular Zone to ensure Change Detection works
         this._zone.run(() => {
           try {

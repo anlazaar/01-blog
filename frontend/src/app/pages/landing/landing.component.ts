@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 
@@ -33,7 +33,7 @@ export class Landing {
     'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=64&h=64&q=80',
   ];
 
-  constructor(private router: Router) {}
+  private router = inject(Router);
 
   getStarted() {
     this.router.navigate(['/auth/register']);
