@@ -1,0 +1,7 @@
+.right-sidebar-sticky {
+  position: sticky;
+  top: 88px;
+  max-height: calc(100vh - 88px);
+  overflow-y: auto;
+  padding-bottom: 24px;
+}

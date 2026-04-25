@@ -121,7 +121,7 @@ export class AddPost implements OnInit, OnDestroy {
   // Added strict Validators mapped to DTO requirements
   postForm = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
-    description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(50000)]], // description holds full body here
+    description: ['', [Validators.required, Validators.minLength(10)]],
     mediaType: ['IMAGE'],
   });
 
@@ -147,7 +147,13 @@ export class AddPost implements OnInit, OnDestroy {
       });
   }
 
-  private populateForm(post: { title: string; mediaType: string; tags?: string[]; mediaUrl?: string; id: string }) {
+  private populateForm(post: {
+    title: string;
+    mediaType: string;
+    tags?: string[];
+    mediaUrl?: string;
+    id: string;
+  }) {
     this.postForm.patchValue({
       title: post.title,
       description: '',
@@ -172,13 +178,15 @@ export class AddPost implements OnInit, OnDestroy {
       extensions: [
         StarterKit,
         Image.configure({ inline: false, allowBase64: false }),
-        Markdown.configure({ html: true, transformPastedText: true, transformCopiedText: true }),
+        Markdown.configure({ html: false, transformPastedText: true, transformCopiedText: true }),
         Link.configure({ openOnClick: false, autolink: true }),
         Placeholder.configure({ placeholder: 'Tell your story...' }),
       ],
       editorProps: { attributes: { class: 'medium-editor-content' } },
       onUpdate: ({ editor }) => {
-        const markdown = (editor.storage as unknown as { markdown: { getMarkdown: () => string } }).markdown.getMarkdown();
+        const markdown = (
+          editor.storage as unknown as { markdown: { getMarkdown: () => string } }
+        ).markdown.getMarkdown();
         this.postForm.patchValue({ description: markdown });
       },
     });
