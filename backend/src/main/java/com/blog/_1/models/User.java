@@ -57,7 +57,7 @@ public class User extends BaseEntity {
     private String avatarUrl;
 
     @Column(nullable = false)
-    private boolean completedAccount;
+    private boolean completedAccount = false;
 
     @Column(nullable = false)
     private boolean banned = false;

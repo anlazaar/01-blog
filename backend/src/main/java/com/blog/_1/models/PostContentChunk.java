@@ -6,6 +6,8 @@ import lombok.*;
 import java.io.Serializable;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "post_content_chunks", indexes = {
         @Index(name = "idx_content_chunks_post_id", columnList = "post_id"),
@@ -30,5 +32,6 @@ public class PostContentChunk implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
+    @JsonIgnore
     private Post post;
 }

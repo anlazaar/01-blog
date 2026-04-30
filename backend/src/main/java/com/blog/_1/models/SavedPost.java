@@ -4,13 +4,15 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "saved_posts", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "user_id", "post_id" })
+                @UniqueConstraint(columnNames = { "user_id", "post_id" })
 }, indexes = {
-        @Index(name = "idx_saved_posts_user_id", columnList = "user_id"),
-        @Index(name = "idx_saved_posts_post_id", columnList = "post_id"),
-        @Index(name = "idx_saved_posts_user_post", columnList = "user_id, post_id")
+                @Index(name = "idx_saved_posts_user_id", columnList = "user_id"),
+                @Index(name = "idx_saved_posts_post_id", columnList = "post_id"),
+                @Index(name = "idx_saved_posts_user_post", columnList = "user_id, post_id")
 })
 @Getter
 @Setter
@@ -19,15 +21,17 @@ import java.util.UUID;
 @Builder
 public class SavedPost extends BaseEntity {
 
-    @Id
-    @GeneratedValue
-    private UUID id;
+        @Id
+        @GeneratedValue
+        private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "user_id", nullable = false)
+        @JsonIgnore
+        private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "post_id", nullable = false)
+        @JsonIgnore
+        private Post post;
 }

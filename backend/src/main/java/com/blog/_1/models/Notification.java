@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "notifications", indexes = {
         @Index(name = "idx_notification_user_id", columnList = "user_id"),
@@ -20,15 +22,19 @@ public class Notification extends BaseEntity {
     @GeneratedValue
     private UUID id;
 
+    @Column(nullable = false, length = 500)
     private String message;
 
+    @Column(nullable = false)
     private boolean read = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User receiver;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
+    @JsonIgnore
     private Post post;
 }

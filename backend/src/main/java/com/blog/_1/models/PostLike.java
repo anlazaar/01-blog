@@ -4,13 +4,15 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "post_likes", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "post_id", "user_id" })
+                @UniqueConstraint(columnNames = { "post_id", "user_id" })
 }, indexes = {
-        @Index(name = "idx_post_likes_post_id", columnList = "post_id"),
-        @Index(name = "idx_post_likes_user_id", columnList = "user_id"),
-        @Index(name = "idx_post_likes_user_post", columnList = "user_id, post_id")
+                @Index(name = "idx_post_likes_post_id", columnList = "post_id"),
+                @Index(name = "idx_post_likes_user_id", columnList = "user_id"),
+                @Index(name = "idx_post_likes_user_post", columnList = "user_id, post_id")
 })
 @Getter
 @Setter
@@ -18,15 +20,17 @@ import java.util.UUID;
 @AllArgsConstructor
 public class PostLike extends BaseEntity {
 
-    @Id
-    @GeneratedValue
-    private UUID id;
+        @Id
+        @GeneratedValue
+        private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "post_id")
-    private Post post;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "post_id", nullable = false)
+        @JsonIgnore
+        private Post post;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "user_id", nullable = false)
+        @JsonIgnore
+        private User user;
 }
