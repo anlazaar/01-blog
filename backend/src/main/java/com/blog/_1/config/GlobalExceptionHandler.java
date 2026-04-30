@@ -19,7 +19,6 @@ import io.jsonwebtoken.MalformedJwtException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Validation errors (@Valid)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidationErrors(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();

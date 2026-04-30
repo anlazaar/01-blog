@@ -7,6 +7,10 @@ import java.util.UUID;
 @Entity
 @Table(name = "saved_posts", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "user_id", "post_id" })
+}, indexes = {
+        @Index(name = "idx_saved_posts_user_id", columnList = "user_id"),
+        @Index(name = "idx_saved_posts_post_id", columnList = "post_id"),
+        @Index(name = "idx_saved_posts_user_post", columnList = "user_id, post_id")
 })
 @Getter
 @Setter

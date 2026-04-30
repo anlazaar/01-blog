@@ -1,11 +1,13 @@
 package com.blog._1.controllers;
 
-import java.util.Map;
-import java.util.UUID;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import com.blog._1.services.SubscriptionService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/subscriptions")
@@ -17,12 +19,12 @@ public class SubscriptionController {
     @PostMapping("/{id}/follow")
     public ResponseEntity<Map<String, String>> follow(@PathVariable UUID id) {
         subscriptionService.subscribe(id);
-        return ResponseEntity.ok(Map.of("Res", "Followed successfully"));
+        return ResponseEntity.ok(Map.of("res", "Followed successfully"));
     }
 
     @PostMapping("/{id}/unfollow")
     public ResponseEntity<Map<String, String>> unfollow(@PathVariable UUID id) {
         subscriptionService.unsubscribe(id);
-        return ResponseEntity.ok(Map.of("Res", "Unfollowed successfully"));
+        return ResponseEntity.ok(Map.of("res", "Unfollowed successfully"));
     }
 }

@@ -5,7 +5,11 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "notifications")
+@Table(name = "notifications", indexes = {
+        @Index(name = "idx_notification_user_id", columnList = "user_id"),
+        @Index(name = "idx_notification_post_id", columnList = "post_id"),
+        @Index(name = "idx_notification_user_read", columnList = "user_id, read")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,11 +24,11 @@ public class Notification extends BaseEntity {
 
     private boolean read = false;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User receiver;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
     private Post post;
 }

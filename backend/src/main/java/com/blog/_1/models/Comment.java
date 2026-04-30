@@ -5,7 +5,10 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "comments")
+@Table(name = "comments", indexes = {
+        @Index(name = "idx_comments_post_id", columnList = "post_id"),
+        @Index(name = "idx_comments_author_id", columnList = "author_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,7 +22,7 @@ public class Comment extends BaseEntity {
     @Column(nullable = false, length = 500)
     private String text;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
     private Post post;
 

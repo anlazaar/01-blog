@@ -53,7 +53,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
 
-                        .requestMatchers("/ws/**").permitAll()
+                        // .requestMatchers("/ws/**").permitAll()
 
                         // USER ONLY ROUTES (Creation)
                         .requestMatchers(HttpMethod.POST, "/api/posts/media/upload").hasAnyRole("USER", "ADMIN")

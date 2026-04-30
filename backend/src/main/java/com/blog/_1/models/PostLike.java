@@ -5,7 +5,13 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "post_likes", uniqueConstraints = @UniqueConstraint(columnNames = { "post_id", "user_id" }))
+@Table(name = "post_likes", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "post_id", "user_id" })
+}, indexes = {
+        @Index(name = "idx_post_likes_post_id", columnList = "post_id"),
+        @Index(name = "idx_post_likes_user_id", columnList = "user_id"),
+        @Index(name = "idx_post_likes_user_post", columnList = "user_id, post_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor

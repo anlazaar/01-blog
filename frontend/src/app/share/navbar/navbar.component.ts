@@ -25,6 +25,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { environment } from '../../../environments/environment';
+import { computed } from '@angular/core';
 
 @Component({
   selector: 'app-navbar',
@@ -62,8 +63,17 @@ export class NavbarComponent {
   isMobile = signal(window.innerWidth < 768);
 
   // Profile data is specific to this view, so we keep it local
-  username = signal<string | null>(null);
-  avatarUrl = signal<string | null>(null);
+  profile = this.userService.currentUserProfile;
+
+  username = computed(() => this.profile()?.username ?? null);
+
+  avatarUrl = computed(() => {
+    const avatar = this.profile()?.avatarUrl;
+
+    return avatar
+      ? `${environment.apiUrl.replace('/api', '')}${avatar}?v=${Date.now()}`
+      : '/default-avatar.jpg';
+  });
 
   // --- 2. GLOBAL STATE (Aliased) ---
   // We do NOT create a local signal for notifications.
@@ -94,53 +104,7 @@ export class NavbarComponent {
         }
       } else {
         this.userService.clearCurrentUserProfile();
-        this.resetState();
       }
-    });
-
-    // Effect 2: whenever profile/avatar changes, update navbar immediately
-    effect(() => {
-      const profile = this.userService.currentUserProfile();
-
-      if (!profile) {
-        this.username.set(null);
-        this.avatarUrl.set(null);
-        return;
-      }
-
-      this.username.set(profile.username);
-
-      const avatar = profile.avatarUrl
-        ? `${environment.apiUrl.replace('/api', '')}${profile.avatarUrl}?v=${Date.now()}`
-        : '/default-avatar.jpg';
-
-      this.avatarUrl.set(avatar);
-    });
-  }
-
-  // --- 4. DATA LOADING & SSE ---
-
-  private loadProfileData(uid: string) {
-    // A. Load Avatar & Username
-    this.userService.getUserPublicProfile(uid).subscribe({
-      next: (res) => {
-        const avatar = res.avatarUrl
-          ? 'http://localhost:8080' + res.avatarUrl
-          : '/default-avatar.jpg';
-
-        this.avatarUrl.set(avatar);
-        this.username.set(res.username);
-
-        // B. If user is Normal User (not Admin), Initialize Notifications
-        if (!this.isAdmin()) {
-          // 1. Trigger Service to fetch initial list
-          this.notificationService.loadNotifications();
-
-          // 2. Start listening for live updates
-          this.subscribeToRealTimeNotifications();
-        }
-      },
-      error: (err) => console.error('Error loading profile', err),
     });
   }
 
@@ -176,12 +140,6 @@ export class NavbarComponent {
     this.notificationService.clearState(); // Ensure old notifs are gone
     this.closeMobileMenu();
     this.router.navigate(['auth/login']);
-  }
-
-  private resetState() {
-    this.username.set(null);
-    this.avatarUrl.set(null);
-    // Notification service state is cleared in logout()
   }
 
   /* --- UI Helpers --- */

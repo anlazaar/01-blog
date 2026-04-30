@@ -11,15 +11,13 @@ import { Page } from '../../models/Page';
 // Components
 import { PostOptionsMenuComponent } from '../../share/PostOptionsMenu/post-options-menu';
 import { ConfirmDialogComponent } from '../../share/ConfirmDialogComponent/confirm-dialog';
-import { SuggestedUsersComponent } from '../../share/SuggestedAccounts/suggested-users';
-import { PopularTagsComponent } from '../../share/popular-tags/popular-tags';
 
 // Angular Material Imports
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { RightSidebarComponent } from "../../share/right-sidebar/right-sidebar";
+import { RightSidebarComponent } from '../../share/right-sidebar/right-sidebar';
 
 @Component({
   selector: 'app-home',
@@ -28,14 +26,12 @@ import { RightSidebarComponent } from "../../share/right-sidebar/right-sidebar";
     CommonModule,
     RouterLink,
     PostOptionsMenuComponent,
-    SuggestedUsersComponent,
-    PopularTagsComponent,
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    RightSidebarComponent
-],
+    RightSidebarComponent,
+  ],
   templateUrl: './home.html',
   styleUrl: './home.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

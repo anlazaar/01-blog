@@ -1,23 +1,22 @@
 package com.blog._1.controllers;
 
-import java.util.List;
-import java.util.UUID;
+import com.blog._1.dto.admin.DashboardStatsDTO;
+import com.blog._1.dto.post.PostResponse;
+import com.blog._1.dto.report.ReportResponse;
+import com.blog._1.dto.user.AdminUserDTO;
+import com.blog._1.models.Role;
+import com.blog._1.services.DashboardService;
+import com.blog._1.services.PostService;
+import com.blog._1.services.ReportService;
+import com.blog._1.services.UserService;
+import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.blog._1.dto.user.AdminUserDTO;
-import com.blog._1.dto.admin.DashboardStatsDTO;
-import com.blog._1.dto.post.PostResponse;
-import com.blog._1.dto.report.ReportResponse;
-import com.blog._1.models.Role;
-import com.blog._1.services.DashboardService; // New Service
-import com.blog._1.services.PostService;
-import com.blog._1.services.ReportService;
-import com.blog._1.services.UserService;
-
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -27,11 +26,10 @@ public class AdminController {
     private final UserService userService;
     private final ReportService reportService;
     private final PostService postService;
-    private final DashboardService dashboardService; // Injected new service
+    private final DashboardService dashboardService;
 
     @GetMapping("/stats")
     public ResponseEntity<DashboardStatsDTO> getDashboardStats() {
-        // Logic moved to DashboardService to use efficient SQL aggregation
         return ResponseEntity.ok(dashboardService.getDashboardStats());
     }
 
@@ -39,11 +37,7 @@ public class AdminController {
     public ResponseEntity<Page<AdminUserDTO>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-
-        // Optimization: utilize pagination handled by the service
-        // and map entities to DTOs
-        return ResponseEntity.ok(userService.getAllUsers(page, size)
-                .map(AdminUserDTO::from));
+        return ResponseEntity.ok(userService.getAllUsers(page, size).map(AdminUserDTO::from));
     }
 
     @PatchMapping("/users/{id}/ban")
@@ -56,6 +50,14 @@ public class AdminController {
     public ResponseEntity<String> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
         return ResponseEntity.ok("User deleted");
+    }
+
+    @PatchMapping("/users/{id}/role")
+    public ResponseEntity<String> updateUserRole(
+            @PathVariable UUID id,
+            @RequestParam Role role) {
+        userService.updateUserRole(id, role);
+        return ResponseEntity.ok("User role updated to " + role);
     }
 
     @GetMapping("/posts")
@@ -76,14 +78,5 @@ public class AdminController {
     public ResponseEntity<String> resolveReport(@PathVariable UUID id) {
         reportService.resolveReport(id);
         return ResponseEntity.ok("Report resolved");
-    }
-
-    @PatchMapping("/users/{id}/role")
-    public ResponseEntity<String> updateUserRole(
-            @PathVariable UUID id,
-            @RequestParam Role role) {
-
-        userService.updateUserRole(id, role);
-        return ResponseEntity.ok("User role updated to " + role);
     }
 }

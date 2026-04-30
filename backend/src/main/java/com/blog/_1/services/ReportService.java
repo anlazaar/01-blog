@@ -9,7 +9,6 @@ import com.blog._1.repositories.ReportRepository;
 import com.blog._1.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
@@ -23,8 +22,7 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
 
-    public ReportResponse createReport(ReportCreateRequest req) {
-        User reporter = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public ReportResponse createReport(ReportCreateRequest req, User reporter) {
         User reportedUser = userRepository.getReferenceById(req.getReportedUserId());
 
         Report report = new Report();

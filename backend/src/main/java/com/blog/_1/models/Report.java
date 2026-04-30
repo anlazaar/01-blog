@@ -5,7 +5,11 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "reports")
+@Table(name = "reports", indexes = {
+        @Index(name = "idx_reports_reporter_id", columnList = "reporter_id"),
+        @Index(name = "idx_reports_reported_id", columnList = "reported_id"),
+        @Index(name = "idx_reports_resolved", columnList = "resolved")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,13 +23,14 @@ public class Report extends BaseEntity {
     @Column(nullable = false, length = 500)
     private String reason;
 
-    @ManyToOne
-    @JoinColumn(name = "reporter_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reporter_id", nullable = false)
     private User reporter;
 
-    @ManyToOne
-    @JoinColumn(name = "reported_user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reported_user_id", nullable = false)
     private User reportedUser;
 
+    @Column(nullable = false)
     private boolean resolved = false;
 }

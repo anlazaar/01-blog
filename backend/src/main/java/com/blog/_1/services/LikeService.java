@@ -40,6 +40,7 @@ public class LikeService {
         like.setUser(userRef);
 
         likeRepository.save(like);
+        postRepository.incrementLikeCount(postId);
     }
 
     @Transactional
@@ -47,8 +48,12 @@ public class LikeService {
             @CacheEvict(value = "single_post", key = "#postId"),
             @CacheEvict(value = "post_pages", allEntries = true)
     })
+
     public void unlike(UUID postId, UUID userId) {
-        likeRepository.deleteByPostIdAndUserId(postId, userId);
+        if (likeRepository.existsByPostIdAndUserId(postId, userId)) {
+            likeRepository.deleteByPostIdAndUserId(postId, userId);
+            postRepository.decrementLikeCount(postId);
+        }
     }
 
     // --- Read Operations ---

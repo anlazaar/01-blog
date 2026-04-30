@@ -5,10 +5,12 @@ import com.blog._1.dto.comment.CommentResponse;
 import com.blog._1.models.User;
 import com.blog._1.services.CommentService;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -22,12 +24,11 @@ public class CommentController {
     @PostMapping("/post/{postId}")
     public ResponseEntity<CommentResponse> createComment(
             @PathVariable UUID postId,
-            @RequestBody CommentCreateRequest request) {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            @RequestBody CommentCreateRequest request,
+            @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(commentService.create(postId, currentUser.getId(), request));
     }
 
-    // OPTIMIZATION: Added Pagination for comments
     @GetMapping("/post/{postId}")
     public ResponseEntity<List<CommentResponse>> getComments(
             @PathVariable UUID postId,
@@ -37,11 +38,16 @@ public class CommentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteComment(@PathVariable UUID id, Authentication auth) {
-        User currentUser = (User) auth.getPrincipal();
-        boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    public ResponseEntity<String> deleteComment(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal User currentUser,
+            Authentication auth) {
+        boolean isAdmin = auth.getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         commentService.delete(id, currentUser.getId(), isAdmin);
+
         return ResponseEntity.ok("Comment deleted");
     }
 }

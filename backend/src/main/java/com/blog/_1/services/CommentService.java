@@ -7,6 +7,8 @@ import com.blog._1.models.Comment;
 import com.blog._1.repositories.CommentRepository;
 import com.blog._1.repositories.PostRepository;
 import com.blog._1.repositories.UserRepository;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.cache.CacheManager;
@@ -32,6 +34,7 @@ public class CommentService {
     // Injecting CacheManager for programmatic eviction in the delete method
     private final CacheManager cacheManager;
 
+    @Transactional
     @Caching(evict = {
             @CacheEvict(value = "single_post", key = "#postId"),
             @CacheEvict(value = "post_pages", allEntries = true) // Wipes paginated lists so commentCount updates
@@ -46,6 +49,7 @@ public class CommentService {
         comment.setAuthor(author);
 
         Comment saved = commentRepository.save(comment);
+        postRepository.incrementCommentCount(postId);
         return mapToResponse(saved);
     }
 
@@ -57,6 +61,7 @@ public class CommentService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void delete(UUID commentId, UUID userId, boolean isAdmin) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
@@ -69,6 +74,7 @@ public class CommentService {
         UUID postId = comment.getPost().getId();
 
         commentRepository.delete(comment);
+        postRepository.decrementCommentCount(postId);
 
         // Programmatically evict the cache since postId is not a method parameter
         var singlePostCache = cacheManager.getCache("single_post");

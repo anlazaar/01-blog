@@ -7,7 +7,9 @@ import java.io.Serializable;
 import java.util.UUID;
 
 @Entity
-@Table(name = "hashtags")
+@Table(name = "hashtags", indexes = {
+        @Index(name = "idx_hashtags_name", columnList = "name")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,9 +21,6 @@ public class Hashtag implements Serializable {
     @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 20)
     private String name;
-
-    // @ManyToMany(mappedBy = "hashtags")
-    // private List<Post> posts;
 }

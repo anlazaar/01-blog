@@ -24,7 +24,10 @@ public class LikeController {
             @PathVariable UUID postId,
             @AuthenticationPrincipal User currentUser) {
 
-        // Optimization: Pass the user ID directly to the service
+        if (currentUser == null) {
+            return ResponseEntity.status(401).build();
+        }
+
         likeService.like(postId, currentUser.getId());
         return ResponseEntity.ok(Map.of("message", "Post liked"));
     }
@@ -33,6 +36,10 @@ public class LikeController {
     public ResponseEntity<Map<String, String>> unlike(
             @PathVariable UUID postId,
             @AuthenticationPrincipal User currentUser) {
+
+        if (currentUser == null) {
+            return ResponseEntity.status(401).build();
+        }
 
         likeService.unlike(postId, currentUser.getId());
         return ResponseEntity.ok(Map.of("message", "Post unliked"));
