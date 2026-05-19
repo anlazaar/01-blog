@@ -9,7 +9,12 @@
   <header class="profile-header">
     <div class="header-content">
       <div class="info-group">
-        <h1 class="profile-name">{{ u.lastname }} {{ u.firstname }}</h1>
+        <h1 class="profile-name" style="display: flex; align-items: center; gap: 6px;">
+          {{ u.lastname }} {{ u.firstname }}
+          @if (u.admin) {
+          <mat-icon style="color: #FFD700; font-size: 28px; width: 28px; height: 28px; filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.4));" title="Verified Admin">verified</mat-icon>
+          }
+        </h1>
         <p class="profile-username">@{{ u.username }}</p>
 
         @if (u.bio) {
@@ -54,7 +59,17 @@
             <button mat-flat-button color="primary" class="follow-btn" (click)="toggleFollow()">
               Follow
             </button>
-            } }
+            }
+
+            <a
+              mat-button
+              color="warn"
+              [routerLink]="['/report/user', u.id]"
+              class="text-btn report-btn"
+            >
+              Report
+            </a>
+            }
           </div>
         </div>
       </div>

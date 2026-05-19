@@ -40,8 +40,10 @@
           [postId]="postData.id"
           [canEdit]="currentUserId() === postData.author.id || isAdmin()"
           [canReport]="currentUserId() !== postData.author.id && !isAdmin()"
-          (delete)="onDelete(postData)"
+          [canArchieve]="isAdmin()"
+          (archive)="onArchive(postData)"
           (report)="onReport(postData.author.id)"
+          (delete)="onDelete(postData)"
         ></app-post-options-menu>
         }
       </div>
@@ -134,7 +136,7 @@
             rows="1"
             maxlength="500"
           ></textarea>
-          <div class="char-counter" style="text-align: right; font-size: 12px; color: #888;">
+          <div class="char-counter" style="text-align: right; font-size: 12px; color: #888">
             {{ newComment().length }} / 500
           </div>
 
@@ -153,20 +155,34 @@
         <p class="empty-responses">No responses yet.</p>
         } @else { @for (c of postData.comments; track c.id) {
         <div class="response-item">
-          <div class="response-header">
-            <div class="response-author" [routerLink]="['/profile', c.author.id]">
-              <img
-                [src]="
-                  c.author.avatarUrl
-                    ? 'http://localhost:8080' + c.author.avatarUrl
-                    : '/default-avatar.jpg'
-                "
-                alt="Author avatar"
-              />
-              <span class="response-name">{{ c.author.username }}</span>
-              <span class="response-date">{{ c.createdAt | date : 'MMM d' }}</span>
+          <div class="response-top">
+            <div class="response-header">
+              <div class="response-author" [routerLink]="['/profile', c.author.id]">
+                <img
+                  [src]="
+                    c.author.avatarUrl
+                      ? 'http://localhost:8080' + c.author.avatarUrl
+                      : '/default-avatar.jpg'
+                  "
+                  alt="Author avatar"
+                />
+                <span class="response-name">{{ c.author.username }}</span>
+                <span class="response-date">{{ c.createdAt | date : 'MMM d' }}</span>
+              </div>
             </div>
+
+            @if (canDeleteComment(c)) {
+            <button
+              mat-icon-button
+              class="delete-comment-btn"
+              (click)="deleteComment(c.id)"
+              matTooltip="Delete response"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+            }
           </div>
+
           <div class="response-body">
             <p>{{ c.text }}</p>
           </div>

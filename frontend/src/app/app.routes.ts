@@ -12,7 +12,11 @@ import { UpdateProfile } from './pages/updateProfile/updateProfile';
 import { ReportPage } from './pages/report/reportPage';
 import { BannedPageComponent } from './share/BannedPageComponent/BannedPageComponent';
 import { AdminGuard } from './core/guards/admin.guard';
-import { AdminDashboardComponent } from './pages/admin/adminDashboard/dashboard';
+import { AdminLayoutComponent } from './pages/admin/layout/layout';
+import { AdminOverviewComponent } from './pages/admin/overview/overview';
+import { AdminUsersComponent } from './pages/admin/users/users';
+import { AdminPostsComponent } from './pages/admin/posts/posts';
+import { AdminReportsComponent } from './pages/admin/reports/reports';
 import { AddPost } from './pages/add-post/add-post';
 import { PrivacyPage } from './pages/privacy/privacy';
 import { HelpComponent } from './pages/help/help';
@@ -42,10 +46,23 @@ export const routes: Routes = [
     canActivate: [RequireAuthGuard],
   },
   { path: 'profile/update/:id', component: UpdateProfile, canActivate: [RequireAuthGuard] },
-  { path: 'report/:id', component: ReportPage, canActivate: [RequireAuthGuard] },
+  { path: 'report/user/:id', component: ReportPage, canActivate: [RequireAuthGuard] },
+  { path: 'report/post/:id', component: ReportPage, canActivate: [RequireAuthGuard] },
   { path: 'banned', component: BannedPageComponent },
   { path: 'writers', component: UsersPageComponent, canActivate: [RequireAuthGuard] },
-  { path: 'admin/dashboard', component: AdminDashboardComponent, canActivate: [AdminGuard] },
+  {
+    path: 'admin',
+    component: AdminLayoutComponent,
+    canActivate: [AdminGuard],
+    children: [
+      { path: '', redirectTo: 'overview', pathMatch: 'full' },
+      { path: 'overview', component: AdminOverviewComponent },
+      { path: 'users', component: AdminUsersComponent },
+      { path: 'posts', component: AdminPostsComponent },
+      { path: 'reports', component: AdminReportsComponent },
+    ],
+  },
+  { path: 'admin/dashboard', redirectTo: '/admin/overview', pathMatch: 'full' }, // Redirect for old links
   { path: 'new-story', component: AddPost, canActivate: [RequireAuthGuard] },
   { path: 'p/:id/edit', component: AddPost, canActivate: [RequireAuthGuard] },
   { path: 'me/drafts', component: DraftsComponent, canActivate: [RequireAuthGuard] },

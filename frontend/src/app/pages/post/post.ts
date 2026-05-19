@@ -14,7 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { switchMap } from 'rxjs';
 
 // Models & Services
-import { PostResponse, SinglePostResponse } from '../../models/POST/PostResponse';
+import { CommentDTO, PostResponse, SinglePostResponse } from '../../models/POST/PostResponse';
 import { TokenService } from '../../services/token.service';
 import { PostService } from '../../services/post.service';
 
@@ -242,6 +242,12 @@ export class PostPage implements OnInit, OnDestroy {
     }
   }
 
+  onArchive(post: PostResponse) {
+    this.postService.archivePost(post.id).subscribe({
+      error: (err) => console.error(err),
+    });
+  }
+
   ngOnDestroy() {
     this.disconnectObserver();
   }
@@ -251,5 +257,44 @@ export class PostPage implements OnInit, OnDestroy {
       this.observer.disconnect();
       this.observer = null;
     }
+  }
+
+  canDeleteComment(comment: CommentDTO): boolean {
+    const currentUserId = this.currentUserId();
+
+    if (!currentUserId) return false;
+
+    return (
+      this.isAdmin() ||
+      comment.author.id === currentUserId ||
+      this.post()?.author.id === currentUserId
+    );
+  }
+
+  deleteComment(commentId: string) {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '380px',
+      data: { message: 'Delete this response?' },
+      panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-backdrop-blur',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result === true) {
+        this.postService.deleteComment(commentId).subscribe({
+          next: () => {
+            this.post.update((current) => {
+              if (!current) return null;
+
+              return {
+                ...current,
+                comments: current.comments.filter((c) => c.id !== commentId),
+              };
+            });
+          },
+          error: (err) => console.error('Failed to delete comment', err),
+        });
+      }
+    });
   }
 }

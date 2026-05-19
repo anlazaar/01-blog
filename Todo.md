@@ -21,23 +21,49 @@
   - `saved_posts.user_id`
   - `post_hashtags.post_id`
 
+- [x] Potential infinite recursion / heavy JSON → ensure all relations are hidden (already partially fixed).
+- [x] Collections not initialized (risk of `NullPointerException`).
+- [x] No global exception handling (`@RestControllerAdvice` missing).
+- [x] Weak error consistency (different response shapes everywhere).
+- [x] Missing validation on update/patch DTOs (`@Valid`).
+- [x] Make sure cached data does not break serialization.
+- [x] Improve cache naming strategy.
+- [-] Tune TTL per cache type.
+- [x] Replace polymorphic serializer with cleaner DTO-based serialization.
+- [-] Optimize JWT filter current-user DB lookup.---
+- [x] Separate controller logic from response formatting.
+- [x] Introduce consistent API response format.
+- [x] 5 → Optimize `@Formula` + queries
+- [x] 6 → Add indexes + search optimization
+- [x] 7 → Add global error handling
+- [x] 2 → Fix delete cascade issues
+- [x] Avoid caching user-specific post responses globally unless userId is part of the key.
+- [x] Cache DTOs when easy, but do not refactor the whole app only for this.
+- [x] save/unsave if saved state is inside cached response
+
 ## 🔧 FIX
 
 - [ ] Backend private keys should be set to an env or locally to local docker container.
 
+- [ ] add tika file MIME security in backend
+
+- [ ] ARCHIEVED POST SHOULD APPEAR IN POSTS LIST FOR THE ADMIN.
+- [ ] MEDIA VALIDATION BEFORE UPLOADING.
+
+- [ ] FIX THIS ERROR ON THE ADMIN PAGE:
+      home:1 EventSource's response has a MIME type ("text/html") that is not "text/event-stream". Aborting the connection.
+
 - [ ] `/api/users/{id}/block` is public (`permitAll`) → should be protected + not `GET`.
-- [ ] Missing validation on update/patch DTOs (`@Valid`).
 
   - create → should return `201`
   - delete/clear → should return `204`
 
 - [ ] Returning raw `Map.of(...)` instead of proper response DTOs.
-- [ ] Potential infinite recursion / heavy JSON → ensure all relations are hidden (already partially fixed).
-- [ ] Collections not initialized (risk of `NullPointerException`).
 
 - [ ] Service layer missing strict ownership checks (user editing/deleting others' posts).
-- [ ] No global exception handling (`@RestControllerAdvice` missing).
-- [ ] Weak error consistency (different response shapes everywhere).
+
+- [ ] JWT filter loads full User from DB on every authenticated request to check banned status and build principal.  
+       Look into later: replace full User principal with lightweight AuthUser principal, and handle banned users with cache/token invalidation/short-lived access tokens.
 
 ---
 
@@ -54,24 +80,16 @@
 
 ## ⚡ REDIS / CACHE
 
-- [ ] Cache only DTOs (NOT entities).
-- [ ] Add proper cache naming strategy:
+### MUST FIX
 
-  - `posts:list`
-  - `posts:single`
-  - `posts:search`
+- [ ] Make sure post cache is evicted after:
+  - [x] post update/delete
+  - [ ] comment add/delete
+  - [ ] like/unlike
 
-- [ ] Implement cache eviction on:
+### SHOULD FIX
 
-  - post create/update/delete
-  - like/unlike
-  - comment add/delete
-  - save/unsave
-
-- [ ] Avoid caching user-specific data globally (include userId in key).
-- [ ] Tune TTL per cache type (not one global value).
-
----
+### OPTIONAL / LATER
 
 ## 📁 FILE / MEDIA
 
@@ -93,11 +111,9 @@
 
 ## 🧠 CLEAN ARCHITECTURE
 
-- [ ] Separate controller logic from response formatting.
 - [ ] Centralize authorization logic in service layer.
-- [ ] Introduce consistent API response format.
 - [ ] Add logging for critical actions (create/delete/update).
-- [ ] Add integration tests for:
+- [-] Add integration tests for:
 
   - post lifecycle
   - delete cascade
@@ -109,9 +125,5 @@
 ## 📌 PRIORITY ORDER (VERY IMPORTANT)
 
 - [ ] 1 → Fix security + authorization logic
-- [ ] 2 → Fix delete cascade issues
 - [ ] 3 → Fix controller routing + DTO cleanup
 - [ ] 4 → Fix Redis strategy (DTO caching + eviction)
-- [ ] 5 → Optimize `@Formula` + queries
-- [ ] 6 → Add indexes + search optimization
-- [ ] 7 → Add global error handling

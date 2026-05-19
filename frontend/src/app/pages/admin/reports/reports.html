@@ -1,0 +1,86 @@
+@if (message()) {
+<div class="toast-message">{{ message() }}</div>
+}
+
+@if (isLoading()) {
+<div class="loading-state"><mat-spinner diameter="40"></mat-spinner></div>
+}
+
+@if (!isLoading()) {
+<div class="report-tabs">
+  <button mat-button (click)="reportTab.set('users')" [class.active]="reportTab() === 'users'">
+    User Reports
+  </button>
+
+  <button
+    mat-button
+    (click)="reportTab.set('posts')"
+    [class.active]="reportTab() === 'posts'"
+  >
+    Post Reports
+  </button>
+</div>
+
+<!-- POST REPORTS -->
+<section class="data-section">
+  <div class="table-container mat-elevation-z0">
+    <table
+      mat-table
+      [dataSource]="reportTab() === 'posts' ? postReports() : userReports()"
+      class="custom-mat-table"
+    >
+      <ng-container matColumnDef="details">
+        <th mat-header-cell *matHeaderCellDef>Report Details</th>
+        <td mat-cell *matCellDef="let report">
+          <div class="report-cell">
+            <span class="report-reason">{{ report.reason }}</span>
+            <div class="report-meta">
+              Reported by <strong>{{ report.reporter?.username }}</strong>
+              against
+              @if (report.reportedPost) {
+              <a [routerLink]="['/posts', report.reportedPost.id]"> View Post </a>
+              } @else if (report.reportedUser) {
+              <a [routerLink]="['/profile', report.reportedUser.id]"> View User </a>
+              }
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let report">
+          <span
+            class="status-badge"
+            [class.pending]="!report.resolved"
+            [class.resolved]="report.resolved"
+          >
+            {{ report.resolved ? 'Resolved' : 'Review Needed' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="createdAt">
+        <th mat-header-cell *matHeaderCellDef>Date</th>
+        <td mat-cell *matCellDef="let report">
+          {{ report.createdAt | date : 'medium' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let report">
+          @if (!report.resolved) {
+          <button mat-icon-button (click)="resolveReport(report.id)">
+            <mat-icon>check_circle</mat-icon>
+          </button>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="reportColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: reportColumns"></tr>
+    </table>
+  </div>
+</section>
+}

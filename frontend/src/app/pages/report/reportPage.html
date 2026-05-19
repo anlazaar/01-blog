@@ -1,7 +1,11 @@
 <div class="report-layout">
   <div class="report-container">
-    <h1>Report Post</h1>
-    <p class="subtitle">Help us understand what's happening with this post.</p>
+    <h1>Report {{ reportType() === 'USER' ? 'User' : 'Post' }}</h1>
+
+    <p class="subtitle">
+      @if (reportType() === 'USER') { Help us understand what's happening with this user. } @else {
+      Help us understand what's happening with this post. }
+    </p>
 
     <form [formGroup]="reportForm" (ngSubmit)="submitReport()">
       <!-- Reason Select -->
@@ -9,12 +13,35 @@
         <mat-form-field appearance="fill" class="full-width">
           <mat-label>What is the issue?</mat-label>
           <mat-select formControlName="reason">
-            <mat-option value="Spam">It's spam</mat-option>
-            <mat-option value="Harassment">Harassment or bullying</mat-option>
-            <mat-option value="Hate Speech">Hate speech</mat-option>
-            <mat-option value="NSFW">Nudity or sexual activity</mat-option>
-            <mat-option value="Violence">Violence or dangerous organizations</mat-option>
-            <mat-option value="Other">Something else</mat-option>
+            @if (reportType() === 'USER') {
+
+            <mat-option value="Harassment"> Harassment or bullying </mat-option>
+
+            <mat-option value="Fake Account"> Fake account </mat-option>
+
+            <mat-option value="Impersonation"> Impersonation </mat-option>
+
+            <mat-option value="Hate Speech"> Hate speech </mat-option>
+
+            <mat-option value="Spam"> Spam behavior </mat-option>
+
+            <mat-option value="Other"> Something else </mat-option>
+
+            } @else {
+
+            <mat-option value="Spam"> It's spam </mat-option>
+
+            <mat-option value="Harassment"> Harassment or bullying </mat-option>
+
+            <mat-option value="Hate Speech"> Hate speech </mat-option>
+
+            <mat-option value="NSFW"> Nudity or sexual activity </mat-option>
+
+            <mat-option value="Violence"> Violence or dangerous organizations </mat-option>
+
+            <mat-option value="Other"> Something else </mat-option>
+
+            }
           </mat-select>
           @if (reportForm.controls.reason.invalid && reportForm.controls.reason.touched) {
           <mat-error>Please select a reason</mat-error>
@@ -33,7 +60,9 @@
             rows="5"
             maxlength="450"
           ></textarea>
-          <mat-hint align="end">{{ reportForm.controls.description.value?.length || 0 }} / 450</mat-hint>
+          <mat-hint align="end"
+            >{{ reportForm.controls.description.value?.length || 0 }} / 450</mat-hint
+          >
           @if (reportForm.controls.description.invalid) {
           <mat-error>Description is too long.</mat-error>
           }

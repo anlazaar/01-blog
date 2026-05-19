@@ -4,6 +4,8 @@ import com.blog._1.dto.comment.CommentCreateRequest;
 import com.blog._1.dto.comment.CommentResponse;
 import com.blog._1.models.User;
 import com.blog._1.services.CommentService;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -24,7 +26,7 @@ public class CommentController {
     @PostMapping("/post/{postId}")
     public ResponseEntity<CommentResponse> createComment(
             @PathVariable UUID postId,
-            @RequestBody CommentCreateRequest request,
+            @Valid @RequestBody CommentCreateRequest request,
             @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(commentService.create(postId, currentUser.getId(), request));
     }

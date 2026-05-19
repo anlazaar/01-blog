@@ -72,12 +72,12 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.PUT, "/api/users/profile/update/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/users/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/notifications/**").hasAnyRole("USER", "ADMIN")
 
                         // USER ONLY (Interaction/Social)
-                        .requestMatchers("/api/comments/**").hasRole("USER")
+                        .requestMatchers("/api/comments/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/likes/**").hasRole("USER")
                         .requestMatchers("/api/subscriptions/**").hasRole("USER")
-                        .requestMatchers("/api/notifications/**").hasRole("USER")
                         .requestMatchers(HttpMethod.POST, "/api/reports/**").hasRole("USER")
 
                         // ADMIN SPECIFIC ROUTES

@@ -25,7 +25,7 @@ public class LikeController {
             @AuthenticationPrincipal User currentUser) {
 
         if (currentUser == null) {
-            return ResponseEntity.status(401).build();
+            throw new RuntimeException("Authentication required");
         }
 
         likeService.like(postId, currentUser.getId());
@@ -38,7 +38,7 @@ public class LikeController {
             @AuthenticationPrincipal User currentUser) {
 
         if (currentUser == null) {
-            return ResponseEntity.status(401).build();
+            throw new RuntimeException("Authentication required");
         }
 
         likeService.unlike(postId, currentUser.getId());

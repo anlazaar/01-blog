@@ -3,8 +3,10 @@ package com.blog._1.services;
 import com.blog._1.dto.report.ReportCreateRequest;
 import com.blog._1.dto.report.ReportResponse;
 import com.blog._1.dto.user.UserPublicProfileDTO;
+import com.blog._1.models.Post;
 import com.blog._1.models.Report;
 import com.blog._1.models.User;
+import com.blog._1.repositories.PostRepository;
 import com.blog._1.repositories.ReportRepository;
 import com.blog._1.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +23,32 @@ public class ReportService {
 
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
+    private final PostRepository postRepository;
 
     public ReportResponse createReport(ReportCreateRequest req, User reporter) {
-        User reportedUser = userRepository.getReferenceById(req.getReportedUserId());
 
         Report report = new Report();
+
         report.setReason(req.getReason());
         report.setReporter(reporter);
-        report.setReportedUser(reportedUser);
+        report.setType(req.getType());
+
+        switch (req.getType()) {
+
+            case USER -> {
+                User reportedUser = userRepository
+                        .getReferenceById(req.getReportedUserId());
+
+                report.setReportedUser(reportedUser);
+            }
+
+            case POST -> {
+                Post reportedPost = postRepository
+                        .getReferenceById(req.getReportedPostId());
+
+                report.setReportedPost(reportedPost);
+            }
+        }
 
         return toResponse(reportRepository.save(report));
     }
@@ -58,6 +78,7 @@ public class ReportService {
         dto.setResolved(r.isResolved());
         dto.setCreatedAt(
                 r.getCreatedAt() != null ? r.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : null);
+        dto.setType(r.getType());
         dto.setReporter(toUserDTO(r.getReporter()));
         dto.setReportedUser(toUserDTO(r.getReportedUser()));
         return dto;

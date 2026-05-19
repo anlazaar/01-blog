@@ -1,0 +1,97 @@
+@if (message()) {
+<div class="toast-message">{{ message() }}</div>
+}
+
+<section class="data-section">
+  <div class="table-container mat-elevation-z0">
+    <table mat-table [dataSource]="users()" class="custom-mat-table">
+      <ng-container matColumnDef="user">
+        <th mat-header-cell *matHeaderCellDef>User</th>
+        <td mat-cell *matCellDef="let user">
+          <div class="user-info-cell">
+            <img
+              [src]="
+                user.avatarUrl
+                  ? 'http://localhost:8080' + user.avatarUrl
+                  : '/default-avatar.jpg'
+              "
+              alt="User avatar"
+              class="cell-avatar"
+              onerror="this.src='/default-avatar.jpg'"
+            />
+            <div class="text-stack">
+              <a [routerLink]="['/profile', user.id]" class="cell-name">{{
+                user.username
+              }}</a>
+              <span class="cell-email">{{ user.email }}</span>
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="role">
+        <th mat-header-cell *matHeaderCellDef>Role</th>
+        <td mat-cell *matCellDef="let user">
+          <span class="role-badge">{{ user.role | titlecase }}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let user">
+          <div style="display: flex; align-items: center">
+            <span
+              class="status-dot"
+              [class.active]="!user.banned"
+              [class.banned]="user.banned"
+            ></span>
+            <span class="status-text">{{ user.banned ? 'Suspended' : 'Active' }}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let user" class="cell-actions">
+          <div class="action-buttons">
+            <button
+              mat-icon-button
+              (click)="toggleRole(user)"
+              [matTooltip]="user.role === 'ADMIN' ? 'Demote' : 'Promote'"
+              [class.accent-icon]="user.role === 'ADMIN'"
+            >
+              <mat-icon>security</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              (click)="banUser(user.id)"
+              [matTooltip]="user.banned ? 'Unban' : 'Ban'"
+              [class.warn-icon]="!user.banned"
+            >
+              <mat-icon>{{ user.banned ? 'check_circle' : 'block' }}</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="warn"
+              (click)="deleteUser(user.id)"
+              matTooltip="Delete"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="userColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: userColumns"
+        [class.row-banned]="row.banned"
+      ></tr>
+    </table>
+
+    @if (pagination().loading) {
+    <div class="scroll-loader"><mat-spinner diameter="30"></mat-spinner></div>
+    }
+  </div>
+</section>

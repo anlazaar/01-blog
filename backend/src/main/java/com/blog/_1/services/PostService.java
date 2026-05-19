@@ -62,14 +62,11 @@ public class PostService {
             if (!Files.exists(uploadPath))
                 Files.createDirectories(uploadPath);
 
-            // SECURITY: Sanitize filename to prevent ".." attacks
             String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
             if (originalFilename.contains("..")) {
                 throw new RuntimeException("Invalid filename sequence");
             }
 
-            // OPTIMIZATION: Shorten filename (UUID + Extension) to save DB space and avoid
-            // filesystem issues
             String extension = "";
             int i = originalFilename.lastIndexOf('.');
             if (i > 0)
@@ -98,8 +95,6 @@ public class PostService {
             log.info("Deleted orphaned file: {}", filePath);
         } catch (IOException e) {
             log.warn("Failed to delete file: {}", mediaUrl);
-            // We log but don't throw exception, so we don't rollback the DB transaction
-            // just because a file was missing
         }
     }
 
@@ -124,22 +119,29 @@ public class PostService {
             @CacheEvict(value = "post_pages", allEntries = true),
             @CacheEvict(value = "single_user", key = "#userId")
     })
-    public PostResponse patch(UUID postId, UUID userId, PostPatchRequest req) {
+
+    public PostResponse patch(UUID postId, UUID userId, PostPatchRequest req, boolean isAdmin) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        if (!post.getAuthor().getId().equals(userId)) {
+        if (!post.getAuthor().getId().equals(userId) && !isAdmin) {
             throw new RuntimeException("You are not allowed to edit this post");
         }
 
         if (req.getTitle() != null) {
             post.setTitle(req.getTitle());
         }
+
         if (req.getDescription() != null) {
             post.setDescription(req.getDescription());
         }
 
+        if (req.getPostStatus() != null) {
+            post.setStatus(req.getPostStatus());
+        }
+
         Post updated = postRepository.save(post);
+
         return PostResponse.from(updated);
     }
 
@@ -173,11 +175,23 @@ public class PostService {
         if (!post.getAuthor().getId().equals(userId))
             throw new RuntimeException("Unauthorized");
 
+        // --- 5 CHUNKS LIMIT ---
+        if (request.getIndex() < 0 || request.getIndex() >= 5) {
+            throw new RuntimeException("Invalid chunk index. A post can only have up to 5 chunks (index 0-4).");
+        }
+
+        long actualCount = chunkRepository.countByPostId(post.getId());
+        if (actualCount >= 5) {
+            throw new RuntimeException("Maximum of 5 chunks reached for this post.");
+        }
+        // ----------------------------------
+
         PostContentChunk chunk = PostContentChunk.builder()
                 .post(post)
                 .chunkIndex(request.getIndex())
                 .content(request.getContent())
                 .build();
+
         chunkRepository.save(chunk);
     }
 
@@ -185,14 +199,24 @@ public class PostService {
     @Caching(evict = {
             @CacheEvict(value = "post_pages", allEntries = true),
             @CacheEvict(value = "single_user", key = "#userId")
-    }) // when a new post is created here it enssure to wipe cash
-
+    })
     public PostResponse finalizePost(UUID postId, UUID userId, int expectedTotalChunks) {
+        // --- 5 CHUNKS LIMIT ---
+        if (expectedTotalChunks > 5) {
+            throw new RuntimeException("Cannot publish. A post can have a maximum of 5 chunks.");
+        }
+        // ----------------------------------
+
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
         if (!post.getAuthor().getId().equals(userId))
             throw new RuntimeException("Unauthorized");
 
         long actualCount = chunkRepository.countByPostId(postId);
+
+        if (actualCount > 5) {
+            throw new RuntimeException("Database error: Post exceeds the maximum allowed 5 chunks.");
+        }
+
         if (actualCount != expectedTotalChunks)
             throw new RuntimeException("Upload incomplete");
 
@@ -240,13 +264,38 @@ public class PostService {
         return new PageImpl<>(cachedPage.getContent(), pageable, cachedPage.getTotalElements());
     }
 
+    @Cacheable(value = "post_pages", key = "'all_' + #page + '_' + #size")
+    public CacheablePage<PostResponse> getBaseAllPostsForAdmin(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<Post> postsPage = postRepository.findAll(pageable);
+
+        List<PostResponse> content = postsPage.getContent().stream()
+                .map(PostResponse::from)
+                .collect(Collectors.toList());
+
+        // Return pure DTO, safe for Redis serialization
+        return new CacheablePage<>(content, pageable.getPageNumber(), pageable.getPageSize(),
+                postsPage.getTotalElements());
+    }
+
+    // --- GETTERS FOR ADMIN ---
+    public Page<PostResponse> getAllPostForAdmin(int page, int size) {
+        CacheablePage<PostResponse> cachedPage = getSelf().getBaseAllPostsForAdmin(page, size);
+
+        // 2. Enrich with user data (mutating the DTO is now SAFE because Redis
+        // deserializes a fresh copy every time)
+        enrichWithUserInteraction(cachedPage.getContent());
+
+        // 3. Convert back to Spring Data PageImpl to satisfy Controller/Frontend
+        // contract
+        Pageable pageable = PageRequest.of(cachedPage.getPageNumber(), cachedPage.getPageSize());
+        return new PageImpl<>(cachedPage.getContent(), pageable, cachedPage.getTotalElements());
+    }
+
     public List<PostResponse> getByUser(UUID userId, int page, int size) {
-        // We moved the sorting logic HERE.
-        // Previously your method name forced "updatedAt", so I kept that.
-        // If you prefer "createdAt", just change the string below.
         Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
 
-        // Call the new cleaner Repo method
         List<PostResponse> posts = postRepository
                 .findByAuthorIdAndStatus(userId, PostStatus.PUBLISHED, pageable)
                 .stream()
@@ -394,20 +443,25 @@ public class PostService {
                 .build()).collect(Collectors.toList());
     }
 
+    @Transactional
     @Caching(evict = {
             @CacheEvict(value = "single_post", key = "#postId"),
             @CacheEvict(value = "post_pages", allEntries = true),
+            @CacheEvict(value = "post_chunks", allEntries = true),
+            @CacheEvict(value = "single_user", allEntries = true)
     })
     public void delete(UUID postId, UUID userId, boolean isAdmin) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Not found"));
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Not found"));
 
-        if (!isAdmin && !post.getAuthor().getId().equals(userId))
+        if (!isAdmin && !post.getAuthor().getId().equals(userId)) {
             throw new RuntimeException("Unauthorized");
+        }
 
-        // CLEANUP: Delete the associated image from disk
         if (post.getMediaUrl() != null) {
             deleteFileFromDisk(post.getMediaUrl());
         }
+
         postRepository.delete(post);
     }
 
@@ -444,7 +498,7 @@ public class PostService {
             return hashtags;
 
         for (String name : tagNames) {
-            String cleanName = name.replaceAll("\\s+", "").replace("#", "_").toLowerCase();
+            String cleanName = name.replaceAll("\\s+", "_").replace("#", "").toLowerCase();
 
             if (cleanName.isBlank())
                 continue;

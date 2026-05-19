@@ -57,6 +57,12 @@ export class PostService {
     return this.http.delete<void>(`${this.POSTS_URL}/${id}/content`);
   }
 
+  archivePost(postId: string) {
+    return this.http.patch<PostResponse>(`${this.POSTS_URL}/${postId}`, {
+      postStatus: 'ARCHIVED',
+    });
+  }
+
   deletePost(id: string) {
     return this.http.delete(`${this.POSTS_URL}/${id}`);
   }
@@ -127,11 +133,13 @@ export class PostService {
     });
   }
 
-  reportUser(reason: string, userId: string) {
-    return this.http.post(`${this.REPORTS_URL}`, {
-      reportedUserId: userId,
-      reason: reason,
-    });
+  report(data: {
+    reason: string;
+    type: 'POST' | 'USER';
+    reportedPostId?: string;
+    reportedUserId?: string;
+  }) {
+    return this.http.post(this.REPORTS_URL, data);
   }
 
   // --- 5. HASHTAGS ---
@@ -162,5 +170,11 @@ export class PostService {
     if (followed) params = params.set('followed', 'true');
 
     return this.http.get<Page<PostResponse>>(`${this.POSTS_URL}/search`, { params });
+  }
+
+  deleteComment(commentId: string) {
+    return this.http.delete(`http://localhost:8080/api/comments/${commentId}`, {
+      responseType: 'text',
+    });
   }
 }

@@ -89,39 +89,52 @@ export class NavbarComponent {
   userId = this.tokenService.userId;
 
   constructor() {
-    // Effect 1: when login/logout happens, load or clear profile
     effect(() => {
       const uid = this.userId();
 
-      if (uid) {
-        this.userService.refreshCurrentUserProfile(uid).subscribe({
-          error: (err) => console.error('Error refreshing current user profile', err),
-        });
-
-        if (!this.isAdmin()) {
-          this.notificationService.loadNotifications();
-          this.subscribeToRealTimeNotifications();
-        }
-      } else {
+      if (!uid) {
         this.userService.clearCurrentUserProfile();
+        return;
       }
+
+      this.userService.refreshCurrentUserProfile(uid).subscribe({
+        error: (err) => {
+          console.log('Error refreshing profile', err);
+        },
+      });
     });
+
+    effect(() => {
+      const uid = this.userId();
+      const isAdmin = this.isAdmin();
+
+      if (!uid || isAdmin) return;
+
+      this.notificationService.loadNotifications();
+    });
+
+    this.subscribeToRealTimeNotifications();
   }
 
+  private sseConnected = false;
+
   private subscribeToRealTimeNotifications() {
-    // Subscribe to the stream
+    if (this.sseConnected) return;
+
+    this.sseConnected = true;
+
     this.notificationService
       .getServerSentEvent()
-      .pipe(takeUntilDestroyed(this.destroyRef)) // Auto-unsubscribe on destroy
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (newNotification) => {
-          // 1. Push data into the Service's State
           this.notificationService.addRealTimeNotification(newNotification);
-
-          // 2. Play Sound (UI Side Effect)
           this.playNotificationSound();
         },
-        error: (err) => console.error('SSE Error', err),
+        error: (err) => {
+          console.log('SSE ERROR', err);
+          this.sseConnected = false;
+        },
       });
   }
 

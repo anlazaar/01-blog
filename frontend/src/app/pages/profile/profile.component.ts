@@ -39,12 +39,11 @@ export class ProfilePage implements OnInit {
   user = signal<UserPublicProfileDTO | null>(null);
   loading = signal(true);
 
-  // Directly access TokenService signals
+
   isAdmin = this.tokenService.isAdminSignal;
   private currentUserId = this.tokenService.userId;
 
-  // --- COMPUTED VALUES ---
-  // Automatically checks if the loaded user ID matches the logged-in ID
+
   isCurrentUser = computed(() => {
     const u = this.user();
     const myId = this.currentUserId();
@@ -54,10 +53,9 @@ export class ProfilePage implements OnInit {
   private readonly BACKEND_URL = environment.serverUrl;
 
   ngOnInit(): void {
-    // Reactively fetch user data when Route Param ID changes
     this.route.paramMap
       .pipe(
-        tap(() => this.loading.set(true)), // Show spinner immediately on nav
+        tap(() => this.loading.set(true)),
         switchMap((params) => {
           const id = params.get('id');
           if (!id) throw new Error('No ID provided');
@@ -70,6 +68,7 @@ export class ProfilePage implements OnInit {
           if (data.avatarUrl && !data.avatarUrl.startsWith('http')) {
             data.avatarUrl = this.BACKEND_URL + data.avatarUrl;
           }
+          console.log(data  );
           this.user.set(data);
           this.loading.set(false);
         },

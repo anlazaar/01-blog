@@ -76,7 +76,6 @@ public class UserController {
         return ResponseEntity.ok(Map.of("res", result));
     }
 
-    // --- Dynamic UUID routes AFTER static routes ---
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserFullData(

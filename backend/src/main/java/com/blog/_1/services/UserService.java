@@ -143,6 +143,7 @@ public class UserService {
         dto.setFollowersCount((int) subscriptionRepository.countByFollowingId(user.getId()));
         dto.setFollowingCount((int) subscriptionRepository.countByFollowerId(user.getId()));
         dto.setFollowing(false); // Default to false for Cache
+        dto.setAdmin(user.getRole() == Role.ADMIN);
 
         List<PostMinimalDTO> postDTOs = postRepository.findByAuthorId(user.getId(), PageRequest.of(0, 6))
                 .stream().map(post -> {
@@ -224,6 +225,7 @@ public class UserService {
             dto.setUsername(user.getUsername());
             dto.setBio(user.getBio());
             dto.setAvatarUrl(user.getAvatarUrl());
+            dto.setAdmin(user.getRole() == Role.ADMIN);
             return dto;
         }).toList();
     }
@@ -245,14 +247,23 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
     @Caching(evict = {
             @CacheEvict(value = "single_user", key = "#id"),
-            @CacheEvict(value = "user_pages", allEntries = true)
+
+            @CacheEvict(value = "user_pages", allEntries = true),
+
+            @CacheEvict(value = "post_pages", allEntries = true),
+
+            @CacheEvict(value = "single_post", allEntries = true),
+
+            @CacheEvict(value = "post_chunks", allEntries = true)
     })
     public void deleteUser(UUID id) {
         if (!userRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
+
         userRepository.deleteById(id);
     }
 
@@ -362,6 +373,7 @@ public class UserService {
             dto.setBio(u.getBio());
             dto.setFollowersCount((int) subscriptionRepository.countByFollowingId(u.getId()));
             dto.setFollowingCount((int) subscriptionRepository.countByFollowerId(u.getId()));
+            dto.setAdmin(u.getRole() == Role.ADMIN);
             return dto;
         }).toList();
 

@@ -36,6 +36,7 @@ export class ReportPage implements OnInit {
   // State Signals
   reportedId = signal<string | null>(null);
   isSubmitting = signal(false);
+  reportType = signal<'POST' | 'USER'>('POST');
 
   // Form Definition
   reportForm = this.fb.group({
@@ -45,11 +46,21 @@ export class ReportPage implements OnInit {
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
+
     this.reportedId.set(id);
 
     if (!id) {
       this.toastService.show('Invalid request: ID missing', 'error');
       this.router.navigate(['/home']);
+      return;
+    }
+
+    const url = this.router.url;
+
+    if (url.includes('/report/user')) {
+      this.reportType.set('USER');
+    } else {
+      this.reportType.set('POST');
     }
   }
 
@@ -59,21 +70,44 @@ export class ReportPage implements OnInit {
     this.isSubmitting.set(true);
 
     const { reason, description } = this.reportForm.getRawValue();
+
     const safeReason = reason || 'Other';
 
-    // Concatenate details if provided, assuming backend only accepts one string 'reason'
-    // If backend accepts a separate 'description' field, update the service method.
     const fullReason = description ? `${safeReason} - Details: ${description}` : safeReason;
 
-    this.postService.reportUser(fullReason, this.reportedId()!).subscribe({
+    const payload: {
+      reason: string;
+      type: 'POST' | 'USER';
+      reportedPostId?: string;
+      reportedUserId?: string;
+    } =
+      this.reportType() === 'USER'
+        ? {
+            reason: fullReason,
+            type: 'USER',
+            reportedUserId: this.reportedId()!,
+          }
+        : {
+            reason: fullReason,
+            type: 'POST',
+            reportedPostId: this.reportedId()!,
+          };
+
+    this.postService.report(payload).subscribe({
       next: () => {
         this.isSubmitting.set(false);
+
         this.toastService.show('Report submitted successfully.', 'success');
+
         this.router.navigate(['/home']);
       },
+
       error: (err) => {
+        console.log('this is the payload of the report req:', payload);
         console.error('Report error', err);
+
         this.isSubmitting.set(false);
+
         this.toastService.show('Failed to submit report. Please try again.', 'error');
       },
     });

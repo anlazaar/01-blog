@@ -343,3 +343,24 @@ textarea {
     width: 100%;
   }
 }
+
+.response-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.delete-comment-btn {
+  color: var(--text-secondary) !important;
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.response-item:hover .delete-comment-btn {
+  opacity: 1;
+}
+
+.delete-comment-btn:hover {
+  color: var(--error-color) !important;
+}

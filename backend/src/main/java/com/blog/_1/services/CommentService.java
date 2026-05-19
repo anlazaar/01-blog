@@ -66,17 +66,22 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
 
-        if (!isAdmin && !comment.getAuthor().getId().equals(userId)) {
+        boolean isCommentAuthor = comment.getAuthor().getId().equals(userId);
+
+        boolean isPostOwner = comment.getPost()
+                .getAuthor()
+                .getId()
+                .equals(userId);
+
+        if (!isAdmin && !isCommentAuthor && !isPostOwner) {
             throw new RuntimeException("You cannot delete this comment");
         }
 
-        // Capture the postId BEFORE deleting the comment
         UUID postId = comment.getPost().getId();
 
         commentRepository.delete(comment);
         postRepository.decrementCommentCount(postId);
 
-        // Programmatically evict the cache since postId is not a method parameter
         var singlePostCache = cacheManager.getCache("single_post");
         if (singlePostCache != null) {
             singlePostCache.evict(postId);
@@ -84,7 +89,7 @@ public class CommentService {
 
         var pagesCache = cacheManager.getCache("post_pages");
         if (pagesCache != null) {
-            pagesCache.clear(); // Wipes all entries
+            pagesCache.clear();
         }
     }
 

@@ -4,6 +4,8 @@ import {
   output,
   ViewEncapsulation,
   ChangeDetectionStrategy,
+  Output,
+  EventEmitter,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatMenuModule } from '@angular/material/menu';
@@ -24,6 +26,9 @@ export class PostOptionsMenuComponent {
 
   canEdit = input(false);
   canReport = input(false);
+  canArchieve = input(false)
+
+  @Output() archive = new EventEmitter<void>();
 
   report = output<void>();
   delete = output<void>();

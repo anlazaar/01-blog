@@ -214,7 +214,6 @@ MIT License © 2026 Anass Lazaar
 
 ## Resources
 
-- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
 - [Angular Documentation](https://angular.io/docs)
 - [Angular Material](https://material.angular.io/)
 - [Spring Boot File Upload](https://www.bezkoder.com/spring-boot-upload-file-database/)

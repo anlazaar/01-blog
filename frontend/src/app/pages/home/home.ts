@@ -162,8 +162,8 @@ export class Home implements OnInit {
     this.router.navigate(['/home']);
   }
 
-  onReport(userId: string) {
-    this.router.navigate(['/report', userId]); // Assuming route is /report/:userId
+  onReport(postId: string) {
+    this.router.navigate(['report/post', postId]);
   }
 
   onDelete(p: PostResponse) {
@@ -188,6 +188,15 @@ export class Home implements OnInit {
         this.posts.update((current) => current.filter((p) => p.id !== postId));
       },
       error: (err) => console.error('Delete failed:', err),
+    });
+  }
+
+  onArchive(post: PostResponse) {
+    this.postService.archivePost(post.id).subscribe({
+      next: () => {
+        this.posts.update((current) => current.filter((p) => p.id !== post.id));
+      },
+      error: (err) => console.error(err),
     });
   }
 

@@ -11,7 +11,7 @@ import {
 import { ReactiveFormsModule, FormBuilder, Validators, FormControl } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Observable, of, from } from 'rxjs';
+import { Observable, of, from, throwError, forkJoin } from 'rxjs';
 import { concatMap, debounceTime, last, startWith, switchMap, tap } from 'rxjs/operators';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
@@ -94,6 +94,7 @@ export class AddPost implements OnInit, OnDestroy {
   existingMediaUrl: string | null = null;
   selectedFile: File | null = null;
   coverPreviewUrl: string | null = null;
+  pendingEditorImages: { file: File; blobUrl: string }[] = [];
 
   // --- 2. FORMS & AUTOCOMPLETE ---
   readonly separatorKeysCodes = [ENTER, COMMA] as const;
@@ -118,10 +119,10 @@ export class AddPost implements OnInit, OnDestroy {
   @ViewChild('tagInput') tagInput!: ElementRef<HTMLInputElement>;
   @ViewChild(MatAutocompleteTrigger) autocompleteTrigger!: MatAutocompleteTrigger;
 
-  // Added strict Validators mapped to DTO requirements
+  // Validation
   postForm = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
-    description: ['', [Validators.required, Validators.minLength(10)]],
+    description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(20000)]],
     mediaType: ['IMAGE'],
   });
 
@@ -292,18 +293,9 @@ export class AddPost implements OnInit, OnDestroy {
   }
 
   uploadEditorMedia(file: File) {
-    this.editorMediaLoading.set(true);
-    this.postService.uploadEditorMedia(file).subscribe({
-      next: (res) => {
-        this.editorMediaLoading.set(false);
-        const fullUrl = `${this.BACKEND_URL}${res.url}`;
-        this.editor.chain().focus().setImage({ src: fullUrl }).run();
-      },
-      error: () => {
-        this.editorMediaLoading.set(false);
-        this.toast.show('Failed to upload image.', 'error');
-      },
-    });
+    const blobUrl = URL.createObjectURL(file);
+    this.pendingEditorImages.push({ file, blobUrl });
+    this.editor.chain().focus().setImage({ src: blobUrl }).run();
   }
 
   triggerFileInput() {
@@ -353,12 +345,26 @@ export class AddPost implements OnInit, OnDestroy {
   }
 
   private handleSave(publish: boolean) {
+    let fullContent = this.postForm.get('description')?.value || '';
+    const CHUNK_SIZE = 4000;
+    const totalExpectedChunks = Math.ceil(fullContent.length / CHUNK_SIZE);
+
+    // --- ENFORCE MAX 5 CHUNKS FRONTEND LIMIT ---
+    if (totalExpectedChunks > 5) {
+      this.toast.show(
+        `Story is too long! Maximum allowed is 20,000 characters (5 chunks).`,
+        'error'
+      );
+      return;
+    }
+    // -------------------------------------------
+
     // Validate Form
     if (this.postForm.invalid) {
       if (this.postForm.get('title')?.hasError('maxlength')) {
         this.toast.show('Title is too long (max 150 characters).', 'error');
       } else if (this.postForm.get('description')?.hasError('maxlength')) {
-        this.toast.show('Content is too long. Please reduce text.', 'error');
+        this.toast.show('Content is too long. Maximum allowed is 20,000 characters.', 'error');
       } else {
         this.toast.show('Please provide a valid title and content.', 'error');
       }
@@ -374,7 +380,41 @@ export class AddPost implements OnInit, OnDestroy {
     this.errorMessage.set('');
     this.uploadProgress.set(0);
 
-    const fullContent = this.postForm.get('description')?.value || '';
+    const imagesToUpload = this.pendingEditorImages.filter((img) => fullContent.includes(img.blobUrl));
+
+    if (imagesToUpload.length > 0) {
+      this.editorMediaLoading.set(true);
+      const uploadObservables = imagesToUpload.map((img) =>
+        this.postService.uploadEditorMedia(img.file).pipe(
+          tap((res: { url: string }) => {
+            const fullUrl = `${this.BACKEND_URL}${res.url}`;
+            fullContent = fullContent.split(img.blobUrl).join(fullUrl);
+          })
+        )
+      );
+
+      forkJoin(uploadObservables).subscribe({
+        next: () => {
+          this.editorMediaLoading.set(false);
+          this.postForm.patchValue({ description: fullContent });
+          if (this.editor) {
+            this.editor.commands.setContent(fullContent);
+          }
+          this.pendingEditorImages = [];
+          this.executeSave(publish, fullContent, totalExpectedChunks);
+        },
+        error: () => {
+          this.editorMediaLoading.set(false);
+          this.isSubmitting.set(false);
+          this.toast.show('Failed to upload some images.', 'error');
+        },
+      });
+    } else {
+      this.executeSave(publish, fullContent, totalExpectedChunks);
+    }
+  }
+
+  private executeSave(publish: boolean, fullContent: string, totalExpectedChunks: number) {
     // Description in DTO expects a summary. Limit this to 150 to be safe for typical DB limits
     const summary = fullContent.substring(0, 150) + '...';
     const title = this.postForm.get('title')?.value;
@@ -439,8 +479,7 @@ export class AddPost implements OnInit, OnDestroy {
         concatMap(() => this.uploadChunksSequentially(this.currentPostId()!, fullContent)),
         concatMap(() => {
           if (publish) {
-            const totalChunks = Math.ceil(fullContent.length / 4000);
-            return this.postService.publishPost(this.currentPostId()!, totalChunks);
+            return this.postService.publishPost(this.currentPostId()!, totalExpectedChunks);
           }
           return of(null);
         })
@@ -459,7 +498,7 @@ export class AddPost implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error(err);
-          this.toast.show('Could not save story.', 'error');
+          this.toast.show(err.message || 'Could not save story.', 'error');
           this.isSubmitting.set(false);
         },
       });
@@ -468,6 +507,13 @@ export class AddPost implements OnInit, OnDestroy {
   private uploadChunksSequentially(postId: string, content: string): Observable<unknown> {
     const CHUNK_SIZE = 4000;
     const totalChunks = Math.ceil(content.length / CHUNK_SIZE);
+
+    // --- 5 CHUNKS LIMIT ---
+    if (totalChunks > 5) {
+      return throwError(() => new Error('Upload aborted: Content exceeds maximum of 5 chunks.'));
+    }
+    // ----------------------------
+
     const chunks: { index: number; content: string }[] = [];
 
     for (let i = 0; i < totalChunks; i++) {

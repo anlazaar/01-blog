@@ -23,6 +23,10 @@ public class NotificationController {
 
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@AuthenticationPrincipal User currentUser) {
+        if (currentUser == null) {
+            throw new RuntimeException("Authentication required");
+        }
+
         return notificationService.subscribe(currentUser.getId());
     }
 
@@ -31,6 +35,11 @@ public class NotificationController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal User currentUser) {
+
+        if (currentUser == null) {
+            throw new RuntimeException("Authentication required");
+        }
+
         return ResponseEntity.ok(
                 notificationService.getUserNotifications(currentUser.getId(), page, size));
     }

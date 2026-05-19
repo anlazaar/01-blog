@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import com.blog._1.dto.post.PostMinimalDTO;
+import com.blog._1.models.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,11 +22,12 @@ public class UserPublicProfileDTO {
     private int followersCount;
     private int followingCount;
     private boolean isFollowing;
+    private boolean isAdmin;
     private List<PostMinimalDTO> posts;
 
     // Constructor for JPQL Queries (Performance Optimization)
     public UserPublicProfileDTO(UUID id, String username, String firstname, String lastname,
-            String bio, String avatarUrl, Long followersCount, Long followingCount) {
+            String bio, String avatarUrl, Long followersCount, Long followingCount, Role role) {
         this.id = id;
         this.username = username;
         this.firstname = firstname;
@@ -35,6 +37,7 @@ public class UserPublicProfileDTO {
         this.followersCount = followersCount != null ? followersCount.intValue() : 0;
         this.followingCount = followingCount != null ? followingCount.intValue() : 0;
         this.isFollowing = false;
+        this.isAdmin = role == Role.ADMIN;
         this.posts = Collections.emptyList();
     }
 }

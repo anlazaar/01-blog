@@ -22,6 +22,11 @@ public class ReportController {
     public ResponseEntity<ReportResponse> create(
             @RequestBody ReportCreateRequest req,
             @AuthenticationPrincipal User currentUser) {
+
+        if (currentUser == null) {
+            throw new RuntimeException("Authentication required");
+        }
+
         return ResponseEntity.ok(reportService.createReport(req, currentUser));
     }
 
@@ -34,9 +39,7 @@ public class ReportController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable UUID id,
-            @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         reportService.deleteReport(id);
         return ResponseEntity.noContent().build();
     }

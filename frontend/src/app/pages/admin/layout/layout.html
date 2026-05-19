@@ -1,0 +1,49 @@
+<div class="admin-wrapper">
+  <header class="admin-page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Overview of platform activity</p>
+  </header>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar Navigation -->
+    <nav class="admin-nav">
+      <button
+        class="nav-item"
+        routerLink="/admin/overview"
+        routerLinkActive="active"
+        mat-button
+      >
+        <mat-icon>trending_up</mat-icon> <span>Overview</span>
+      </button>
+      <button
+        class="nav-item"
+        routerLink="/admin/users"
+        routerLinkActive="active"
+        mat-button
+      >
+        <mat-icon>group</mat-icon> <span>People</span>
+      </button>
+      <button
+        class="nav-item"
+        routerLink="/admin/posts"
+        routerLinkActive="active"
+        mat-button
+      >
+        <mat-icon>article</mat-icon> <span>Stories</span>
+      </button>
+      <button
+        class="nav-item"
+        routerLink="/admin/reports"
+        routerLinkActive="active"
+        mat-button
+      >
+        <mat-icon>flag</mat-icon> <span>Reports</span>
+      </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="dashboard-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

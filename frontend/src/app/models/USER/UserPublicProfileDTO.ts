@@ -10,5 +10,6 @@ export interface UserPublicProfileDTO {
   followersCount: number;
   followingCount: number;
   following?: boolean;
+  admin: boolean;
   posts: PostResponse[];
 }

@@ -58,7 +58,8 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
                     u.bio,
                     u.avatarUrl,
                     (SELECT COUNT(s1) FROM Subscription s1 WHERE s1.following.id = u.id),
-                    (SELECT COUNT(s2) FROM Subscription s2 WHERE s2.follower.id = u.id)
+                    (SELECT COUNT(s2) FROM Subscription s2 WHERE s2.follower.id = u.id),
+                    u.role
                 )
                 FROM User u
             """)

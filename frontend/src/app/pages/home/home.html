@@ -76,7 +76,9 @@
             [postId]="p.id"
             [canEdit]="currentUserId() === p.author.id || isAdmin()"
             [canReport]="currentUserId() !== p.author.id && !isAdmin()"
-            (report)="onReport(p.author.id)"
+            [canArchieve]="isAdmin()"
+            (archive)="onArchive(p)"
+            (report)="onReport(p.id)"
             (delete)="onDelete(p)"
           ></app-post-options-menu>
           }
