@@ -351,7 +351,7 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Only image files are allowed");
         }
         if (file.getSize() > 5 * 1024 * 1024) {
-            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "File too large");
+            throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE, "File too large");
         }
     }
 
