@@ -27,8 +27,10 @@ export class PostOptionsMenuComponent {
   canEdit = input(false);
   canReport = input(false);
   canArchieve = input(false)
+  canUnarchieve = input(false)
 
   @Output() archive = new EventEmitter<void>();
+  @Output() unarchive = new EventEmitter<void>();
 
   report = output<void>();
   delete = output<void>();

@@ -244,6 +244,18 @@ export class PostPage implements OnInit, OnDestroy {
 
   onArchive(post: PostResponse) {
     this.postService.archivePost(post.id).subscribe({
+      next: (res) => {
+        this.post.update((p) => (p ? { ...p, postStatus: 'ARCHIVED' } : null));
+      },
+      error: (err) => console.error(err),
+    });
+  }
+
+  onUnarchive(post: PostResponse) {
+    this.postService.unarchivePost(post.id).subscribe({
+      next: (res) => {
+        this.post.update((p) => (p ? { ...p, postStatus: 'PUBLISHED' } : null));
+      },
       error: (err) => console.error(err),
     });
   }

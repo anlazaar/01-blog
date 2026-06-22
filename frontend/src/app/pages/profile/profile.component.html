@@ -98,7 +98,26 @@
       <article class="feed-item">
         <div class="item-content" [routerLink]="['/posts', p.id]">
           <div class="text-content">
-            <span class="post-date">{{ p.createdAt | date : 'MMM d, y' }}</span>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <span class="post-date">
+                {{ p.createdAt | date : 'MMM d, y' }}
+                @if (p.postStatus === 'ARCHIVED') {
+                <span class="archived-badge" style="background: #f0f0f0; color: #666; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 8px;">ARCHIVED</span>
+                }
+              </span>
+              <app-post-options-menu
+                [postId]="p.id"
+                [canEdit]="isCurrentUser() || isAdmin()"
+                [canReport]="!isCurrentUser() && !isAdmin()"
+                [canArchieve]="(isCurrentUser() || isAdmin()) && p.postStatus === 'PUBLISHED'"
+                [canUnarchieve]="(isCurrentUser() || isAdmin()) && p.postStatus === 'ARCHIVED'"
+                (archive)="onArchive(p)"
+                (unarchive)="onUnarchive(p)"
+                (report)="onReport(p.id)"
+                (delete)="onDelete(p)"
+                (click)="$event.stopPropagation()"
+              ></app-post-options-menu>
+            </div>
             <h2 class="post-title">{{ p.title }}</h2>
             <p class="post-snippet">{{ p.description }}</p>
             <div class="post-footer">

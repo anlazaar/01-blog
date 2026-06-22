@@ -63,6 +63,12 @@ export class PostService {
     });
   }
 
+  unarchivePost(postId: string) {
+    return this.http.patch<PostResponse>(`${this.POSTS_URL}/${postId}`, {
+      postStatus: 'PUBLISHED',
+    });
+  }
+
   deletePost(id: string) {
     return this.http.delete(`${this.POSTS_URL}/${id}`);
   }

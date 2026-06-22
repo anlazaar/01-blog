@@ -33,6 +33,7 @@ public class PostResponse implements Serializable {
     private boolean savedByCurrentUser;
     private boolean likedByCurrentUser;
 
+    private PostStatus status;
     private Set<String> tags;
 
     public static PostResponse from(Post post) {
@@ -43,6 +44,7 @@ public class PostResponse implements Serializable {
         dto.setDescription(post.getDescription());
         dto.setMediaUrl(post.getMediaUrl());
         dto.setMediaType(post.getMediaType());
+        dto.setStatus(post.getStatus());
 
         // Safe Date Conversion
         if (post.getCreatedAt() != null) {

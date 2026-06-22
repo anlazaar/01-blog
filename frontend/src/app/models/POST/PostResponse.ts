@@ -18,6 +18,7 @@ export interface PostResponse {
   mediaType: string;
   createdAt: string;
   updatedAt: string | null;
+  postStatus: 'PUBLISHED' | 'ARCHIVED' | 'DRAFT';
   author: UserPublicProfileDTO;
 
   tags: string[];

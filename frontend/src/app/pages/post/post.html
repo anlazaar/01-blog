@@ -40,8 +40,10 @@
           [postId]="postData.id"
           [canEdit]="currentUserId() === postData.author.id || isAdmin()"
           [canReport]="currentUserId() !== postData.author.id && !isAdmin()"
-          [canArchieve]="isAdmin()"
+          [canArchieve]="(currentUserId() === postData.author.id || isAdmin()) && postData.postStatus === 'PUBLISHED'"
+          [canUnarchieve]="(currentUserId() === postData.author.id || isAdmin()) && postData.postStatus === 'ARCHIVED'"
           (archive)="onArchive(postData)"
+          (unarchive)="onUnarchive(postData)"
           (report)="onReport(postData.author.id)"
           (delete)="onDelete(postData)"
         ></app-post-options-menu>

@@ -17,5 +17,7 @@
   <button mat-menu-item color="warn" (click)="delete.emit()">Delete story</button>
   } @if (canArchieve()) {
   <button mat-menu-item (click)="archive.emit()">Archive post</button>
+  } @if (canUnarchieve()) {
+  <button mat-menu-item (click)="unarchive.emit()">Unarchive post</button>
   }
 </mat-menu>

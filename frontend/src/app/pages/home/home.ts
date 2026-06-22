@@ -200,6 +200,18 @@ export class Home implements OnInit {
     });
   }
 
+  onUnarchive(post: PostResponse) {
+    this.postService.unarchivePost(post.id).subscribe({
+      next: () => {
+        // Normally unarchived posts wouldn't be in the feed if they were archived,
+        // but if they are, we'd update their status or just leave them.
+        // If we're an admin seeing all posts, we might want to update the status.
+        this.updatePostInList(post.id, { postStatus: 'PUBLISHED' });
+      },
+      error: (err) => console.error(err),
+    });
+  }
+
   // Helper for immutable updates
   private updatePostInList(postId: string, changes: Partial<PostResponse>) {
     this.posts.update((current) =>
