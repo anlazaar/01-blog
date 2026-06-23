@@ -8,8 +8,11 @@ import java.util.stream.Collectors;
 import com.blog._1.dto.user.UserPublicProfileDTO;
 import com.blog._1.models.Hashtag;
 import com.blog._1.models.Post;
+import com.blog._1.models.PostStatus;
 
 import lombok.Data;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Data
 public class PostResponse implements Serializable {
@@ -33,10 +36,15 @@ public class PostResponse implements Serializable {
     private boolean savedByCurrentUser;
     private boolean likedByCurrentUser;
 
-    private PostStatus status;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private PostStatus postStatus;
     private Set<String> tags;
 
     public static PostResponse from(Post post) {
+        System.out.println("--------------------------------POST STATUS--------------------------------\n" +
+                "POST ID=" + post.getId() +
+                " STATUS=" + post.getStatus());
+
         PostResponse dto = new PostResponse();
 
         dto.setId(post.getId());
@@ -44,7 +52,7 @@ public class PostResponse implements Serializable {
         dto.setDescription(post.getDescription());
         dto.setMediaUrl(post.getMediaUrl());
         dto.setMediaType(post.getMediaType());
-        dto.setStatus(post.getStatus());
+        dto.setPostStatus(post.getStatus());
 
         // Safe Date Conversion
         if (post.getCreatedAt() != null) {
@@ -75,9 +83,10 @@ public class PostResponse implements Serializable {
         dto.setLikedByCurrentUser(false);
         dto.setSavedByCurrentUser(false);
 
-        dto.setTags(post.getHashtags().stream()
-                .map(Hashtag::getName)
-                .collect(Collectors.toSet()));
+        // dto.setTags(post.getHashtags().stream()
+        // .map(Hashtag::getName)
+        // .collect(Collectors.toSet()));
+        System.out.println("----------------------DTO----------------------\n" + "DTO STATUS = " + dto.getPostStatus());
 
         return dto;
     }

@@ -293,14 +293,23 @@ public class PostService {
         return new PageImpl<>(cachedPage.getContent(), pageable, cachedPage.getTotalElements());
     }
 
-    public List<PostResponse> getByUser(UUID userId, int page, int size) {
+    public List<PostResponse> getByUser(UUID userId, int page, int size, User currentUser) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
 
-        List<PostResponse> posts = postRepository
-                .findByAuthorIdAndStatus(userId, PostStatus.PUBLISHED, pageable)
-                .stream()
-                .map(PostResponse::from)
-                .collect(Collectors.toList());
+        List<PostResponse> posts;
+        if (currentUser != null && (currentUser.getId().equals(userId) || currentUser.getRole() == Role.ADMIN)) {
+            posts = postRepository
+                    .findByAuthorIdAndStatusIn(userId, List.of(PostStatus.PUBLISHED, PostStatus.ARCHIVED), pageable)
+                    .stream()
+                    .map(PostResponse::from)
+                    .collect(Collectors.toList());
+        } else {
+            posts = postRepository
+                    .findByAuthorIdAndStatus(userId, PostStatus.PUBLISHED, pageable)
+                    .stream()
+                    .map(PostResponse::from)
+                    .collect(Collectors.toList());
+        }
 
         enrichWithUserInteraction(posts);
         return posts;
@@ -330,17 +339,6 @@ public class PostService {
             return resp;
         }).collect(Collectors.toList());
     }
-
-    // Used later or never...
-    // private void enrichPostResponse(PostResponse response, UUID userId) {
-    // // Legacy single item enricher if needed
-    // if (userId != null) {
-    // response.setSavedByCurrentUser(savedPostRepository.existsByUserIdAndPostId(userId,
-    // response.getId()));
-    // response.setLikedByCurrentUser(likeRepository.existsByPostIdAndUserId(response.getId(),
-    // userId));
-    // }
-    // }
 
     private void enrichWithUserInteraction(List<PostResponse> posts) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
@@ -380,7 +378,8 @@ public class PostService {
         dto.setAuthor(base.getAuthor());
         dto.setLikeCount(base.getLikeCount());
         dto.setCommentCount(base.getCommentCount());
-        dto.setTags(base.getTags());
+        dto.setPostStatus(base.getPostStatus());
+        // dto.setTags(base.getTags());
 
         if (post.getComments() != null) {
             dto.setComments(post.getComments().stream().map(CommentDTO::from).collect(Collectors.toList()));

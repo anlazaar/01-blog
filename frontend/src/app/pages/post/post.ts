@@ -93,6 +93,7 @@ export class PostPage implements OnInit, OnDestroy {
           const data = { ...res, comments: res.comments || [] };
           this.post.set(data);
           this.loading.set(false);
+          console.log(data);
 
           setTimeout(() => {
             this.initObserver();

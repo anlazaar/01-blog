@@ -33,6 +33,10 @@ public interface PostRepository extends JpaRepository<Post, UUID>, JpaSpecificat
 
     // OPTIMIZATION: Added Pageable.
     @EntityGraph(attributePaths = { "author" })
+    Page<Post> findByAuthorIdAndStatusIn(UUID authorId, List<PostStatus> statuses, Pageable pageable);
+
+    // OPTIMIZATION: Added Pageable.
+    @EntityGraph(attributePaths = { "author" })
     List<Post> findByAuthorIdAndStatus(UUID authorId, PostStatus status, Pageable pageable);
 
     @Query("SELECT p.createdAt FROM Post p WHERE p.createdAt > :date")

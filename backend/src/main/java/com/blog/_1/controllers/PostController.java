@@ -113,8 +113,9 @@ public class PostController {
     public ResponseEntity<List<PostResponse>> getByUser(
             @PathVariable UUID userId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(postService.getByUser(userId, page, size));
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(postService.getByUser(userId, page, size, currentUser));
     }
 
     @GetMapping("/tag/{tag}")

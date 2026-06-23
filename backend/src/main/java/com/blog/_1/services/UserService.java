@@ -32,6 +32,7 @@ import com.blog._1.dto.user.UserPublicProfileDTO;
 import com.blog._1.dto.user.UserResponse;
 import com.blog._1.models.Role;
 import com.blog._1.models.User;
+import com.blog._1.models.PostStatus;
 import com.blog._1.repositories.PostRepository;
 import com.blog._1.repositories.SubscriptionRepository;
 import com.blog._1.repositories.UserRepository;
@@ -145,7 +146,7 @@ public class UserService {
         dto.setFollowing(false); // Default to false for Cache
         dto.setAdmin(user.getRole() == Role.ADMIN);
 
-        List<PostMinimalDTO> postDTOs = postRepository.findByAuthorId(user.getId(), PageRequest.of(0, 6))
+        List<PostMinimalDTO> postDTOs = postRepository.findByAuthorIdAndStatus(user.getId(), PostStatus.PUBLISHED, PageRequest.of(0, 6))
                 .stream().map(post -> {
                     PostMinimalDTO p = new PostMinimalDTO();
                     p.setId(post.getId());
@@ -154,6 +155,7 @@ public class UserService {
                     p.setMediaType(post.getMediaType());
                     p.setAuthorUsername(user.getUsername());
                     p.setCreatedAt(post.getCreatedAt());
+                    p.setPostStatus(post.getStatus());
                     return p;
                 }).toList();
 
@@ -169,11 +171,27 @@ public class UserService {
 
         // 2. Enrich with specific user connection status
         var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof User currentUser
-                && !currentUser.getId().equals(userId)) {
-
-            cachedDto.setFollowing(
-                    subscriptionRepository.findByFollowerIdAndFollowingId(currentUser.getId(), userId).isPresent());
+        if (auth != null && auth.getPrincipal() instanceof User currentUser) {
+            if (currentUser.getId().equals(userId) || currentUser.getRole() == Role.ADMIN) {
+                // Owner or Admin viewing: fetch PUBLISHED and ARCHIVED posts
+                List<PostMinimalDTO> ownerPosts = postRepository.findByAuthorIdAndStatusIn(
+                        userId, List.of(PostStatus.PUBLISHED, PostStatus.ARCHIVED), PageRequest.of(0, 6))
+                        .stream().map(post -> {
+                            PostMinimalDTO p = new PostMinimalDTO();
+                            p.setId(post.getId());
+                            p.setTitle(post.getTitle());
+                            p.setMediaUrl(post.getMediaUrl());
+                            p.setMediaType(post.getMediaType());
+                            p.setAuthorUsername(cachedDto.getUsername());
+                            p.setCreatedAt(post.getCreatedAt());
+                            p.setPostStatus(post.getStatus());
+                            return p;
+                        }).toList();
+                cachedDto.setPosts(ownerPosts);
+            } else {
+                cachedDto.setFollowing(
+                        subscriptionRepository.findByFollowerIdAndFollowingId(currentUser.getId(), userId).isPresent());
+            }
         }
 
         return cachedDto;
